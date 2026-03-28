@@ -2,8 +2,10 @@ import { useAppState } from '../store';
 import { detectNameCol, detectCatCol, getLeadName, getLeadCategory } from '../utils/detect';
 import ScoreRing from '../components/ScoreRing';
 import BarChart from '../components/BarChart';
+import FunnelChart from '../components/FunnelChart';
 import { formatTime } from '../utils/time';
 import type { Page } from '../components/Layout';
+import { PIPELINE_COLS } from '../types';
 
 interface DashboardProps {
     onNavigate: (page: Page) => void;
@@ -36,11 +38,11 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
     const nameCol = detectNameCol(leads);
     const catCol = detectCatCol(leads);
 
-    // Score distribution
-    const buckets = Array(10).fill(0);
-    leads.forEach((l) => { const b = Math.min(9, Math.floor(l._score)); buckets[b]++; });
-    const scoreColors = ['#64748B', '#64748B', '#64748B', '#64748B', '#F59E0B', '#F59E0B', '#F59E0B', '#10B981', '#10B981', '#10B981'];
-    const scoreData = buckets.map((v, i) => ({ label: `${i}–${i + 1} pts`, value: v, color: scoreColors[i] }));
+    // Funnel data
+    const funnelData = PIPELINE_COLS.map((col) => {
+        const count = leads.filter((l) => l._pipeline === col.id).length;
+        return { label: col.label, value: count, color: col.color };
+    });
 
     // Category distribution
     let catData: { label: string; value: number; color: string }[] = [];
@@ -52,6 +54,8 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
 
     // Top 5 leads
     const top5 = [...leads].sort((a, b) => b._score - a._score).slice(0, 5);
+    const won = leads.filter((l) => l._pipeline === 'ganho').length;
+    const conversionRate = leads.length > 0 ? Math.round((won / leads.length) * 100) : 0;
 
     return (
         <>
@@ -78,23 +82,28 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                     <div className="kpi-val purple">{avg.toFixed(1)}</div>
                     <div className="kpi-sub">de 10 pontos</div>
                 </div>
+                <div className="kpi blue">
+                    <div className="kpi-label">Conversão Final</div>
+                    <div className="kpi-val blue">{conversionRate}%</div>
+                    <div className="kpi-sub">{won} leads ganhos</div>
+                </div>
             </div>
 
             <div className="grid-2 mb-24">
                 <div className="card">
                     <div className="sec-header">
                         <div>
-                            <div className="sec-title">Distribuição de Score</div>
-                            <div className="sec-sub">Todos os leads importados</div>
+                            <div className="sec-title">Funil de Vendas</div>
+                            <div className="sec-sub">Conversão por etapa do pipeline</div>
                         </div>
                     </div>
-                    <BarChart data={scoreData} />
+                    <FunnelChart data={funnelData} />
                 </div>
                 <div className="card">
                     <div className="sec-header">
                         <div>
                             <div className="sec-title">Top Segmentos</div>
-                            <div className="sec-sub">Por quantidade de leads quentes</div>
+                            <div className="sec-sub">Por volume total de leads</div>
                         </div>
                     </div>
                     {catData.length ? <BarChart data={catData} /> : <div className="text-muted text-sm">Nenhuma coluna categórica detectada.</div>}

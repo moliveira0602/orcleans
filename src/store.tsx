@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
 import type { Lead, ImportRecord, PipelineMap, AppSettings, AppState, ActivityEntry, PipelineStage, NoteEntry } from './types';
 import { DEFAULT_SETTINGS } from './types';
+import { loadLeadsDB, saveLeadsDB } from './utils/db';
 
-const STORAGE_KEY = 'orcalens_state';
+const STORAGE_KEY = 'orcalens_meta';
 
 const initialState: AppState = {
     leads: [],
@@ -10,22 +11,25 @@ const initialState: AppState = {
     pipeline: { novo: [], qualificado: [], proposta: [], negociacao: [], ganho: [], perdido: [] },
     settings: { ...DEFAULT_SETTINGS },
     activities: [],
+    isLoading: true,
 };
 
-function loadState(): AppState {
+function loadMeta(): Partial<AppState> {
     try {
         const s = localStorage.getItem(STORAGE_KEY);
         if (s) {
             const d = JSON.parse(s);
-            return { ...initialState, ...d, settings: { ...DEFAULT_SETTINGS, ...d.settings } };
+            return { ...d, settings: { ...DEFAULT_SETTINGS, ...d.settings } };
         }
     } catch { /* ignore */ }
-    return initialState;
+    return {};
 }
 
-function saveState(state: AppState) {
+function saveMeta(state: AppState) {
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        const { leads, isLoading, ...meta } = state;
+        void leads; void isLoading;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(meta));
     } catch { /* ignore */ }
 }
 
@@ -49,10 +53,13 @@ type Action =
     | { type: 'ADD_ACTIVITY'; payload: ActivityEntry }
     | { type: 'ADD_NOTE'; payload: { leadId: string; note: NoteEntry } }
     | { type: 'UPDATE_LEAD_SCORES'; payload: Lead[] }
-    | { type: 'SET_STATE'; payload: AppState };
+    | { type: 'SET_STATE'; payload: AppState }
+    | { type: 'FINISH_LOADING'; payload: Lead[] };
 
 function reducer(state: AppState, action: Action): AppState {
     switch (action.type) {
+        case 'FINISH_LOADING':
+            return { ...state, leads: action.payload, isLoading: false };
         case 'IMPORT_LEADS': {
             const newLeads = [...state.leads, ...action.payload.leads];
             const newImports = [...state.imports, action.payload.record];
@@ -78,21 +85,14 @@ function reducer(state: AppState, action: Action): AppState {
                         );
                         updated++;
                     }
-                    // skip mode: do nothing
                 } else {
                     newLeads.push(lead);
                     newPipeline.novo.push(lead.id);
                     added++;
                 }
             }
-
             const newRecord = { ...record, rows: added, count: added };
-            return {
-                ...state,
-                leads: newLeads,
-                imports: [...state.imports, newRecord],
-                pipeline: newPipeline,
-            };
+            return { ...state, leads: newLeads, imports: [...state.imports, newRecord], pipeline: newPipeline };
         }
         case 'ADD_LEAD': {
             const newPipeline = { ...state.pipeline };
@@ -150,7 +150,7 @@ function reducer(state: AppState, action: Action): AppState {
         case 'UPDATE_LEAD_SCORES':
             return { ...state, leads: action.payload };
         case 'SET_STATE':
-            return action.payload;
+            return { ...action.payload, isLoading: false };
         default:
             return state;
     }
@@ -164,11 +164,28 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-    const [state, dispatch] = useReducer(reducer, null, loadState);
+    const [state, dispatch] = useReducer(reducer, { ...initialState, ...loadMeta() });
 
+    // Load leads from IndexedDB on mount
     useEffect(() => {
-        saveState(state);
+        loadLeadsDB().then((leads) => {
+            dispatch({ type: 'FINISH_LOADING', payload: leads });
+        }).catch(() => {
+            dispatch({ type: 'FINISH_LOADING', payload: [] });
+        });
+    }, []);
+
+    // Save meta to localStorage
+    useEffect(() => {
+        if (!state.isLoading) saveMeta(state);
     }, [state]);
+
+    // Save leads to IndexedDB periodically or on change
+    useEffect(() => {
+        if (!state.isLoading) {
+            saveLeadsDB(state.leads);
+        }
+    }, [state.leads, state.isLoading]);
 
     return <AppContext.Provider value={{ state, dispatch }}>{children}</AppContext.Provider>;
 }

@@ -68,6 +68,7 @@ export default function ImportPage() {
         if (!pending) return;
         const { data, file, cols } = pending;
         const numCol = scoreCol || null;
+        const importId = 'imp_' + Date.now();
         const newLeads: Lead[] = data.map((row, i) => {
             const score = computeScore(row, numCol, data);
             return {
@@ -76,9 +77,20 @@ export default function ImportPage() {
                 _pipeline: 'novo' as const,
                 _importFile: file,
                 _importDate: new Date().toISOString(),
+                _importId: importId,
                 ...row,
             };
         });
+
+        const importRecord = {
+            id: importId,
+            name: file.replace(/\.[^/.]+$/, ""), // file name without extension
+            file,
+            rows: pending.rows,
+            cols: cols.length,
+            date: new Date().toISOString(),
+            count: pending.rows,
+        };
 
         const hasDupes = dupeStats.dupeCount > 0;
         if (hasDupes) {
@@ -86,7 +98,7 @@ export default function ImportPage() {
                 type: 'UPSERT_LEADS',
                 payload: {
                     leads: newLeads,
-                    record: { file, rows: pending.rows, cols: cols.length, date: new Date().toISOString(), count: pending.rows },
+                    record: importRecord,
                     mode: dupeMode,
                 },
             });
@@ -100,7 +112,7 @@ export default function ImportPage() {
                 type: 'IMPORT_LEADS',
                 payload: {
                     leads: newLeads,
-                    record: { file, rows: pending.rows, cols: cols.length, date: new Date().toISOString(), count: pending.rows },
+                    record: importRecord,
                 },
             });
             toast(`✓ ${pending.rows} leads importados com scoring automático`, 'success');

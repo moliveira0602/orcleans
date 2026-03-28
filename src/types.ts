@@ -11,11 +11,14 @@ export interface Lead {
     _pipeline: PipelineStage;
     _importFile: string;
     _importDate: string;
+    _importId?: string;
     _notes?: NoteEntry[];
     [key: string]: unknown;
 }
 
 export interface ImportRecord {
+    id: string;
+    name: string;
     file: string;
     rows: number;
     cols: number;
@@ -53,6 +56,7 @@ export interface AppState {
     pipeline: PipelineMap;
     settings: AppSettings;
     activities: ActivityEntry[];
+    isLoading: boolean;
 }
 
 export interface PipelineColumnDef {

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAppState } from '../store';
 import { detectNameCol, detectCatCol } from '../utils/detect';
 import { scoreClass } from '../utils/scoring';
@@ -8,13 +8,15 @@ import { useToast } from '../components/Toast';
 
 interface LeadsProps {
     searchQuery?: string;
+    onSearch?: (query: string) => void;
     onOpenDetail: (id: string) => void;
 }
 
-export default function Leads({ searchQuery = '', onOpenDetail }: LeadsProps) {
-    const { leads, settings } = useAppState();
+export default function Leads({ searchQuery = '', onSearch, onOpenDetail }: LeadsProps) {
+    const { leads, settings, imports } = useAppState();
     const toast = useToast();
     const [search, setSearch] = useState(searchQuery);
+    const [importFilter, setImportFilter] = useState('');
     const [scoreFilter, setScoreFilter] = useState('');
     const [catFilter, setCatFilter] = useState('');
     const [sortCol, setSortCol] = useState<string | null>(null);
@@ -23,9 +25,10 @@ export default function Leads({ searchQuery = '', onOpenDetail }: LeadsProps) {
     const perPage = 25;
 
     // Sync external search query
-    useState(() => {
-        if (searchQuery) setSearch(searchQuery);
-    });
+    useEffect(() => {
+        setSearch(searchQuery);
+        setPage(0);
+    }, [searchQuery]);
 
     const nameCol = detectNameCol(leads);
     const catCol = detectCatCol(leads);
@@ -42,6 +45,7 @@ export default function Leads({ searchQuery = '', onOpenDetail }: LeadsProps) {
             if (scoreFilter === 'warm' && (l._score < warm || l._score >= hot)) return false;
             if (scoreFilter === 'cold' && l._score >= warm) return false;
             if (catFilter && catCol && String(l[catCol] || '') !== catFilter) return false;
+            if (importFilter && l._importId !== importFilter) return false;
             if (search) {
                 const str = Object.values(l).join(' ').toLowerCase();
                 if (!str.includes(search.toLowerCase())) return false;
@@ -118,17 +122,28 @@ export default function Leads({ searchQuery = '', onOpenDetail }: LeadsProps) {
                             type="text"
                             placeholder="Filtrar leads..."
                             value={search}
-                            onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-                            style={{ width: 200, paddingLeft: 30 }}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setSearch(val);
+                                setPage(0);
+                                if (onSearch) onSearch(val);
+                            }}
+                            style={{ width: 180, paddingLeft: 30 }}
                         />
                     </div>
-                    <select className="input" style={{ width: 140 }} value={scoreFilter} onChange={(e) => { setScoreFilter(e.target.value); setPage(0); }}>
-                        <option value="">Todos</option>
+                    <select className="input" style={{ width: 130 }} value={importFilter} onChange={(e) => { setImportFilter(e.target.value); setPage(0); }}>
+                        <option value="">Todas importações</option>
+                        {imports.map((imp) => (
+                            <option key={imp.id} value={imp.id}>{imp.name} ({imp.count})</option>
+                        ))}
+                    </select>
+                    <select className="input" style={{ width: 130 }} value={scoreFilter} onChange={(e) => { setScoreFilter(e.target.value); setPage(0); }}>
+                        <option value="">Todos scores</option>
                         <option value="hot">Quentes (≥{settings.hotThreshold})</option>
                         <option value="warm">Mornos ({settings.warmThreshold}–{settings.hotThreshold - 1})</option>
                         <option value="cold">Frios (&lt;{settings.warmThreshold})</option>
                     </select>
-                    <select className="input" style={{ width: 140 }} value={catFilter} onChange={(e) => { setCatFilter(e.target.value); setPage(0); }}>
+                    <select className="input" style={{ width: 130 }} value={catFilter} onChange={(e) => { setCatFilter(e.target.value); setPage(0); }}>
                         <option value="">Todas categorias</option>
                         {categories.map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
