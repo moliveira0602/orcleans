@@ -57,3 +57,33 @@ export function getLeadCategory(lead: Lead, catCol: string | null): string {
         ''
     ).slice(0, 40);
 }
+
+export function detectAddressCol(leads: Lead[]): string | null {
+    if (!leads.length) return null;
+    const cols = Object.keys(leads[0]).filter(c => !c.startsWith('_'));
+    const prefer = ['Address', 'Morada', 'Endereço', 'address', 'morada', 'Localidade'];
+    return prefer.find(c => cols.includes(c)) || cols.find(c => c.toLowerCase().includes('morada') || c.toLowerCase().includes('address')) || null;
+}
+
+export function getLeadAddress(lead: Lead, addressCol: string | null): string {
+    if (!addressCol) return '';
+    return String(lead[addressCol] || '').trim();
+}
+
+export function detectLatCol(leads: Lead[]): string | null {
+    if (!leads.length) return null;
+    const cols = Object.keys(leads[0]);
+    return cols.find(c => ['Latitude', 'lat', 'Lat', 'latitude', 'LAT'].includes(c)) || null;
+}
+
+export function detectLngCol(leads: Lead[]): string | null {
+    if (!leads.length) return null;
+    const cols = Object.keys(leads[0]);
+    return cols.find(c => ['Longitude', 'lng', 'Lng', 'longitude', 'LON', 'Long'].includes(c)) || null;
+}
+
+export function getRawCoord(lead: Lead, col: string | null): number | undefined {
+    if (!col) return undefined;
+    const val = Number(lead[col]);
+    return isNaN(val) ? undefined : val;
+}

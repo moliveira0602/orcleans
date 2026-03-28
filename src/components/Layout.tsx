@@ -22,6 +22,7 @@ export default function Layout() {
     const navigate = useCallback((page: Page) => {
         setCurrentPage(page);
         setSearchQuery('');
+        setSelectedLeadId(null);
     }, []);
 
     const handleSearch = useCallback((query: string) => {
@@ -65,7 +66,7 @@ export default function Layout() {
                             {currentPage === 'pipeline' && (
                                 <Pipeline onOpenDetail={openDetail} />
                             )}
-                            {currentPage === 'insights' && <Insights />}
+                            {currentPage === 'insights' && <Insights onOpenDetail={openDetail} />}
                             {currentPage === 'import' && <ImportPage />}
                             {currentPage === 'segments' && <Segments onNavigate={navigate} />}
                             {currentPage === 'settings' && <SettingsPage />}

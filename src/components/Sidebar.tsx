@@ -23,7 +23,7 @@ const NAV_ITEMS: { section: string; items: { id: Page; label: string; icon: Reac
             { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={16} /> },
             { id: 'leads', label: 'Leads', icon: <Users size={16} /> },
             { id: 'pipeline', label: 'Pipeline', icon: <Columns3 size={16} /> },
-            { id: 'insights', label: 'Insights IA', icon: <Sparkles size={16} /> },
+            { id: 'insights', label: 'GeoScout', icon: <Sparkles size={16} /> },
         ],
     },
     {

@@ -28,6 +28,9 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 >
                     ↑ Importar minha primeira lista
                 </button>
+                <div style={{ marginTop: 24, fontSize: 12, color: 'var(--t3)', maxWidth: 400 }}>
+                    A OrcaLens utilizará <strong>Inteligência B2B Especializada</strong> para analisar cada lead, identificar dores e sugerir a melhor abordagem comercial automaticamente.
+                </div>
             </div>
         );
     }
@@ -86,6 +89,11 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                     <div className="kpi-label">Conversão Final</div>
                     <div className="kpi-val blue">{conversionRate}%</div>
                     <div className="kpi-sub">{won} leads ganhos</div>
+                </div>
+                <div className="kpi" style={{ border: '1px solid var(--blue)', cursor: 'pointer', background: 'var(--blue-dim)' }} onClick={() => onNavigate('insights')}>
+                    <div className="kpi-label" style={{ color: 'var(--blue)' }}>GeoScout</div>
+                    <div className="kpi-val" style={{ fontSize: 18, color: 'var(--blue)' }}>Explorar Mapa</div>
+                    <div className="kpi-sub" style={{ color: 'var(--blue)' }}>Radar de Proximidade</div>
                 </div>
             </div>
 

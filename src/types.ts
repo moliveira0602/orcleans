@@ -5,6 +5,33 @@ export interface NoteEntry {
     date: string;
 }
 
+export interface LeadInsight {
+    analysis: {
+        pains: string[];
+        opportunities: string[];
+        maturity: 'baixa' | 'media' | 'alta';
+    };
+    strategy: {
+        classification: string;
+        qualification: 'frio' | 'morno' | 'quente';
+        potential: number; // 0-100
+        priority: 'baixa' | 'media' | 'alta';
+        approachType: string;
+        tone: string;
+        triggers: string[];
+    };
+    templates: {
+        email: string[];
+        linkedin: string;
+        whatsapp: string;
+    };
+    actionPlan: {
+        channels: string[];
+        sequence: string[];
+        bestTiming: string;
+    };
+}
+
 export interface Lead {
     id: string;
     _score: number;
@@ -13,6 +40,9 @@ export interface Lead {
     _importDate: string;
     _importId?: string;
     _notes?: NoteEntry[];
+    _lat?: number;
+    _lng?: number;
+    _insight?: LeadInsight;
     [key: string]: unknown;
 }
 
