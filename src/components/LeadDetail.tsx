@@ -17,7 +17,7 @@ interface LeadDetailProps {
 }
 
 export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailProps) {
-    const { leads, settings, pipeline } = useAppState();
+    const { leads, settings } = useAppState();
     const dispatch = useAppDispatch();
     const toast = useToast();
     const confirm = useConfirm();
@@ -25,6 +25,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     const [editValue, setEditValue] = useState('');
     const [noteText, setNoteText] = useState('');
     const [activeTab, setActiveTab] = useState<'info' | 'intel' | 'notes'>('info');
+    void onNavigate;
 
     const lead = leads.find((l) => l.id === leadId);
     if (!lead) {
@@ -39,6 +40,55 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
 
     const skipCols = ['id', '_score', '_pipeline', '_importFile', '_importDate', '_notes'];
     const fields = Object.entries(lead).filter(([k]) => !skipCols.includes(k) && !k.startsWith('_'));
+    const fieldLabel = (k: string) => {
+        const map: Record<string, string> = {
+            id: 'ID',
+            name: 'Nome',
+            Name: 'Nome',
+            company: 'Empresa',
+            Company: 'Empresa',
+            categoria: 'Categoria',
+            category: 'Categoria',
+            Category: 'Categoria',
+            segmento: 'Segmento',
+            segment: 'Segmento',
+            Segment: 'Segmento',
+            address: 'Morada',
+            Address: 'Morada',
+            morada: 'Morada',
+            'Endereço': 'Endereço',
+            phone: 'Telefone',
+            Phone: 'Telefone',
+            telefone: 'Telefone',
+            email: 'Email',
+            Email: 'Email',
+            website: 'Website',
+            Website: 'Website',
+            url: 'URL',
+            URL: 'URL',
+            city: 'Cidade',
+            City: 'Cidade',
+            country: 'País',
+            Country: 'País',
+            state: 'Distrito/Estado',
+            State: 'Distrito/Estado',
+            postcode: 'Código Postal',
+            postal_code: 'Código Postal',
+            zip: 'Código Postal',
+            CEP: 'Código Postal',
+            'Código Postal': 'Código Postal',
+            latitude: 'Latitude',
+            Latitude: 'Latitude',
+            longitude: 'Longitude',
+            Longitude: 'Longitude',
+            rating: 'Avaliação',
+            Rating: 'Avaliação',
+            'Featured image': 'Imagem destacada',
+            'Rating Info': 'Info da Avaliação',
+            'Bing Maps URL': 'URL do Bing Maps',
+        };
+        return map[k] || k;
+    };
 
     const movePipeline = (stage: PipelineStage) => {
         dispatch({ type: 'MOVE_PIPELINE', payload: { leadId: lead.id, stage } });
@@ -46,7 +96,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
         toast(`Lead movido para "${label}"`, 'success');
         dispatch({
             type: 'ADD_ACTIVITY',
-            payload: { title: `Pipeline: ${name}`, sub: `Movido para ${label}`, icon: '▦', time: new Date().toISOString() },
+            payload: { title: `Funil: ${name}`, sub: `Movido para ${label}`, icon: '▦', time: new Date().toISOString() },
         });
     };
 
@@ -93,7 +143,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
 
     const handleDelete = async () => {
         const ok = await confirm({
-            title: 'Remover Lead',
+            title: 'Remover lead',
             message: `Tem certeza que deseja remover "${name}" permanentemente? Esta ação não pode ser desfeita.`,
             confirmLabel: 'Remover',
             variant: 'danger',
@@ -118,7 +168,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                     <button className="btn-icon" onClick={onClose}>✕</button>
                 </div>
 
-                <div className="detail-tabs" style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'var(--card)' }}>
+                <div className="detail-tabs" style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'transparent' }}>
                     {(['info', 'intel', 'notes'] as const).map((t) => (
                         <button
                             key={t}
@@ -132,7 +182,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                 cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em'
                             }}
                         >
-                            {t === 'info' ? 'Info' : t === 'intel' ? 'Intel ⚝' : 'Notas'}
+                            {t === 'info' ? 'Dados' : t === 'intel' ? 'Inteligência ⚝' : 'Notas'}
                         </button>
                     ))}
                 </div>
@@ -164,7 +214,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
 
                             {/* Pipeline */}
                             <div className="detail-section">
-                                <div className="detail-section-title">Pipeline</div>
+                                <div className="detail-section-title">Funil</div>
                                 <select className="input" value={lead._pipeline || 'novo'} onChange={(e) => movePipeline(e.target.value as PipelineStage)}>
                                     <option value="novo">Novo</option>
                                     <option value="qualificado">Qualificado</option>
@@ -182,7 +232,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                     const isEditing = editingField === k;
                                     return (
                                         <div className="detail-field" key={k} style={{ cursor: isEditing ? 'default' : 'pointer' }}>
-                                            <span className="detail-field-label">{k}</span>
+                                            <span className="detail-field-label">{fieldLabel(k)}</span>
                                             {isEditing ? (
                                                 <span style={{ display: 'flex', gap: 4, alignItems: 'center', flex: 1 }}>
                                                     <input className="input" style={{ flex: 1, padding: '4px 8px', fontSize: 12 }} value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }} autoFocus />
@@ -190,7 +240,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                                 </span>
                                             ) : (
                                                 <span className="detail-field-value" onClick={() => startEdit(k, vs)} style={{ flex: 1, textAlign: 'right' }}>
-                                                    {vs.startsWith('http') ? <a href={vs} target="_blank" rel="noreferrer" style={{ color: 'var(--blue3)' }}>↗ link</a> : vs.slice(0, 50) || '—'}
+                                                    {vs.startsWith('http') ? <a href={vs} target="_blank" rel="noreferrer" style={{ color: 'var(--blue3)' }}>↗ abrir</a> : vs.slice(0, 50) || '—'}
                                                 </span>
                                             )}
                                         </div>
@@ -239,7 +289,7 @@ function IntelligenceView({ lead, settings }: { lead: any, settings: any }) {
             <div className="detail-section" style={{ background: 'var(--blue-dim)', borderRadius: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
                     <div>
-                        <div style={{ fontSize: 10, color: 'var(--blue)', fontWeight: 700 }}>B2B STRATEGY</div>
+                        <div style={{ fontSize: 10, color: 'var(--blue)', fontWeight: 700 }}>ESTRATÉGIA B2B</div>
                         <div style={{ fontSize: 14, fontWeight: 700 }}>Especialista em {getLeadCategory(lead, 'segmento') || 'Mercado'}</div>
                     </div>
                     <div className={`badge badge-${insight.strategy.qualification === 'quente' ? 'green' : 'amber'}`}>{insight.strategy.qualification.toUpperCase()}</div>
@@ -266,4 +316,3 @@ function IntelligenceView({ lead, settings }: { lead: any, settings: any }) {
         </div>
     );
 }
-

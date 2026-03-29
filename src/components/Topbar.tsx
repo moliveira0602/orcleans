@@ -5,10 +5,10 @@ import { useToast } from './Toast';
 type Page = 'dashboard' | 'leads' | 'pipeline' | 'insights' | 'import' | 'segments' | 'settings';
 
 const PAGE_TITLES: Record<Page, string> = {
-    dashboard: 'Dashboard',
+    dashboard: 'Painel',
     leads: 'Leads',
-    pipeline: 'Pipeline',
-    insights: 'Insights IA',
+    pipeline: 'Funil',
+    insights: 'GeoScout',
     import: 'Importar',
     segments: 'Segmentos',
     settings: 'Configurações',

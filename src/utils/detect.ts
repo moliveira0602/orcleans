@@ -61,13 +61,32 @@ export function getLeadCategory(lead: Lead, catCol: string | null): string {
 export function detectAddressCol(leads: Lead[]): string | null {
     if (!leads.length) return null;
     const cols = Object.keys(leads[0]).filter(c => !c.startsWith('_'));
-    const prefer = ['Address', 'Morada', 'Endereço', 'address', 'morada', 'Localidade'];
+    const prefer = ['Address', 'Morada', 'Endereço', 'address', 'morada', 'Localidade', 'Localidade/Morada'];
     return prefer.find(c => cols.includes(c)) || cols.find(c => c.toLowerCase().includes('morada') || c.toLowerCase().includes('address')) || null;
 }
 
 export function getLeadAddress(lead: Lead, addressCol: string | null): string {
     if (!addressCol) return '';
     return String(lead[addressCol] || '').trim();
+}
+
+export function detectPostalCol(leads: Lead[]): string | null {
+    if (!leads.length) return null;
+    const cols = Object.keys(leads[0]).filter(c => !c.startsWith('_'));
+    const prefer = ['Código Postal', 'Codigo Postal', 'cod_postal', 'codigo_postal', 'postal_code', 'postcode', 'zip', 'ZIP', 'CEP', 'cep', 'CP'];
+    return (
+        prefer.find(c => cols.includes(c)) ||
+        cols.find(c => {
+            const lc = c.toLowerCase();
+            return lc.includes('código postal') || lc.includes('codigo postal') || lc.includes('cod_postal') || lc.includes('codigo_postal') || lc.includes('postal') || lc.includes('postcode') || lc === 'cp' || lc === 'cep';
+        }) ||
+        null
+    );
+}
+
+export function getLeadPostal(lead: Lead, postalCol: string | null): string {
+    if (!postalCol) return '';
+    return String(lead[postalCol] || '').trim();
 }
 
 export function detectLatCol(leads: Lead[]): string | null {
@@ -84,6 +103,12 @@ export function detectLngCol(leads: Lead[]): string | null {
 
 export function getRawCoord(lead: Lead, col: string | null): number | undefined {
     if (!col) return undefined;
-    const val = Number(lead[col]);
-    return isNaN(val) ? undefined : val;
+    const raw = lead[col];
+    if (raw === null || raw === undefined) return undefined;
+    const str = String(raw).trim();
+    if (!str) return undefined;
+    const m = str.match(/-?\d+(?:[.,]\d+)?/);
+    if (!m) return undefined;
+    const val = Number(m[0].replace(',', '.'));
+    return Number.isFinite(val) ? val : undefined;
 }

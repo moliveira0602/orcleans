@@ -17,7 +17,7 @@ export function generateLeadInsight(lead: Lead, settings: AppSettings): LeadInsi
 
     if (!lead.telefone && !lead.email) {
         pains.push('Dificuldade de prospecção direta por ausência de dados de contato.');
-        opportunities.push('Enriquecimento de dados via LinkedIn ou ferramentas de Sales Intelligence.');
+        opportunities.push('Enriquecimento de dados via LinkedIn ou ferramentas de inteligência comercial.');
         maturity = 'baixa';
     } else if (score < 5) {
         pains.push('Baixo engajamento digital ou presença online fragmentada.');
@@ -55,10 +55,10 @@ export function generateLeadInsight(lead: Lead, settings: AppSettings): LeadInsi
     // 3. Templates (Dynamic generation)
     const emailTemplates = [
         `Assunto: Oportunidade de escala para a ${name}\n\nOlá,\n\nNotei que a ${name} está em um momento de expansão no setor de ${segment}. Identificamos que a implementação de processos de inteligência comercial pode acelerar seus resultados em até 30%.\n\nPodemos agendar 15 minutos para eu te mostrar como outras empresas de ${segment} estão resolvendo a dor de ${pains[0]}?`,
-        `Assunto: Insights Estratégicos - ${name}\n\nOlá,\n\nEstive analisando a presença digital da ${name} e vejo uma grande oportunidade em ${opportunities[0]}.\n\nTrabalhamos com soluções que podem ajudar exatamente nesse ponto. Teriam disponibilidade para um breve café virtual na próxima terça?`
+        `Assunto: Análises estratégicas - ${name}\n\nOlá,\n\nEstive analisando a presença digital da ${name} e vejo uma grande oportunidade em ${opportunities[0]}.\n\nTrabalhamos com soluções que podem ajudar exatamente nesse ponto. Teriam disponibilidade para um breve café virtual na próxima terça?`
     ];
 
-    const linkedin = `Olá, notei sua atuação na ${name}. Acompanho o setor de ${segment} e gostaria de trocar alguns insights sobre como estamos ajudando empresas similares a superarem o desafio de ${pains[0]}. Vamos nos conectar?`;
+    const linkedin = `Olá, notei sua atuação na ${name}. Acompanho o setor de ${segment} e gostaria de trocar algumas ideias sobre como estamos ajudando empresas similares a superarem o desafio de ${pains[0]}. Vamos nos conectar?`;
 
     const whatsapp = `Olá! Sou da ${settings.company || 'OrcaLens'} e gostaria de falar rapidinho sobre uma oportunidade de melhoria que identifiquei para a ${name}. Você seria a pessoa certa para conversarmos sobre ${segment}?`;
 
@@ -70,7 +70,7 @@ export function generateLeadInsight(lead: Lead, settings: AppSettings): LeadInsi
         'Dia 1: Solicitação de conexão personalizada no LinkedIn',
         'Dia 2: Envio do primeiro e-mail de abordagem consultiva',
         'Dia 4: Interação com postagem recente (se houver)',
-        'Dia 6: Segundo e-mail (follow-up de valor)',
+        'Dia 6: Segundo e-mail (seguimento de valor)',
         'Dia 10: Mensagem curta via WhatsApp/Telefone'
     ];
 

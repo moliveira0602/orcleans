@@ -42,6 +42,7 @@ export interface Lead {
     _notes?: NoteEntry[];
     _lat?: number;
     _lng?: number;
+    _geocodeStatus?: 'pending' | 'ok' | 'failed';
     _insight?: LeadInsight;
     [key: string]: unknown;
 }

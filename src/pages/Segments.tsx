@@ -31,8 +31,8 @@ export default function Segments({ onNavigate }: SegmentsProps) {
         { name: 'Leads Mornos', desc: `Score ${settings.warmThreshold}–${settings.hotThreshold - 1}`, count: leads.filter((l) => l._score >= settings.warmThreshold && l._score < settings.hotThreshold).length, color: 'var(--amber)', icon: '🌡', auto: true },
         { name: 'Leads Frios', desc: 'Score < ' + settings.warmThreshold, count: leads.filter((l) => l._score < settings.warmThreshold).length, color: 'var(--t3)', icon: '❄', auto: true },
         { name: 'Com Contato', desc: 'Têm tel. ou email', count: leads.filter((l) => Object.values(l).some((v) => String(v).match(/\d{8,}|@/))).length, color: 'var(--blue3)', icon: '📞', auto: true },
-        { name: 'No Pipeline', desc: 'Em fase ativa', count: leads.filter((l) => ['qualificado', 'proposta', 'negociacao'].includes(l._pipeline)).length, color: 'var(--purple)', icon: '▦', auto: true },
-        { name: 'Ganhos', desc: 'Pipeline: Ganho', count: leads.filter((l) => l._pipeline === 'ganho').length, color: 'var(--green)', icon: '✅', auto: true },
+        { name: 'No Funil', desc: 'Em fase ativa', count: leads.filter((l) => ['qualificado', 'proposta', 'negociacao'].includes(l._pipeline)).length, color: 'var(--purple)', icon: '▦', auto: true },
+        { name: 'Ganhos', desc: 'Funil: Ganho', count: leads.filter((l) => l._pipeline === 'ganho').length, color: 'var(--green)', icon: '✅', auto: true },
     ];
 
     if (catCol) {
@@ -42,12 +42,6 @@ export default function Segments({ onNavigate }: SegmentsProps) {
             segments.push({ name, desc: 'Categoria', count, color: 'var(--blue)', icon: '◉', auto: false });
         });
     }
-
-    const handleClick = (name: string) => {
-        onNavigate('leads');
-    };
-
-    void handleClick;
 
     return (
         <>

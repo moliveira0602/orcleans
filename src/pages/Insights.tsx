@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useAppState, useAppDispatch } from '../store';
-import { getLeadName, getLeadCategory, detectAddressCol, getLeadAddress, detectLatCol, detectLngCol, getRawCoord } from '../utils/detect';
+import { getLeadName, getLeadCategory, detectAddressCol, getLeadAddress, detectPostalCol, getLeadPostal, detectLatCol, detectLngCol, getRawCoord } from '../utils/detect';
 import { scoreClass } from '../utils/scoring';
 import { geocodeAddress } from '../utils/geocoding';
 import { MapContainer, TileLayer, Circle, CircleMarker, Popup, useMap } from 'react-leaflet';
@@ -9,9 +9,11 @@ import 'leaflet/dist/leaflet.css';
 /**
  * Component to auto-resize and center map when leads change
  */
-function MapResizer({ center, radius }: { center: [number, number], radius: number }) {
+function MapResizer({ center }: { center: [number, number] }) {
     const map = useMap();
-    map.setView(center, map.getZoom());
+    useEffect(() => {
+        map.setView(center, map.getZoom());
+    }, [map, center]);
     return null;
 }
 
@@ -24,8 +26,13 @@ export default function Insights({ onOpenDetail }: InsightsProps) {
     const dispatch = useAppDispatch();
     const [radius, setRadius] = useState<number>(5); // km
     const [filterCategory, setFilterCategory] = useState<string>('todos');
+    const [locationText, setLocationText] = useState('');
+    const [locationPin, setLocationPin] = useState<[number, number] | null>(null);
+    const [locationError, setLocationError] = useState<string | null>(null);
+    const [isLocating, setIsLocating] = useState(false);
 
     const addressCol = useMemo(() => detectAddressCol(leads), [leads]);
+    const postalCol = useMemo(() => detectPostalCol(leads), [leads]);
     const latCol = useMemo(() => detectLatCol(leads), [leads]);
     const lngCol = useMemo(() => detectLngCol(leads), [leads]);
 
@@ -36,29 +43,38 @@ export default function Insights({ onOpenDetail }: InsightsProps) {
         if (isGeocodingRef.current) return;
 
         const needsGeocoding = leads.find(l => {
-            const hasRawLat = getRawCoord(l, latCol) !== undefined;
-            const hasAddress = getLeadAddress(l, addressCol) !== '';
-            return !l._lat && !l._lng && !hasRawLat && hasAddress;
+            const rawLat = getRawCoord(l, latCol);
+            const rawLng = getRawCoord(l, lngCol);
+            const hasRawCoords = rawLat !== undefined && rawLng !== undefined;
+            const address = getLeadAddress(l, addressCol);
+            const postal = getLeadPostal(l, postalCol);
+            const hasQuery = address !== '' || postal !== '';
+            const missingCoords = typeof l._lat !== 'number' || typeof l._lng !== 'number';
+            return missingCoords && !hasRawCoords && hasQuery && l._geocodeStatus !== 'pending' && l._geocodeStatus !== 'failed';
         });
 
         if (needsGeocoding) {
             const address = getLeadAddress(needsGeocoding, addressCol);
+            const postal = getLeadPostal(needsGeocoding, postalCol);
+            const query = [address, postal].filter(Boolean).join(', ');
             isGeocodingRef.current = true;
+            dispatch({
+                type: 'UPDATE_LEAD',
+                payload: { id: needsGeocoding.id, fields: { _geocodeStatus: 'pending' } }
+            });
 
             // Wait 1.1s between requests to respect Nominatim policy
             const timer = setTimeout(async () => {
-                const coords = await geocodeAddress(address);
+                const coords = await geocodeAddress(query);
                 if (coords) {
                     dispatch({
                         type: 'UPDATE_LEAD',
-                        payload: { id: needsGeocoding.id, fields: { _lat: coords.lat, _lng: coords.lng } }
+                        payload: { id: needsGeocoding.id, fields: { _lat: coords.lat, _lng: coords.lng, _geocodeStatus: 'ok' } }
                     });
                 } else {
-                    // Mark as geocoded with dummy value or skip to prevent infinite loop
-                    // For now, we'll use a small offset so it's not "missing" but maybe simulated later
                     dispatch({
                         type: 'UPDATE_LEAD',
-                        payload: { id: needsGeocoding.id, fields: { _geocoded: false } }
+                        payload: { id: needsGeocoding.id, fields: { _geocodeStatus: 'failed' } }
                     });
                 }
                 isGeocodingRef.current = false;
@@ -66,83 +82,36 @@ export default function Insights({ onOpenDetail }: InsightsProps) {
 
             return () => clearTimeout(timer);
         }
-    }, [leads, addressCol, latCol, dispatch]);
+    }, [leads, addressCol, postalCol, latCol, lngCol, dispatch]);
 
-    // Center logic: use average of leads or default to a safe location
-    const leadsWithCoords = useMemo(() => {
-        // First pass: Find all leads that ALREADY have real coords
-        const realCoords = leads.map(l => {
-            if (typeof l._lat === 'number' && typeof l._lng === 'number') return { lat: l._lat, lng: l._lng };
-            const rl = getRawCoord(l, latCol);
-            const rg = getRawCoord(l, lngCol);
-            if (rl !== undefined && rg !== undefined) return { lat: rl, lng: rg };
-            return null;
-        }).filter(Boolean) as { lat: number, lng: number }[];
-
-        if (realCoords.length > 0) {
-            console.log(`[GeoScout] Found ${realCoords.length} leads with real coords. Using them as base.`);
-        }
-
-        // Default base (Sao Paulo) if absolutely nothing else found
-        let baseLat = -23.5505;
-        let baseLng = -46.6333;
-
-        if (realCoords.length > 0) {
-            baseLat = realCoords.reduce((acc, c) => acc + c.lat, 0) / realCoords.length;
-            baseLng = realCoords.reduce((acc, c) => acc + c.lng, 0) / realCoords.length;
-        }
-
+    const mappableLeads = useMemo(() => {
         return leads.map((l) => {
-            // Priority 1: Real _lat/_lng from state
-            if (typeof l._lat === 'number' && typeof l._lng === 'number') return l;
-
-            // Priority 2: Raw data columns
+            if (typeof l._lat === 'number' && typeof l._lng === 'number' && Number.isFinite(l._lat) && Number.isFinite(l._lng)) return l;
             const rawLat = getRawCoord(l, latCol);
             const rawLng = getRawCoord(l, lngCol);
-            if (rawLat !== undefined && rawLng !== undefined) {
+            if (
+                rawLat !== undefined &&
+                rawLng !== undefined &&
+                Number.isFinite(rawLat) &&
+                Number.isFinite(rawLng) &&
+                Math.abs(rawLat) <= 90 &&
+                Math.abs(rawLng) <= 180
+            ) {
                 return { ...l, _lat: rawLat, _lng: rawLng };
             }
-
-            // Priority 3: Simulation around the detected base (FALLBACK)
-            let hash = 0;
-            const str = l.id;
-            for (let i = 0; i < str.length; i++) {
-                hash = ((hash << 5) - hash) + str.charCodeAt(i);
-                hash |= 0;
-            }
-
-            const angle = (Math.abs(hash) % 360) * (Math.PI / 180);
-            const dist = (Math.abs(hash * 31) % 10000) / 1000; // 0-10km
-
-            return {
-                ...l,
-                _lat: baseLat + (Math.cos(angle) * dist) / 111,
-                _lng: baseLng + (Math.sin(angle) * dist) / 111,
-                _distance: dist,
-                _simulated: true
-            };
-        });
+            return null;
+        }).filter(Boolean) as any[];
     }, [leads, latCol, lngCol]);
 
     const activeCenter = useMemo(() => {
-        // Find only leads that have REAL coordinates
-        const realCoords = leadsWithCoords.filter(l => {
-            const isSimulated = (l as any)._simulated === true;
-            return !isSimulated;
-        });
-
-        if (realCoords.length > 0) {
-            const avgLat = realCoords.reduce((acc, l) => acc + (l as any)._lat, 0) / realCoords.length;
-            const avgLng = realCoords.reduce((acc, l) => acc + (l as any)._lng, 0) / realCoords.length;
-            console.log(`[GeoScout] Center moved to real area: ${avgLat}, ${avgLng}`);
+        if (locationPin) return locationPin;
+        if (mappableLeads.length > 0) {
+            const avgLat = mappableLeads.reduce((acc, l) => acc + (l as any)._lat, 0) / mappableLeads.length;
+            const avgLng = mappableLeads.reduce((acc, l) => acc + (l as any)._lng, 0) / mappableLeads.length;
             return [avgLat, avgLng] as [number, number];
         }
-
-        return [-23.5505, -46.6333] as [number, number];
-    }, [leadsWithCoords]);
-
-    // Debug View
-    const realCount = leadsWithCoords.filter(l => !(l as any)._simulated).length;
+        return [38.7223, -9.1393] as [number, number];
+    }, [mappableLeads, locationPin]);
 
     const categories = useMemo(() => {
         const set = new Set<string>();
@@ -154,7 +123,7 @@ export default function Insights({ onOpenDetail }: InsightsProps) {
     }, [leads]);
 
     const filteredLeads = useMemo(() => {
-        return leadsWithCoords.filter(l => {
+        return mappableLeads.filter(l => {
             // Recalculate distance to current center for filtering
             const dLat = (l as any)._lat - activeCenter[0];
             const dLng = (l as any)._lng - activeCenter[1];
@@ -165,7 +134,24 @@ export default function Insights({ onOpenDetail }: InsightsProps) {
             const matchesCat = filterCategory === 'todos' || getLeadCategory(l, 'segmento') === filterCategory;
             return inRadius && matchesCat;
         });
-    }, [leadsWithCoords, radius, filterCategory, activeCenter]);
+    }, [mappableLeads, radius, filterCategory, activeCenter]);
+
+    const leadsWithQueryButNoCoords = useMemo(() => {
+        return leads.filter(l => {
+            const rawLat = getRawCoord(l, latCol);
+            const rawLng = getRawCoord(l, lngCol);
+            const hasRawCoords = rawLat !== undefined && rawLng !== undefined;
+            const hasCoords = typeof l._lat === 'number' && typeof l._lng === 'number';
+            if (hasCoords || hasRawCoords) return false;
+            const address = getLeadAddress(l, addressCol);
+            const postal = getLeadPostal(l, postalCol);
+            return address !== '' || postal !== '';
+        }).length;
+    }, [leads, addressCol, postalCol, latCol, lngCol]);
+
+    const geocodingPendingCount = useMemo(() => {
+        return leads.filter(l => l._geocodeStatus === 'pending').length;
+    }, [leads]);
 
     const getMarkerColor = (score: number) => {
         if (score >= settings.hotThreshold) return 'var(--green)';
@@ -173,14 +159,65 @@ export default function Insights({ onOpenDetail }: InsightsProps) {
         return 'var(--t3)';
     };
 
+    const locate = async () => {
+        const raw = locationText.trim();
+        if (!raw) {
+            setLocationPin(null);
+            setLocationError(null);
+            return;
+        }
+
+        setLocationError(null);
+        setIsLocating(true);
+        try {
+            const m = raw.match(/(-?\d+(?:[.,]\d+)?)\s*,\s*(-?\d+(?:[.,]\d+)?)/);
+            if (m) {
+                const lat = Number(m[1].replace(',', '.'));
+                const lng = Number(m[2].replace(',', '.'));
+                if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+                    setLocationPin([lat, lng]);
+                    return;
+                }
+            }
+
+            const coords = await geocodeAddress(raw);
+            if (!coords) {
+                setLocationError('Não foi possível encontrar este local.');
+                return;
+            }
+            setLocationPin([coords.lat, coords.lng]);
+        } finally {
+            setIsLocating(false);
+        }
+    };
+
     return (
         <div className="page" style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: 24, height: '100%' }}>
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
-                    <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>GeoScout Intelligence</h1>
+                    <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>GeoScout Inteligência</h1>
                     <p style={{ color: 'var(--t3)', marginTop: 4 }}>Mapeamento real e análise de proximidade de leads B2B.</p>
                 </div>
-                <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase' }}>Local</label>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                            <input
+                                className="input"
+                                style={{ width: 260 }}
+                                value={locationText}
+                                onChange={(e) => setLocationText(e.target.value)}
+                                placeholder="Morada, código postal ou lat,lng"
+                                onKeyDown={(e) => { if (e.key === 'Enter') void locate(); }}
+                            />
+                            <button className="btn btn-primary" onClick={() => void locate()} disabled={isLocating}>
+                                {isLocating ? '...' : 'Localizar'}
+                            </button>
+                        </div>
+                        {locationError && (
+                            <div style={{ fontSize: 11, color: 'var(--red)' }}>{locationError}</div>
+                        )}
+                    </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase' }}>Raio de Atuação</label>
                         <select className="input" style={{ width: 120 }} value={radius} onChange={e => setRadius(Number(e.target.value))}>
@@ -203,11 +240,6 @@ export default function Insights({ onOpenDetail }: InsightsProps) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, flex: 1, minHeight: 0 }}>
                 {/* Real Map Component */}
                 <div className="card" style={{ position: 'relative', overflow: 'hidden', background: '#0a0b10', border: '1px solid var(--border)', padding: 0 }}>
-                    {/* Debug Overlay */}
-                    <div style={{ position: 'absolute', bottom: 16, left: 16, zIndex: 1000, background: 'rgba(255, 0, 0, 0.8)', color: 'white', padding: '4px 8px', fontSize: 10, borderRadius: 4, pointerEvents: 'none' }}>
-                        DEBUG: {realCount} real coords | Center: {activeCenter[0].toFixed(2)}, {activeCenter[1].toFixed(2)}
-                    </div>
-
                     <MapContainer
                         center={activeCenter}
                         zoom={13}
@@ -223,6 +255,22 @@ export default function Insights({ onOpenDetail }: InsightsProps) {
                             radius={radius * 1000}
                             pathOptions={{ color: 'var(--blue)', fillColor: 'var(--blue)', fillOpacity: 0.05, weight: 1, dashArray: '5, 10' }}
                         />
+                        {locationPin && (
+                            <CircleMarker
+                                center={locationPin}
+                                radius={8}
+                                pathOptions={{ color: 'var(--blue)', fillColor: 'var(--blue)', fillOpacity: 0.9, weight: 2 }}
+                            >
+                                <Popup>
+                                    <div style={{ color: '#000', padding: '4px' }}>
+                                        <div style={{ fontWeight: 700, fontSize: 13 }}>Local pesquisado</div>
+                                        <div style={{ fontSize: 11, color: '#666' }}>
+                                            {locationPin[0].toFixed(6)}, {locationPin[1].toFixed(6)}
+                                        </div>
+                                    </div>
+                                </Popup>
+                            </CircleMarker>
+                        )}
                         {filteredLeads.map((l: any) => (
                             <CircleMarker
                                 key={l.id}
@@ -257,7 +305,7 @@ export default function Insights({ onOpenDetail }: InsightsProps) {
                                 </Popup>
                             </CircleMarker>
                         ))}
-                        <MapResizer center={activeCenter} radius={radius} />
+                        <MapResizer center={activeCenter} />
                     </MapContainer>
 
                     {/* Simple Legend Overlay */}
@@ -292,6 +340,10 @@ export default function Insights({ onOpenDetail }: InsightsProps) {
                                 </div>
                                 <div style={{ fontSize: 10, color: 'var(--t3)' }}>Alta Conversão</div>
                             </div>
+                        </div>
+                        <div style={{ marginTop: 12, fontSize: 11, color: 'var(--t3)' }}>
+                            {geocodingPendingCount > 0 ? `A geocodificar ${geocodingPendingCount} leads… ` : ''}
+                            {leadsWithQueryButNoCoords > 0 ? `${leadsWithQueryButNoCoords} leads sem coordenadas ainda.` : ''}
                         </div>
                     </div>
 

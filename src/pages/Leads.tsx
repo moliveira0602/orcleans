@@ -1,7 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAppState } from '../store';
-import { detectNameCol, detectCatCol } from '../utils/detect';
-import { scoreClass } from '../utils/scoring';
+import { detectCatCol } from '../utils/detect';
 import ScoreRing from '../components/ScoreRing';
 import { exportLeadsCsv } from '../utils/export';
 import { useToast } from '../components/Toast';
@@ -30,7 +29,6 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail }: Lead
         setPage(0);
     }, [searchQuery]);
 
-    const nameCol = detectNameCol(leads);
     const catCol = detectCatCol(leads);
 
     const categories = useMemo(() => {
@@ -159,7 +157,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail }: Lead
                             {displayCols.map((c) => (
                                 <th key={c} onClick={() => handleSort(c)} className={sortCol === c ? 'sorted' : ''}>{c} ↕</th>
                             ))}
-                            <th>Pipeline</th>
+                            <th>Funil</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -172,7 +170,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail }: Lead
                                     if (v.startsWith('http')) {
                                         return (
                                             <td key={c}>
-                                                <a href={v} target="_blank" rel="noreferrer" style={{ color: 'var(--blue3)', textDecoration: 'none', fontSize: 11 }}>↗ link</a>
+                                                <a href={v} target="_blank" rel="noreferrer" style={{ color: 'var(--blue3)', textDecoration: 'none', fontSize: 11 }}>↗ abrir</a>
                                             </td>
                                         );
                                     }
