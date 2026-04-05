@@ -3,14 +3,21 @@ import * as XLSX from 'xlsx';
 import { useAppState, useAppDispatch, leadFingerprint } from '../store';
 import { useToast } from '../components/Toast';
 import { computeScore } from '../utils/scoring';
+import { detectSourceType, mapRowToLead } from '../utils/leadMapper';
 import type { Lead } from '../types';
+import type { Page } from '../components/Layout';
 
-export default function ImportPage() {
+interface ImportPageProps {
+    onNavigate?: (page: Page) => void;
+}
+
+export default function ImportPage({ onNavigate }: ImportPageProps) {
     const { imports, leads: existingLeads } = useAppState();
     const dispatch = useAppDispatch();
     const toast = useToast();
     const fileInput = useRef<HTMLInputElement>(null);
     const [dragOver, setDragOver] = useState(false);
+    const [deleteImportId, setDeleteImportId] = useState<string | null>(null);
     const [pending, setPending] = useState<{
         file: string;
         data: Record<string, unknown>[];
@@ -69,22 +76,69 @@ export default function ImportPage() {
         const { data, file, cols } = pending;
         const numCol = scoreCol || null;
         const importId = 'imp_' + Date.now();
+        
+        // Detect source type
+        const sourceType = detectSourceType(cols);
+        
         const newLeads: Lead[] = data.map((row, i) => {
-            const score = computeScore(row, numCol, data);
+            // Map row to canonical Lead fields
+            const mapped = mapRowToLead(row as Record<string, any>, sourceType, cols) as Lead;
+            
+            // Extract fields with proper typing
+            const nome: string = mapped.nome || '';
+            const segmento: string = mapped.segmento || '';
+            const avaliacao: number | null = mapped.avaliacao ?? null;
+            const reviews: number | null = mapped.reviews ?? null;
+            const preco: string = mapped.preco || '';
+            const endereco: string = mapped.endereco || '';
+            const status: string = mapped.status || '';
+            const horario: string = mapped.horario || '';
+            const telefone: string = mapped.telefone || '';
+            const website: string = mapped.website || '';
+            const email: string = mapped.email || '';
+            const servicos: string[] = Array.isArray(mapped.servicos) ? mapped.servicos : [];
+            const foto: string = mapped.foto || '';
+            const linkOrigem: string = mapped.linkOrigem || '';
+            const linkPedido: string = mapped.linkPedido || '';
+            const observacoes: string = mapped.observacoes || '';
+            const _raw: Record<string, any> = mapped._raw || {};
+            
+            // Calculate score using canonical fields
+            const leadData = {
+                nome, segmento, avaliacao: avaliacao ?? 0, reviews: reviews ?? 0,
+                preco, endereco, status, horario, telefone, website, email, servicos,
+                foto, linkOrigem, linkPedido, observacoes, _raw,
+            };
+            let score = computeScore(leadData, numCol, data as Record<string, unknown>[]);
+            
+            // Apply score boosts based on canonical fields
+            const hasRating = avaliacao !== null && avaliacao > 0;
+            const hasReviews = reviews !== null && reviews > 0;
+            
+            if (hasRating && avaliacao >= 4.5 && hasReviews && reviews >= 100) score += 2;
+            if (hasRating && avaliacao >= 4.0) score += 1;
+            if (preco.includes('15') || preco.includes('20')) score += 1;
+            if (servicos.some(s => s.toLowerCase().includes('delivery'))) score += 0.5;
+            if (status === 'Aberto' || status === 'Ativo') score += 0.5;
+            if (website) score += 0.5;
+            if (email) score += 0.5;
+
             return {
                 id: 'lead_' + Date.now() + '_' + i,
                 _score: score,
                 _pipeline: 'novo' as const,
+                _importedAt: Date.now(),
                 _importFile: file,
                 _importDate: new Date().toISOString(),
                 _importId: importId,
-                ...row,
+                nome, segmento, avaliacao, reviews, preco, endereco, status, horario,
+                telefone, website, email, servicos, foto, linkOrigem, linkPedido, observacoes, _raw,
             };
         });
 
         const importRecord = {
             id: importId,
-            name: file.replace(/\.[^/.]+$/, ""), // file name without extension
+            name: file.replace(/\.[^/.]+$/, ""),
             file,
             rows: pending.rows,
             cols: cols.length,
@@ -104,7 +158,7 @@ export default function ImportPage() {
             });
             const modeLabel = dupeMode === 'skip' ? 'ignorados' : 'atualizados';
             toast(
-                `✓ ${dupeStats.newCount} novos importados · ${dupeStats.dupeCount} duplicados ${modeLabel}`,
+                `✓ ${dupeStats.newCount} novos importados · ${dupeStats.dupeCount} duplicados ${modeLabel} · Fonte: ${sourceType === 'google_maps' ? 'Google Maps' : sourceType === 'linkedin' ? 'LinkedIn' : 'Genérica'}`,
                 'success'
             );
         } else {
@@ -115,7 +169,7 @@ export default function ImportPage() {
                     record: importRecord,
                 },
             });
-            toast(`✓ ${pending.rows} leads importados com scoring automático`, 'success');
+            toast(`✓ ${pending.rows} leads importados · Fonte: ${sourceType === 'google_maps' ? 'Google Maps' : sourceType === 'linkedin' ? 'LinkedIn' : 'Genérica'}`, 'success');
         }
 
         dispatch({
@@ -126,6 +180,11 @@ export default function ImportPage() {
         setScoreCol('');
         setDupeMode('skip');
         if (fileInput.current) fileInput.current.value = '';
+        
+        // Navigate to Leads tab after import
+        if (onNavigate) {
+            onNavigate('leads');
+        }
     };
 
     const cancelImport = () => {
@@ -139,13 +198,6 @@ export default function ImportPage() {
 
     return (
         <>
-            <div className="sec-header mb-20">
-                <div>
-                    <div className="sec-title">Importar Leads</div>
-                    <div className="sec-sub">Qualquer formato tabular é aceito</div>
-                </div>
-            </div>
-
             {!pending && (
                 <div
                     className={`upload-zone${dragOver ? ' over' : ''}`}
@@ -169,7 +221,7 @@ export default function ImportPage() {
                     <span className="upload-icon">📂</span>
                     <div className="upload-title">Solte seu arquivo aqui</div>
                     <div className="upload-sub">
-                        Arraste e solte ou clique para selecionar. A OrcaLens detecta automaticamente as colunas e gera o scoring.
+                        Arraste e solte ou clique para selecionar. A ORCA detecta automaticamente as colunas e gera o scoring.
                     </div>
                     <div className="upload-types">
                         <span className="upload-type-tag">xlsx</span>
@@ -248,7 +300,7 @@ export default function ImportPage() {
                 {imports.length ? (
                     <div className="table-wrap">
                         <table>
-                            <thead><tr><th>Arquivo</th><th>Registros</th><th>Colunas</th><th>Data</th></tr></thead>
+                            <thead><tr><th>Arquivo</th><th>Registros</th><th>Colunas</th><th>Data</th><th></th></tr></thead>
                             <tbody>
                                 {[...imports].reverse().map((imp, i) => (
                                     <tr key={i}>
@@ -256,6 +308,16 @@ export default function ImportPage() {
                                         <td><span className="badge badge-blue">{imp.rows}</span></td>
                                         <td className="muted">{imp.cols}</td>
                                         <td className="muted">{new Date(imp.date).toLocaleString('pt-BR')}</td>
+                                        <td>
+                                            <button 
+                                                className="btn btn-ghost btn-sm" 
+                                                style={{ color: 'var(--red)' }}
+                                                onClick={() => setDeleteImportId(imp.id)}
+                                                title="Excluir importação e leads associados"
+                                            >
+                                                🗑
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -268,6 +330,34 @@ export default function ImportPage() {
                     </div>
                 )}
             </div>
+
+            {deleteImportId && (
+                <div className="modal-overlay open" onClick={() => setDeleteImportId(null)}>
+                    <div className="modal" style={{ maxWidth: 400 }} onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div className="modal-title">Excluir Importação</div>
+                            <button className="modal-close" onClick={() => setDeleteImportId(null)}>✕</button>
+                        </div>
+                        <p style={{ color: 'var(--t2)', marginBottom: 24, lineHeight: 1.6 }}>
+                            Tem certeza que deseja excluir esta importação? <strong>Todos os leads associados também serão excluídos.</strong>
+                        </p>
+                        <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                            <button className="btn btn-ghost" onClick={() => setDeleteImportId(null)}>Cancelar</button>
+                            <button 
+                                className="btn" 
+                                style={{ background: 'var(--red)', color: '#fff' }}
+                                onClick={() => {
+                                    dispatch({ type: 'DELETE_IMPORT', payload: deleteImportId });
+                                    toast('Importação e leads associados excluídos.', 'success');
+                                    setDeleteImportId(null);
+                                }}
+                            >
+                                Excluir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

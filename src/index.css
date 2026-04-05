@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Zen+Dots&family=Montserrat:wght@400;500;600&family=Open+Sans:wght@400;500;600&display=swap');
 
 *,
 *::before,
@@ -9,38 +9,41 @@
 }
 
 :root {
-  --bg: #080E1A;
-  --bg2: #0D1525;
-  --bg3: #111D31;
-  --bg4: #162035;
-  --bg5: #1C2A42;
-  --blue: #2563EB;
-  --blue2: #3B82F6;
-  --blue3: #60A5FA;
-  --blue-dim: rgba(37, 99, 235, .12);
-  --cyan: #06B6D4;
-  --green: #10B981;
-  --green-dim: rgba(16, 185, 129, .12);
-  --amber: #F59E0B;
-  --amber-dim: rgba(245, 158, 11, .1);
-  --red: #EF4444;
-  --red-dim: rgba(239, 68, 68, .1);
-  --purple: #8B5CF6;
-  --t1: #F1F5F9;
-  --t2: #94A3B8;
-  --t3: #64748B;
-  --t4: #334155;
-  --border: rgba(255, 255, 255, .06);
-  --border2: rgba(255, 255, 255, .1);
-  --card: rgba(255, 255, 255, .03);
-  --card2: rgba(255, 255, 255, .06);
+  --bg: #000000;
+  --bg2: #111111;
+  --bg3: #222222;
+  --bg4: #333333;
+  --bg5: #444444;
+  --blue: #656565;
+  --blue2: #767676;
+  --blue3: #868686;
+  --blue-dim: rgba(101, 101, 101, .12);
+  --cyan: #656565;
+  --green: #656565;
+  --green-dim: rgba(101, 101, 101, .12);
+  --amber: #868686;
+  --amber-dim: rgba(134, 134, 134, .1);
+  --red: #868686;
+  --red-dim: rgba(134, 134, 134, .1);
+  --purple: #656565;
+  --t1: #E0E0E0;
+  --t2: #999999;
+  --t3: #666666;
+  --t4: #444444;
+  --border: rgba(255, 255, 255, .04);
+  --border2: rgba(255, 255, 255, .08);
+  --card: rgba(255, 255, 255, .02);
+  --card2: rgba(255, 255, 255, .04);
   --radius: 12px;
   --radius-lg: 18px;
   --radius-xl: 24px;
-  --font-d: 'Space Grotesk', sans-serif;
-  --font-b: 'DM Sans', sans-serif;
+  --font-d: 'Zen Dots', cursive;
+  --font-s: 'Montserrat', sans-serif;
+  --font-b: 'Open Sans', sans-serif;
   --shadow: 0 4px 24px rgba(0, 0, 0, .4);
-  --transition: .18s cubic-bezier(.4, 0, .2, 1);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, .5);
+  --transition: 200ms cubic-bezier(.4, 0, .2, 1);
+  --transition-slow: 300ms cubic-bezier(.4, 0, .2, 1);
 }
 
 html,
@@ -92,7 +95,57 @@ body {
   flex-direction: column;
   padding: 0;
   overflow: hidden;
-  transition: width var(--transition);
+  transition: width var(--transition), min-width var(--transition);
+  position: relative;
+}
+
+.sidebar.collapsed {
+  width: 64px;
+  min-width: 64px;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  right: 8px;
+  bottom: 12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--bg4);
+  border: 1px solid var(--border);
+  color: var(--t3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all var(--transition);
+  opacity: 0;
+}
+
+.sidebar:hover .sidebar-toggle {
+  opacity: 1;
+}
+
+.sidebar-toggle:hover {
+  color: var(--t1);
+  border-color: var(--border2);
+  background: var(--bg5);
+}
+
+.sidebar.collapsed .sidebar-logo {
+  padding: 14px;
+  text-align: center;
+}
+
+.sidebar.collapsed .nav-item {
+  padding: 10px;
+  justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-footer {
+  padding: 10px;
+  justify-content: center;
 }
 
 .sidebar-logo {
@@ -112,11 +165,19 @@ body {
 }
 
 .logo-sub {
+  font-family: var(--font-s);
   font-size: 10px;
   color: var(--t3);
   letter-spacing: .1em;
   text-transform: uppercase;
   margin-top: 2px
+}
+
+.logo-img {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+  display: block;
 }
 
 .sidebar-nav {
@@ -129,12 +190,24 @@ body {
 }
 
 .nav-section-label {
+  font-family: var(--font-s);
   font-size: 10px;
   color: var(--t3);
   letter-spacing: .1em;
   text-transform: uppercase;
   padding: 10px 8px 4px;
   font-weight: 600
+}
+
+/* Internal section titles - same style as sidebar section labels */
+.section-title {
+  font-family: var(--font-s);
+  font-size: 10px;
+  color: var(--t3);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 12px;
 }
 
 .nav-item {
@@ -228,7 +301,9 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden
+  overflow: hidden;
+  position: relative;
+  z-index: 1
 }
 
 .topbar {
@@ -246,7 +321,8 @@ body {
 .topbar-title {
   font-family: var(--font-d);
   font-size: 17px;
-  font-weight: 700
+  font-weight: 400;
+  letter-spacing: 5px
 }
 
 .topbar-right {
@@ -292,15 +368,15 @@ body {
 }
 
 .btn-ghost {
-  background: var(--card2);
-  color: var(--t2);
+  background: var(--bg4);
+  color: #fff;
   border: 1px solid var(--border)
 }
 
 .btn-ghost:hover {
-  background: var(--card2);
+  background: var(--bg5);
   border-color: var(--border2);
-  color: var(--t1)
+  color: #fff
 }
 
 .btn-danger {
@@ -317,15 +393,16 @@ body {
 .btn-icon {
   padding: 7px;
   border-radius: 7px;
-  background: var(--card2);
-  color: var(--t2);
+  background: var(--bg4);
+  color: #fff;
   border: 1px solid var(--border);
   cursor: pointer;
   transition: all var(--transition)
 }
 
 .btn-icon:hover {
-  color: var(--t1);
+  background: var(--bg5);
+  color: #fff;
   border-color: var(--border2)
 }
 
@@ -390,6 +467,7 @@ body {
 }
 
 .kpi-label {
+  font-family: var(--font-s);
   font-size: 11px;
   color: var(--t3);
   text-transform: uppercase;
@@ -401,9 +479,10 @@ body {
 .kpi-val {
   font-family: var(--font-d);
   font-size: 32px;
-  font-weight: 800;
+  font-weight: 400;
   line-height: 1;
-  margin-bottom: 4px
+  margin-bottom: 4px;
+  letter-spacing: 5px
 }
 
 .kpi-val.green {
@@ -454,12 +533,16 @@ body {
 }
 
 .sec-title {
-  font-family: var(--font-d);
-  font-size: 16px;
-  font-weight: 700
+  font-family: var(--font-s);
+  font-size: 10px;
+  color: var(--t3);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .sec-sub {
+  font-family: var(--font-s);
   font-size: 12px;
   color: var(--t3);
   margin-top: 2px
@@ -727,8 +810,9 @@ select.input {
 .upload-title {
   font-family: var(--font-d);
   font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 8px
+  font-weight: 400;
+  margin-bottom: 8px;
+  letter-spacing: 5px
 }
 
 .upload-sub {
@@ -856,7 +940,8 @@ select.input {
 .modal-title {
   font-family: var(--font-d);
   font-size: 18px;
-  font-weight: 700
+  font-weight: 400;
+  letter-spacing: 5px
 }
 
 .modal-close {
@@ -1317,21 +1402,24 @@ select.input {
 
 /* ── ONBOARDING ── */
 .onboarding {
-  min-height: 100%;
+  height: 100vh;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   text-align: center;
   padding: 40px;
+  position: relative;
+  z-index: 1;
 }
 
 .onboarding h1 {
   font-family: var(--font-d);
   font-size: 36px;
-  font-weight: 800;
+  font-weight: 400;
   margin-bottom: 12px;
-  letter-spacing: -.02em
+  letter-spacing: 5px
 }
 
 .onboarding h1 em {
@@ -1406,11 +1494,12 @@ select.input {
 }
 
 .detail-section-title {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: .1em;
+  font-family: var(--font-s);
+  font-size: 10px;
   color: var(--t3);
-  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  font-weight: 600;
   margin-bottom: 10px
 }
 

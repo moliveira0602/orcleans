@@ -33,9 +33,6 @@ export default function SettingsPage() {
 
     return (
         <>
-            <div className="sec-header mb-24">
-                <div><div className="sec-title">Configurações</div></div>
-            </div>
             <div className="grid-2">
                 <div>
                     <div className="card settings-section">

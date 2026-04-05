@@ -12,9 +12,6 @@ export default function Segments({ onNavigate }: SegmentsProps) {
     if (!leads.length) {
         return (
             <>
-                <div className="sec-header mb-20">
-                    <div><div className="sec-title">Segmentos</div><div className="sec-sub">Grupos inteligentes criados a partir dos seus dados</div></div>
-                </div>
                 <div className="empty">
                     <span className="empty-icon">⊞</span>
                     <div className="empty-title">Nenhum lead ainda</div>
@@ -45,9 +42,6 @@ export default function Segments({ onNavigate }: SegmentsProps) {
 
     return (
         <>
-            <div className="sec-header mb-20">
-                <div><div className="sec-title">Segmentos</div><div className="sec-sub">Grupos inteligentes criados a partir dos seus dados</div></div>
-            </div>
             <div className="grid-3">
                 {segments.map((s, i) => (
                     <div

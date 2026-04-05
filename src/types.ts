@@ -33,17 +33,42 @@ export interface LeadInsight {
 }
 
 export interface Lead {
+    // --- Platform internal ---
     id: string;
     _score: number;
     _pipeline: PipelineStage;
-    _importFile: string;
-    _importDate: string;
+    _importedAt: number;
+    _importFile?: string;
+    _importDate?: string;
     _importId?: string;
     _notes?: NoteEntry[];
     _lat?: number;
     _lng?: number;
     _geocodeStatus?: 'pending' | 'ok' | 'failed';
     _insight?: LeadInsight;
+
+    // --- FIXED display columns (always shown, always in Portuguese) ---
+    nome: string;           // Business/person name
+    segmento: string;       // Segment or business type
+    avaliacao: number | null;      // Star rating (0–5)
+    reviews: number | null;        // Number of reviews/interactions
+    preco: string;          // Price range or deal value (ex: "15-20€" or "R$500")
+    endereco: string;       // Full address
+    status: string;         // "Aberto" / "Fechado" / "Ativo" / "Inativo"
+    horario: string;        // Opening hours or closing time
+    telefone: string;       // Phone number
+    website: string;        // Website URL
+    email: string;          // Contact email
+    servicos: string[];     // Services offered (array)
+    foto: string;           // Photo URL (thumbnail)
+    linkOrigem: string;     // Source URL (Google Maps, LinkedIn, etc.)
+    linkPedido: string;     // Order/contact URL
+    observacoes: string;    // Free notes field
+
+    // --- Keep raw original for reference ---
+    _raw: Record<string, any>;
+    
+    // Allow additional dynamic fields
     [key: string]: unknown;
 }
 

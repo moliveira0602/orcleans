@@ -15,7 +15,9 @@ export function detectNameCol(leads: Lead[]): string {
 export function detectCatCol(leads: Lead[]): string | null {
     if (!leads.length) return null;
     const cols = Object.keys(leads[0]).filter((c) => !c.startsWith('_'));
+    // Prefer 'segmento' as it's the new standard field name
     const prefer = [
+        'segmento', 'Segmento', 'SEGMENTO',
         'Category', 'Categoria', 'category', 'categoria',
         'Type', 'Tipo', 'type', 'segment',
     ];
@@ -50,8 +52,11 @@ export function getLeadName(lead: Lead, nameCol: string): string {
 
 export function getLeadCategory(lead: Lead, catCol: string | null): string {
     if (!catCol) return '';
+    // Check the column first, then fallback to standard 'segmento' field
     return String(
         lead[catCol] ||
+        lead.segmento ||
+        lead.Segmento ||
         lead.Category ||
         lead.category ||
         ''

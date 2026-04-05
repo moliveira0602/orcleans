@@ -61,14 +61,6 @@ export default function Pipeline({ onOpenDetail }: PipelineProps) {
 
     return (
         <>
-            <div className="sec-header mb-20">
-                <div>
-                    <div className="sec-title">Funil Comercial</div>
-                    <div className="sec-sub">Arraste os cards para mover entre etapas</div>
-                </div>
-                <button className="btn btn-primary btn-sm" onClick={() => setAddOpen(true)}>+ Adicionar lead</button>
-            </div>
-
             <div className="pipeline-wrap">
                 {PIPELINE_COLS.map((col) => {
                     const ids = pipeline[col.id] || [];

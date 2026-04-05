@@ -10,6 +10,46 @@ export function computeScore(
     void hotThreshold;
     void _warmThreshold;
 
+    // Check if row has canonical Lead fields (from new import system)
+    const hasCanonicalFields = 'nome' in row || 'avaliacao' in row || 'reviews' in row;
+    
+    if (hasCanonicalFields) {
+        // Use canonical fields for scoring - CRITICAL: never mock or estimate
+        const lead = row as Partial<Lead>;
+        let score = 5;
+        
+        const hasRating = lead.avaliacao !== null && lead.avaliacao !== undefined && lead.avaliacao > 0;
+        const hasReviews = lead.reviews !== null && lead.reviews !== undefined && lead.reviews > 0;
+        
+        // Rating + Reviews boost (most important signal)
+        if (hasRating && lead.avaliacao! >= 4.5 && hasReviews && lead.reviews! >= 100) score += 2.0;
+        else if (hasRating && lead.avaliacao! >= 4.0) score += 1.0;
+        else if (hasRating) score += (lead.avaliacao! / 5) * 0.5;
+        
+        // Price range boost (higher ticket = more valuable)
+        if (lead.preco && (lead.preco.includes('15') || lead.preco.includes('20'))) score += 1.0;
+        
+        // Services boost (delivery = more channels)
+        if (lead.servicos && lead.servicos.some(s => s.toLowerCase().includes('delivery'))) score += 0.5;
+        
+        // Status boost (open/active businesses are more reachable)
+        if (lead.status === 'Aberto' || lead.status === 'Ativo') score += 0.5;
+        
+        // Contact completeness - check for valid values
+        if (lead.website && String(lead.website).trim().startsWith('http')) score += 0.5;
+        if (lead.email && String(lead.email).includes('@')) score += 0.5;
+        if (lead.telefone && String(lead.telefone).match(/\d{8,}/)) score += 0.8;
+        
+        // Industry keywords
+        const name = (lead.nome || '').toLowerCase();
+        if (name.match(/clinic|saúde|medic|health|clínica|clinica/)) score += 0.3;
+        if (name.match(/laser|estética|estetic|beauty|beleza/)) score += 0.4;
+        if (name.match(/dentist|odonto/)) score += 0.3;
+        
+        return Math.round(score * 10) / 10;
+    }
+
+    // Legacy scoring for non-canonical rows
     if (numericCol) {
         const vals = allRows
             .map((r) => parseFloat(String(r[numericCol])))
@@ -94,7 +134,7 @@ export function scoreReason(row: Record<string, unknown>): string {
         reasons.push('tem email');
     if (Object.values(row).some((v) => String(v).match(/\d{8,}/)))
         reasons.push('tem telefone');
-    if (Object.values(row).some((v) => String(v).match(/https?:\/\//)))
+    if (Object.values(row).some((v) => String(v).trim().startsWith('http')))
         reasons.push('tem website');
     if (
         Object.values(row).some((v) =>

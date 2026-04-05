@@ -14,6 +14,8 @@ type Page = 'dashboard' | 'leads' | 'pipeline' | 'insights' | 'import' | 'segmen
 interface SidebarProps {
     currentPage: Page;
     onNavigate: (page: Page) => void;
+    collapsed: boolean;
+    onToggle: () => void;
 }
 
 const NAV_ITEMS: { section: string; items: { id: Page; label: string; icon: React.ReactNode }[] }[] = [
@@ -41,28 +43,28 @@ const NAV_ITEMS: { section: string; items: { id: Page; label: string; icon: Reac
     },
 ];
 
-export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
+export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle }: SidebarProps) {
     const { leads, settings } = useAppState();
 
     return (
-        <aside className="sidebar">
+        <aside className={`sidebar${collapsed ? ' collapsed' : ''}`}>
             <div className="sidebar-logo">
-                <span className="logo-mark">OrcaLens</span>
-                <div className="logo-sub">Inteligência Comercial</div>
+                <img src={collapsed ? "/images/logo/favicon-white.ico" : "/images/ORCA-white.png"} alt="ORCA" className="logo-img" style={{ height: collapsed ? '28px' : '22px' }} />
             </div>
             <nav className="sidebar-nav">
                 {NAV_ITEMS.map((section) => (
                     <div key={section.section}>
-                        <div className="nav-section-label">{section.section}</div>
+                        {!collapsed && <div className="nav-section-label">{section.section}</div>}
                         {section.items.map((item) => (
                             <button
                                 key={item.id}
                                 className={`nav-item${currentPage === item.id ? ' active' : ''}`}
                                 onClick={() => onNavigate(item.id)}
+                                title={collapsed ? item.label : undefined}
                             >
                                 <span className="nav-icon">{item.icon}</span>
-                                <span>{item.label}</span>
-                                {item.id === 'leads' && leads.length > 0 && (
+                                {!collapsed && <span>{item.label}</span>}
+                                {!collapsed && item.id === 'leads' && leads.length > 0 && (
                                     <span className="nav-badge">{leads.length}</span>
                                 )}
                             </button>
@@ -70,13 +72,22 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
                     </div>
                 ))}
             </nav>
-            <div className="sidebar-footer" onClick={() => onNavigate('settings')}>
+            <div className="sidebar-footer" onClick={() => onNavigate('settings')} title={collapsed ? settings.name || 'Usuário' : undefined}>
                 <div className="avatar">{(settings.name || 'U')[0].toUpperCase()}</div>
-                <div>
-                    <div className="user-name">{settings.name || 'Usuário'}</div>
-                    <div className="user-role">Plano Profissional</div>
-                </div>
+                {!collapsed && (
+                    <div>
+                        <div className="user-name">{settings.name || 'Usuário'}</div>
+                        <div className="user-role">Plano Profissional</div>
+                    </div>
+                )}
             </div>
+            <button
+                className="sidebar-toggle"
+                onClick={onToggle}
+                title={collapsed ? 'Expandir menu' : 'Recolher menu'}
+            >
+                {collapsed ? '→' : '←'}
+            </button>
         </aside>
     );
 }

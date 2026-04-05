@@ -14,6 +14,16 @@ const PAGE_TITLES: Record<Page, string> = {
     settings: 'Configurações',
 };
 
+const PAGE_SUBTITLES: Record<Page, string> = {
+    dashboard: 'Visão geral da sua base',
+    leads: 'Gerencie seus contatos',
+    pipeline: 'Acompanhe o funil de vendas',
+    insights: 'Análise geográfica de leads',
+    import: 'Carregue novos leads',
+    segments: 'Segmentação automática',
+    settings: 'Personalize sua experiência',
+};
+
 interface TopbarProps {
     currentPage: Page;
     onNavigate: (page: Page) => void;
@@ -36,7 +46,10 @@ export default function Topbar({ currentPage, onNavigate, onSearch }: TopbarProp
 
     return (
         <div className="topbar">
-            <div className="topbar-title">{PAGE_TITLES[currentPage]}</div>
+            <div>
+                <div className="topbar-title">{PAGE_TITLES[currentPage]}</div>
+                <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{PAGE_SUBTITLES[currentPage]}</div>
+            </div>
             <div className="topbar-right">
                 <div className="search-wrap">
                     <span className="search-icon"><Search size={14} /></span>

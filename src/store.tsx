@@ -54,7 +54,8 @@ type Action =
     | { type: 'ADD_NOTE'; payload: { leadId: string; note: NoteEntry } }
     | { type: 'UPDATE_LEAD_SCORES'; payload: Lead[] }
     | { type: 'SET_STATE'; payload: AppState }
-    | { type: 'FINISH_LOADING'; payload: Lead[] };
+    | { type: 'FINISH_LOADING'; payload: Lead[] }
+    | { type: 'DELETE_IMPORT'; payload: string };
 
 function reducer(state: AppState, action: Action): AppState {
     switch (action.type) {
@@ -136,6 +137,23 @@ function reducer(state: AppState, action: Action): AppState {
                 pipeline: { novo: [], qualificado: [], proposta: [], negociacao: [], ganho: [], perdido: [] },
                 activities: [],
             };
+        case 'DELETE_IMPORT': {
+            const importId = action.payload;
+            const importToDelete = state.imports.find(i => i.id === importId);
+            if (!importToDelete) return state;
+            
+            // Remove leads from this import
+            const newLeads = state.leads.filter(l => l._importId !== importId);
+            const newImports = state.imports.filter(i => i.id !== importId);
+            
+            // Remove from pipeline
+            const newPipeline: PipelineMap = { novo: [], qualificado: [], proposta: [], negociacao: [], ganho: [], perdido: [] };
+            (Object.keys(state.pipeline) as PipelineStage[]).forEach((k) => {
+                newPipeline[k] = state.pipeline[k].filter((lid) => newLeads.some(l => l.id === lid));
+            });
+            
+            return { ...state, leads: newLeads, imports: newImports, pipeline: newPipeline };
+        }
         case 'ADD_ACTIVITY':
             return { ...state, activities: [action.payload, ...state.activities].slice(0, 30) };
         case 'ADD_NOTE': {
