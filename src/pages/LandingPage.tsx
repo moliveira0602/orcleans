@@ -475,22 +475,22 @@ export default function LandingPage() {
                     </div>
                     <div className="pas-grid">
                         <div className="pas-card problem" data-animate="pas-1">
-                            <div className="pas-icon">❌</div>
+                            <div className="pas-icon">✕</div>
                             <h3>Prospecção manual interminável</h3>
                             <p>Seus SDRs gastam horas garimpando leads no Google, LinkedIn e bases desatualizadas.</p>
                         </div>
                         <div className="pas-card problem" data-animate="pas-2">
-                            <div className="pas-icon">❌</div>
+                            <div className="pas-icon">✕</div>
                             <h3>Listas frias e desatualizadas</h3>
                             <p>Contatos que não respondem, emails que voltam e telefones que não existem mais.</p>
                         </div>
                         <div className="pas-card problem" data-animate="pas-3">
-                            <div className="pas-icon">❌</div>
+                            <div className="pas-icon">✕</div>
                             <h3>Leads sem qualificação real</h3>
                             <p>Reuniões marcadas com empresas que não têm budget, autoridade ou necessidade real.</p>
                         </div>
                         <div className="pas-card problem" data-animate="pas-4">
-                            <div className="pas-icon">❌</div>
+                            <div className="pas-icon">✕</div>
                             <h3>Concorrência chegando primeiro</h3>
                             <p>Enquanto seu time analisa planilhas, o concorrente já fechou o contrato.</p>
                         </div>
@@ -515,12 +515,12 @@ export default function LandingPage() {
                     </div>
                     <div className="features-grid">
                         <div className="feature-card" data-animate="feature-1">
-                            <div className="feature-icon">📊</div>
+                            <div className="feature-icon">◈</div>
                             <h3>Veja onde sua equipe está perdendo vendas</h3>
                             <p>Dashboard executivo com métricas em tempo real: conversão por etapa, velocidade do pipeline e previsão de receita.</p>
                         </div>
                         <div className="feature-card" data-animate="feature-2">
-                            <div className="feature-icon">🎯</div>
+                            <div className="feature-icon">◎</div>
                             <h3>Saiba exatamente em qual etapa cada lead travou</h3>
                             <p>Visão completa do funil com alertas automáticos quando um lead precisa de atenção.</p>
                         </div>
@@ -530,17 +530,17 @@ export default function LandingPage() {
                             <p>Conexão nativa com Salesforce, HubSpot, Pipedrive e outros. Ou use nossa API para integração customizada.</p>
                         </div>
                         <div className="feature-card" data-animate="feature-4">
-                            <div className="feature-icon">📋</div>
+                            <div className="feature-icon">▦</div>
                             <h3>Gerencie sua carteira sem abrir planilha</h3>
                             <p>Pipeline visual Kanban: arraste e solte leads entre etapas com gatilhos automáticos de follow-up.</p>
                         </div>
                         <div className="feature-card" data-animate="feature-5">
-                            <div className="feature-icon">🔔</div>
+                            <div className="feature-icon">◉</div>
                             <h3>Receba alertas quando um lead esquentar</h3>
                             <p>Monitoramento contínuo de sinais de compra: mudanças de cargo, rodadas de investimento, expansões de equipe.</p>
                         </div>
                         <div className="feature-card" data-animate="feature-6">
-                            <div className="feature-icon">📈</div>
+                            <div className="feature-icon">⊡</div>
                             <h3>Relatórios prontos para apresentar ao board</h3>
                             <p>Gere relatórios executivos em 1 clique: performance do time, ROI por canal e projeções de receita.</p>
                         </div>
