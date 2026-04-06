@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import MistBackground from '../components/ui/MistBackground';
 
 // FAQ Data
 const faqItems = [
@@ -902,6 +903,7 @@ export default function LandingPage() {
             {/* ===== CTA FINAL SECTION ===== */}
             <section id="contacto" className="cta-section">
                 <div className="cta-bg">
+                    <MistBackground />
                     <div className="cta-gradient" />
                     <div className="cta-particles" />
                     <div className="cta-glow" />
