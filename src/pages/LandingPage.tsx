@@ -870,6 +870,19 @@ export default function LandingPage() {
                 </div>
             )}
 
+            {/* ===== SCROLL TO TOP BUTTON ===== */}
+            {scrolled && (
+                <button
+                    className="scroll-to-top"
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    aria-label="Voltar ao topo"
+                >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="18 15 12 9 6 15" />
+                    </svg>
+                </button>
+            )}
+
             {/* ===== FOOTER ===== */}
             <footer className="landing-footer">
                 <div className="container">
@@ -1501,6 +1514,42 @@ export default function LandingPage() {
                 /* ===== UTILITY ===== */
                 .desktop-only { display: block; }
                 @media (max-width: 768px) { .desktop-only { display: none !important; } }
+
+                /* ===== SCROLL TO TOP BUTTON ===== */
+                .scroll-to-top {
+                    position: fixed;
+                    bottom: 32px;
+                    right: 32px;
+                    width: 48px;
+                    height: 48px;
+                    background: #00C2FF;
+                    color: #05070A;
+                    border: none;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    z-index: 999;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 4px 16px rgba(0, 194, 255, 0.3);
+                }
+                .scroll-to-top:hover {
+                    background: #33CFFF;
+                    transform: translateY(-3px);
+                    box-shadow: 0 8px 24px rgba(0, 194, 255, 0.4);
+                }
+                .scroll-to-top:active {
+                    transform: translateY(-1px);
+                }
+                @media (max-width: 768px) {
+                    .scroll-to-top {
+                        bottom: 24px;
+                        right: 24px;
+                        width: 44px;
+                        height: 44px;
+                    }
+                }
             `}</style>
         </div>
     );
