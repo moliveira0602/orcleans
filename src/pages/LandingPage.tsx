@@ -494,6 +494,16 @@ export default function LandingPage() {
                             <h3>Concorrência chegando primeiro</h3>
                             <p>Enquanto seu time analisa planilhas, o concorrente já fechou o contrato.</p>
                         </div>
+                        <div className="pas-card problem" data-animate="pas-5">
+                            <div className="pas-icon">✕</div>
+                            <h3>Relatórios que ninguém entende</h3>
+                            <p>Dashboards complexos que exigem horas de análise e não geram ações práticas.</p>
+                        </div>
+                        <div className="pas-card problem" data-animate="pas-6">
+                            <div className="pas-icon">✕</div>
+                            <h3>Time comercial desalinhado</h3>
+                            <p>Cada vendedor usa seu próprio método, sem padronização ou visibilidade do todo.</p>
+                        </div>
                     </div>
                     <div className="pas-solution" data-animate="pas-solution">
                         <div className="pas-solution-icon">✓</div>
@@ -525,7 +535,7 @@ export default function LandingPage() {
                             <p>Visão completa do funil com alertas automáticos quando um lead precisa de atenção.</p>
                         </div>
                         <div className="feature-card" data-animate="feature-3">
-                            <div className="feature-icon">⚡</div>
+                            <div className="feature-icon">⊕</div>
                             <h3>Integre com seu CRM em menos de 5 minutos</h3>
                             <p>Conexão nativa com Salesforce, HubSpot, Pipedrive e outros. Ou use nossa API para integração customizada.</p>
                         </div>
