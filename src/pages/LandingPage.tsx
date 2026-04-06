@@ -1070,7 +1070,18 @@ export default function LandingPage() {
                     border-radius: 16px; padding: 32px; transition: all 0.3s ease;
                 }
                 .pas-card.problem { border-color: rgba(239, 68, 68, 0.15); }
-                .pas-icon { font-size: 28px; margin-bottom: 16px; }
+                .pas-icon {
+                    font-size: 24px;
+                    color: #EF4444;
+                    margin-bottom: 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 48px;
+                    height: 48px;
+                    background: rgba(239, 68, 68, 0.1);
+                    border-radius: 12px;
+                }
                 .pas-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
                 .pas-card p { font-size: 14px; line-height: 1.6; color: rgba(234, 246, 255, 0.5); }
                 .pas-solution {
@@ -1079,7 +1090,7 @@ export default function LandingPage() {
                     text-align: center; max-width: 700px; margin: 0 auto;
                 }
                 .pas-solution-icon {
-                    width: 48px; height: 48px; background: rgba(0, 194, 255, 0.15); border-radius: 50%;
+                    width: 48px; height: 48px; background: rgba(0, 194, 255, 0.1); border-radius: 12px;
                     display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
                     font-size: 24px; color: #00C2FF;
                 }
@@ -1094,7 +1105,18 @@ export default function LandingPage() {
                     border-radius: 16px; padding: 32px; transition: all 0.3s ease;
                 }
                 .feature-card:hover { border-color: rgba(0, 194, 255, 0.2); background: rgba(11, 31, 46, 0.5); transform: translateY(-2px); }
-                .feature-icon { font-size: 32px; margin-bottom: 16px; }
+                .feature-icon {
+                    font-size: 24px;
+                    color: #00C2FF;
+                    margin-bottom: 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 56px;
+                    height: 56px;
+                    background: rgba(0, 194, 255, 0.08);
+                    border-radius: 14px;
+                }
                 .feature-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
                 .feature-card p { font-size: 14px; line-height: 1.6; color: rgba(234, 246, 255, 0.5); }
 
