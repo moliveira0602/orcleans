@@ -110,7 +110,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 <DottedSurface />
                 <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '80px 20px 20px', height: '100vh', overflow: 'hidden' }}>
                     <img src="/images/favicon.ico" alt="ORCA" style={{ width: 64, height: 64, marginBottom: 16, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
-                    <h1 style={{ fontFamily: "'Sora', 'Inter', sans-serif" }}>Bem-vindo à <em>ORCA</em></h1>
+                    <h1 style={{ fontFamily: "'Sora', 'Inter', sans-serif" }}>Bem-vindo à <em style={{ fontFamily: "'Zen Dots', cursive", color: "#fff", textTransform: "uppercase", fontSize: "1.2em" }}>ORCA</em></h1>
                     <p>Importe sua primeira lista de leads para começar a ver inteligência comercial em ação. Suporta Excel, CSV e qualquer formato tabular.</p>
                     <button
                         className="btn btn-primary"
