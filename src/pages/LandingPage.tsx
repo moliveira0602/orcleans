@@ -514,60 +514,60 @@ export default function LandingPage() {
                 <div className="container">
                     <div className="section-header">
                         <span className="section-badge">Plataforma</span>
-                        <h2 className="section-title">Uma plataforma completa para sua operação comercial</h2>
+                        <h2 className="section-title">Ferramentas poderosas para escalar suas vendas</h2>
                         <p className="section-subtitle">
-                            A ORCA centraliza todas as suas atividades de captação e gestão de leads
-                            em uma única interface intuitiva e poderosa.
+                            Cada funcionalidade da ORCA foi desenhada para eliminar trabalho manual
+                            e acelerar o ciclo comercial da sua equipa.
                         </p>
                     </div>
 
                     <div className="platform-grid">
                         <div className="platform-card">
                             <div className="platform-icon">◉</div>
-                            <h3>Organização Centralizada</h3>
+                            <h3>Base Unificada de Leads</h3>
                             <p>
-                                Mantenha todos os seus leads em um único lugar, com informações
-                                estruturadas e fáceis de acessar.
+                                Um repositório central com histórico completo de cada lead,
+                                incluindo interações, notas e evolução no funil.
                             </p>
                         </div>
                         <div className="platform-card">
                             <div className="platform-icon">◎</div>
-                            <h3>Qualificação Inteligente</h3>
+                            <h3>Score Automático com IA</h3>
                             <p>
-                                Score automático baseado em múltiplos critérios para identificar
-                                as melhores oportunidades primeiro.
+                                Algoritmo proprietário que analisa dados públicos e comportamentais
+                                para atribuir nota de 0-100 a cada lead automaticamente.
                             </p>
                         </div>
                         <div className="platform-card">
                             <div className="platform-icon">▦</div>
-                            <h3>Segmentação Avançada</h3>
+                            <h3>Cardumes Inteligentes</h3>
                             <p>
-                                Crie grupos e cardumes de leads por características comuns para
-                                campanhas mais direcionadas.
+                                Agrupe leads por setor, localização, tamanho ou qualquer critério
+                                personalizado para ações em massa direcionadas.
                             </p>
                         </div>
                         <div className="platform-card">
                             <div className="platform-icon">⊞</div>
-                            <h3>Visualização de Pipeline</h3>
+                            <h3>Pipeline Visual Kanban</h3>
                             <p>
-                                Acompanhe o progresso de cada lead através do funil de vendas
-                                com clareza total.
+                                Arraste e solte leads entre etapas do funil, com gatilhos automáticos
+                                de tarefa e lembretes de follow-up.
                             </p>
                         </div>
                         <div className="platform-card">
                             <div className="platform-icon">⊡</div>
-                            <h3>Importação Flexível</h3>
+                            <h3>Importador Universal</h3>
                             <p>
-                                Importe dados de qualquer fonte: Excel, CSV, Google Sheets ou
-                                APIs externas.
+                                Conecte-se a qualquer fonte: upload de arquivos, Google Sheets,
+                                CRM existente ou API REST — mapeamento automático de colunas.
                             </p>
                         </div>
                         <div className="platform-card">
                             <div className="platform-icon">⬡</div>
-                            <h3>Relatórios e Insights</h3>
+                            <h3>Dashboard Executivo</h3>
                             <p>
-                                Dashboards completos com métricas de desempenho e indicadores
-                                de saúde da base.
+                                Métricas em tempo real: conversão por etapa, velocidade do pipeline,
+                                performance da equipa e previsão de receita.
                             </p>
                         </div>
                     </div>
