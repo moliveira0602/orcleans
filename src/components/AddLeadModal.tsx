@@ -48,6 +48,7 @@ export default function AddLeadModal({ open, onClose }: AddLeadModalProps) {
             horario: '',
             servicos: [],
             foto: '',
+            fotos: [],
             linkOrigem: '',
             linkPedido: '',
             _raw: row,

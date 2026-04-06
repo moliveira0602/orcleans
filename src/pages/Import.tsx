@@ -1,9 +1,11 @@
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { useAppState, useAppDispatch, leadFingerprint } from '../store';
 import { useToast } from '../components/Toast';
 import { computeScore } from '../utils/scoring';
 import { detectSourceType, mapRowToLead } from '../utils/leadMapper';
+import { analyzeColumns, getColumnAnalysisSummary, type ColumnMapping, type StandardColumnKey } from '../utils/columnMapper';
+import { sanitizeImportedData, getSanitizationSummary, type SanitizationSummary, type SanitizedLeadData } from '../utils/dataSanitizer';
 import type { Lead } from '../types';
 import type { Page } from '../components/Layout';
 
@@ -27,6 +29,36 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
     } | null>(null);
     const [scoreCol, setScoreCol] = useState('');
     const [dupeMode, setDupeMode] = useState<'skip' | 'update'>('skip');
+    
+    // Column mapping state
+    const [columnMappings, setColumnMappings] = useState<ColumnMapping[]>([]);
+    const [editingColumn, setEditingColumn] = useState<string | null>(null);
+    const [editValue, setEditValue] = useState('');
+    
+    // Sanitization state
+    const [sanitizationSummary, setSanitizationSummary] = useState<SanitizationSummary | null>(null);
+    const [sanitizedData, setSanitizedData] = useState<SanitizedLeadData[]>([]);
+
+    // Analyze columns and sanitize data when file is loaded
+    useEffect(() => {
+        if (pending) {
+            // Column mapping analysis
+            const mappings = analyzeColumns(pending.cols);
+            setColumnMappings(mappings);
+            
+            // Data sanitization
+            const sanitized = sanitizeImportedData(pending.data);
+            setSanitizedData(sanitized);
+            
+            // Generate sanitization summary
+            const summary = getSanitizationSummary(pending.data, sanitized);
+            setSanitizationSummary(summary);
+        } else {
+            setColumnMappings([]);
+            setSanitizedData([]);
+            setSanitizationSummary(null);
+        }
+    }, [pending]);
 
     // Compute duplicate stats when pending data is available
     const dupeStats = useMemo(() => {
@@ -80,7 +112,10 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
         // Detect source type
         const sourceType = detectSourceType(cols);
         
-        const newLeads: Lead[] = data.map((row, i) => {
+        // Use sanitized data if available, otherwise fall back to original
+        const importData = sanitizedData.length > 0 ? sanitizedData : data;
+        
+        const newLeads: Lead[] = importData.map((row, i) => {
             // Map row to canonical Lead fields
             const mapped = mapRowToLead(row as Record<string, any>, sourceType, cols) as Lead;
             
@@ -98,6 +133,7 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
             const email: string = mapped.email || '';
             const servicos: string[] = Array.isArray(mapped.servicos) ? mapped.servicos : [];
             const foto: string = mapped.foto || '';
+            const fotos: string[] = Array.isArray(mapped.fotos) ? mapped.fotos : [];
             const linkOrigem: string = mapped.linkOrigem || '';
             const linkPedido: string = mapped.linkPedido || '';
             const observacoes: string = mapped.observacoes || '';
@@ -107,7 +143,7 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
             const leadData = {
                 nome, segmento, avaliacao: avaliacao ?? 0, reviews: reviews ?? 0,
                 preco, endereco, status, horario, telefone, website, email, servicos,
-                foto, linkOrigem, linkPedido, observacoes, _raw,
+                foto, fotos, linkOrigem, linkPedido, observacoes, _raw,
             };
             let score = computeScore(leadData, numCol, data as Record<string, unknown>[]);
             
@@ -132,7 +168,7 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                 _importDate: new Date().toISOString(),
                 _importId: importId,
                 nome, segmento, avaliacao, reviews, preco, endereco, status, horario,
-                telefone, website, email, servicos, foto, linkOrigem, linkPedido, observacoes, _raw,
+                telefone, website, email, servicos, foto, fotos, linkOrigem, linkPedido, observacoes, _raw,
             };
         });
 
@@ -195,6 +231,31 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
 
     const previewCols = pending ? pending.cols.slice(0, 8) : [];
     const previewRows = pending ? pending.data.slice(0, 8) : [];
+
+    // Column editing handlers
+    const handleColumnEdit = (originalName: string) => {
+        setEditingColumn(originalName);
+        const mapping = columnMappings.find(m => m.originalName === originalName);
+        setEditValue(mapping?.suggestedName || originalName);
+    };
+
+    const handleColumnSave = (originalName: string) => {
+        setColumnMappings(prev => prev.map(m => 
+            m.originalName === originalName 
+                ? { ...m, suggestedName: editValue, isStandard: false, standardKey: null }
+                : m
+        ));
+        setEditingColumn(null);
+        setEditValue('');
+    };
+
+    const handleColumnCancel = () => {
+        setEditingColumn(null);
+        setEditValue('');
+    };
+
+    // Get column analysis summary for alerts
+    const columnSummary = pending ? getColumnAnalysisSummary(pending.cols) : null;
 
     return (
         <>
@@ -270,6 +331,93 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                                     <button className={`tab${dupeMode === 'update' ? ' active' : ''}`} onClick={() => setDupeMode('update')}>
                                         Atualizar existentes
                                     </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Sanitization Summary Alert */}
+                        {sanitizationSummary && (sanitizationSummary.fixedEncoding > 0 || sanitizationSummary.standardizedCategories > 0) && (
+                            <div style={{
+                                background: 'var(--green-dim)', border: '1px solid rgba(16,185,129,.25)',
+                                borderRadius: 10, padding: '14px 18px', marginBottom: 16,
+                            }}>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--green)', marginBottom: 2 }}>
+                                    ✨ Dados normalizados automaticamente
+                                </div>
+                                <div style={{ fontSize: 12, color: 'var(--t2)' }}>
+                                    {sanitizationSummary.fixedEncoding > 0 && `${sanitizationSummary.fixedEncoding} encoding(s) corrigido(s)`}
+                                    {sanitizationSummary.standardizedCategories > 0 && ` · ${sanitizationSummary.standardizedCategories} categoria(s) padronizada(s)`}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Column Mapping Alert */}
+                        {columnSummary && columnSummary.hasInconsistencies && (
+                            <div style={{
+                                background: 'var(--blue-dim)', border: '1px solid rgba(0,194,255,.25)',
+                                borderRadius: 10, padding: '14px 18px', marginBottom: 16,
+                            }}>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--blue3)', marginBottom: 4 }}>
+                                    📋 {columnSummary.mappedColumns} de {columnSummary.totalColumns} colunas mapeadas automaticamente
+                                </div>
+                                <div style={{ fontSize: 12, color: 'var(--t2)', marginBottom: 8 }}>
+                                    {columnSummary.unmappedColumns} coluna(s) não identificada(s). Clique no nome da coluna para editar.
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Column Mapping Preview */}
+                        {columnMappings.length > 0 && (
+                            <div style={{ marginBottom: 16 }}>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
+                                    Mapeamento de Colunas
+                                </div>
+                                <div style={{
+                                    display: 'flex', flexWrap: 'wrap', gap: 6, padding: 12,
+                                    background: 'var(--card)', borderRadius: 8, border: '1px solid var(--border)',
+                                }}>
+                                    {columnMappings.map((mapping) => (
+                                        <div
+                                            key={mapping.originalName}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: 6,
+                                                padding: '6px 10px', borderRadius: 6,
+                                                background: mapping.isStandard ? 'var(--green-dim)' : 'var(--amber-dim)',
+                                                border: `1px solid ${mapping.isStandard ? 'rgba(16,185,129,.3)' : 'rgba(245,158,11,.3)'}`,
+                                                cursor: 'pointer',
+                                                transition: 'all var(--transition)',
+                                            }}
+                                            onClick={() => handleColumnEdit(mapping.originalName)}
+                                            title="Clique para editar"
+                                        >
+                                            <span style={{ fontSize: 11, color: 'var(--t3)' }}>{mapping.originalName}</span>
+                                            <span style={{ fontSize: 10, color: 'var(--t3)' }}>→</span>
+                                            {editingColumn === mapping.originalName ? (
+                                                <input
+                                                    autoFocus
+                                                    value={editValue}
+                                                    onChange={(e) => setEditValue(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') handleColumnSave(mapping.originalName);
+                                                        if (e.key === 'Escape') handleColumnCancel();
+                                                    }}
+                                                    onBlur={() => handleColumnSave(mapping.originalName)}
+                                                    style={{
+                                                        width: 80, fontSize: 11, padding: '2px 4px',
+                                                        background: 'var(--bg4)', border: '1px solid var(--blue)',
+                                                        color: 'var(--t1)', borderRadius: 4,
+                                                    }}
+                                                />
+                                            ) : (
+                                                <span style={{ fontSize: 11, fontWeight: 600, color: mapping.isStandard ? 'var(--green)' : 'var(--amber)' }}>
+                                                    {mapping.suggestedName}
+                                                </span>
+                                            )}
+                                            {mapping.isStandard && (
+                                                <span style={{ fontSize: 9, color: 'var(--green)' }}>✓</span>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         )}

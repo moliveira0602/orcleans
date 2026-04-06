@@ -5,6 +5,7 @@ import ScoreRing from '../components/ScoreRing';
 import BarChart from '../components/BarChart';
 import FunnelChart from '../components/FunnelChart';
 import DottedSurface from '../components/ui/DottedSurface';
+import SonarButton from '../components/SonarButton';
 import { formatTime } from '../utils/time';
 import { runScan, getScanStatus, SCAN_PRESETS, type ScanPresetKey } from '../utils/scanService';
 import { useToast } from '../components/Toast';
@@ -77,7 +78,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 dispatch({
                     type: 'ADD_ACTIVITY',
                     payload: {
-                        title: `Scan GeoScout: ${preset.label}`,
+                        title: `Scan Sonar: ${preset.label}`,
                         sub: `${result.imported} novos leads`,
                         icon: '🗺️',
                         time: new Date().toISOString(),
@@ -128,6 +129,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
 
     const hot = leads.filter((l) => l._score >= settings.hotThreshold);
     const warm = leads.filter((l) => l._score >= settings.warmThreshold && l._score < settings.hotThreshold);
+    const cold = leads.filter((l) => l._score < settings.warmThreshold);
     const avg = leads.reduce((s, l) => s + l._score, 0) / leads.length;
     const nameCol = detectNameCol(leads);
     const catCol = detectCatCol(leads);
@@ -149,13 +151,54 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
     // Top 5 leads
     const top5 = [...leads].sort((a, b) => b._score - a._score).slice(0, 5);
     const won = leads.filter((l) => l._pipeline === 'ganho').length;
+    const lost = leads.filter((l) => l._pipeline === 'perdido').length;
     const conversionRate = leads.length > 0 ? Math.round((won / leads.length) * 100) : 0;
+    const lossRate = leads.length > 0 ? Math.round((lost / leads.length) * 100) : 0;
+
+    // Engagement metrics
+    const contacted = leads.filter((l) => l._lastContact).length;
+    const pending = leads.filter((l) => !l._lastContact && l._pipeline === 'novo').length;
+    const followUpNeeded = leads.filter((l) => l._pipeline === 'negociacao' || l._pipeline === 'proposta').length;
+
+    // Revenue potential (estimated from pipeline)
+    const pipelineValue = leads.reduce((sum, l) => {
+        const multipliers: Record<string, number> = { 'ganho': 1.0, 'proposta': 0.7, 'negociacao': 0.5, 'contato': 0.3, 'novo': 0.1, 'perdido': 0 };
+        return sum + (multipliers[l._pipeline] || 0.1) * 5000; // Estimated R$5k per lead
+    }, 0);
+    const wonValue = won * 5000;
+
+    // Activity velocity
+    const recentActivities = activities.filter((a) => {
+        const days = (Date.now() - new Date(a.time).getTime()) / (1000 * 60 * 60 * 24);
+        return days <= 7;
+    }).length;
+
+    // Lead sources
+    const sources: Record<string, number> = {};
+    leads.forEach((l) => {
+        const source = (l._source as string) || 'Importado';
+        sources[source] = (sources[source] || 0) + 1;
+    });
+    const sourceData = Object.entries(sources).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, v]) => ({
+        label: k,
+        value: v,
+        color: 'var(--blue)'
+    }));
+
+    // Health score distribution
+    const healthScores = {
+        excellent: leads.filter((l) => l._score >= 9).length,
+        good: leads.filter((l) => l._score >= 7 && l._score < 9).length,
+        fair: leads.filter((l) => l._score >= 5 && l._score < 7).length,
+        poor: leads.filter((l) => l._score < 5).length
+    };
 
     const scanStatus = refreshScanStatus();
 
     return (
         <>
-            <div className="kpi-grid">
+            {/* ===== ROW 1: Core Metrics (5 cols) ===== */}
+            <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', marginBottom: 24 }}>
                 <div className="kpi">
                     <div className="kpi-label">Total de Leads</div>
                     <div className="kpi-val">{leads.length}</div>
@@ -183,20 +226,39 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                     <div className="kpi-val blue">{conversionRate}%</div>
                     <div className="kpi-sub">{won} leads ganhos</div>
                 </div>
-                <div 
-                    className="kpi" 
-                    style={{ border: '1px solid var(--blue)', cursor: 'pointer', background: 'var(--blue-dim)' }} 
-                    onClick={() => setScanModalOpen(true)}
-                >
-                    <div className="kpi-label" style={{ color: 'var(--blue)' }}>GeoScout</div>
-                    <div className="kpi-val" style={{ fontSize: 18, color: 'var(--blue)' }}>
-                        {scanStatus?.hasCache ? '🔄 Scan Recente' : '🗺️ Novo Scan'}
-                    </div>
-                    <div className="kpi-sub" style={{ color: 'var(--blue)' }}>
-                        {scanStatus?.hasCache 
-                            ? `${scanStatus.cachedCount} estabelecimentos (${scanStatus.ageDays} dias)`
-                            : 'Clique para escanear'}
-                    </div>
+            </div>
+
+            {/* ===== ROW 2: Engagement & Performance ===== */}
+            <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', marginBottom: 24 }}>
+                <div className="kpi">
+                    <div className="kpi-label">Em Negociação</div>
+                    <div className="kpi-val" style={{ fontSize: 28, color: 'var(--orca-accent)' }}>{followUpNeeded}</div>
+                    <div className="kpi-sub">requer atenção</div>
+                </div>
+                <div className="kpi">
+                    <div className="kpi-label">Pendentes</div>
+                    <div className="kpi-val" style={{ fontSize: 28, color: 'var(--amber)' }}>{pending}</div>
+                    <div className="kpi-sub">sem contato</div>
+                </div>
+                <div className="kpi">
+                    <div className="kpi-label">Contatados</div>
+                    <div className="kpi-val" style={{ fontSize: 28, color: 'var(--green)' }}>{contacted}</div>
+                    <div className="kpi-sub">{Math.round((contacted / leads.length) * 100)}% da base</div>
+                </div>
+                <div className="kpi">
+                    <div className="kpi-label">Taxa de Perda</div>
+                    <div className="kpi-val" style={{ fontSize: 28, color: 'var(--red)' }}>{lossRate}%</div>
+                    <div className="kpi-sub">{lost} leads perdidos</div>
+                </div>
+                <div className="kpi">
+                    <div className="kpi-label">Potencial Pipeline</div>
+                    <div className="kpi-val" style={{ fontSize: 24, color: 'var(--orca-accent)' }}>R$ {Math.round(pipelineValue / 1000)}k</div>
+                    <div className="kpi-sub">estimado</div>
+                </div>
+                <div className="kpi">
+                    <div className="kpi-label">Valor Fechado</div>
+                    <div className="kpi-val" style={{ fontSize: 24, color: 'var(--green)' }}>R$ {Math.round(wonValue / 1000)}k</div>
+                    <div className="kpi-sub">confirmado</div>
                 </div>
             </div>
 
@@ -221,7 +283,8 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 </div>
             </div>
 
-            <div className="grid-2">
+            {/* ===== ROW 3: Priority Leads + Health Distribution ===== */}
+            <div className="grid-2 mb-24">
                 <div className="card">
                     <div className="sec-header">
                         <div>
@@ -250,9 +313,142 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                     </div>
                 </div>
 
+                {/* Health Score Distribution */}
+                <div className="card">
+                    <div className="sec-header">
+                        <div>
+                            <div className="sec-title">Qualidade da Base</div>
+                            <div className="sec-sub">Distribuição por score</div>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: 4, background: 'var(--green)' }} />
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: 13, fontWeight: 500 }}>Excelente (9-10)</div>
+                                <div style={{ fontSize: 11, color: 'var(--t3)' }}>{healthScores.excellent} leads</div>
+                            </div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--green)' }}>{Math.round((healthScores.excellent / leads.length) * 100)}%</div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: 4, background: 'var(--amber)' }} />
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: 13, fontWeight: 500 }}>Bom (7-8)</div>
+                                <div style={{ fontSize: 11, color: 'var(--t3)' }}>{healthScores.good} leads</div>
+                            </div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--amber)' }}>{Math.round((healthScores.good / leads.length) * 100)}%</div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: 4, background: '#F59E0B' }} />
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: 13, fontWeight: 500 }}>Regular (5-6)</div>
+                                <div style={{ fontSize: 11, color: 'var(--t3)' }}>{healthScores.fair} leads</div>
+                            </div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: '#F59E0B' }}>{Math.round((healthScores.fair / leads.length) * 100)}%</div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: 4, background: 'var(--red)' }} />
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: 13, fontWeight: 500 }}>Ruim ({"<"}5)</div>
+                                <div style={{ fontSize: 11, color: 'var(--t3)' }}>{healthScores.poor} leads</div>
+                            </div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--red)' }}>{Math.round((healthScores.poor / leads.length) * 100)}%</div>
+                        </div>
+                        {/* Progress bar */}
+                        <div style={{ display: 'flex', height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 8 }}>
+                            <div style={{ width: `${(healthScores.excellent / leads.length) * 100}%`, background: 'var(--green)' }} />
+                            <div style={{ width: `${(healthScores.good / leads.length) * 100}%`, background: 'var(--amber)' }} />
+                            <div style={{ width: `${(healthScores.fair / leads.length) * 100}%`, background: '#F59E0B' }} />
+                            <div style={{ width: `${(healthScores.poor / leads.length) * 100}%`, background: 'var(--red)' }} />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ===== ROW 4: Sources + Activity Velocity ===== */}
+            <div className="grid-2 mb-24">
+                {/* Lead Sources */}
+                <div className="card">
+                    <div className="sec-header">
+                        <div>
+                            <div className="sec-title">Fontes de Leads</div>
+                            <div className="sec-sub">Por origem de captação</div>
+                        </div>
+                    </div>
+                    {sourceData.length > 0 ? (
+                        <BarChart data={sourceData} />
+                    ) : (
+                        <div className="text-muted text-sm">Nenhuma fonte detectada.</div>
+                    )}
+                </div>
+
+                {/* Activity Velocity */}
+                <div className="card">
+                    <div className="sec-header">
+                        <div>
+                            <div className="sec-title">Velocidade de Atividade</div>
+                            <div className="sec-sub">Últimos 7 dias</div>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '8px 0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px', background: 'rgba(0, 194, 255, 0.05)', borderRadius: 10, border: '1px solid rgba(0, 194, 255, 0.08)' }}>
+                            <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--orca-accent)' }}>{recentActivities}</div>
+                            <div>
+                                <div style={{ fontSize: 13, fontWeight: 600 }}>Ações Realizadas</div>
+                                <div style={{ fontSize: 11, color: 'var(--t3)' }}>importações, scans, atualizações</div>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                                <div style={{ fontSize: 13, fontWeight: 500 }}>Média Diária</div>
+                                <div style={{ fontSize: 11, color: 'var(--t3)' }}>ações por dia</div>
+                            </div>
+                            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--green)' }}>{Math.max(1, Math.round(recentActivities / 7))}</div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                                <div style={{ fontSize: 13, fontWeight: 500 }}>Taxa de Engajamento</div>
+                                <div style={{ fontSize: 11, color: 'var(--t3)' }}>leads ativos / total</div>
+                            </div>
+                            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--amber)' }}>{Math.round((contacted / leads.length) * 100)}%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ===== ROW 5: Original sections ===== */}
+            <div className="grid-2">
+                <div className="card">
+                    <div className="sec-header">
+                        <div>
+                            <div className="sec-title">Pipeline por Etapa</div>
+                            <div className="sec-sub">Distribuição detalhada</div>
+                        </div>
+                    </div>
+                    <div className="activity-list">
+                        {PIPELINE_COLS.map((col) => {
+                            const count = leads.filter((l) => l._pipeline === col.id).length;
+                            const pct = Math.round((count / leads.length) * 100);
+                            return (
+                                <div className="activity-item" key={col.id}>
+                                    <div className="activity-dot" style={{ background: col.color + '33', border: `2px solid ${col.color}` }} />
+                                    <div className="activity-content">
+                                        <div className="activity-title">{col.label}</div>
+                                        <div className="activity-sub">{count} leads · {pct}%</div>
+                                    </div>
+                                    <div style={{ width: 80, height: 4, background: 'var(--bg5)', borderRadius: 2, overflow: 'hidden' }}>
+                                        <div style={{ width: `${pct}%`, height: '100%', background: col.color, borderRadius: 2 }} />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
                 <div className="card">
                     <div className="sec-header">
                         <div><div className="sec-title">Atividade Recente</div></div>
+                        <button className="btn btn-ghost btn-sm" onClick={() => onNavigate('import')}>Ver histórico</button>
                     </div>
                     <div className="activity-list">
                         {activities.length ? activities.slice(0, 6).map((a, i) => {
@@ -280,7 +476,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 <div className="modal-overlay open" onClick={() => setScanModalOpen(false)}>
                     <div className="modal" style={{ maxWidth: 500 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <div className="modal-title">🗺️ GeoScout - Scan de Estabelecimentos</div>
+                            <div className="modal-title">🗺️ Sonar - Scan de Estabelecimentos</div>
                             <button className="modal-close" onClick={() => setScanModalOpen(false)}>✕</button>
                         </div>
 

@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Zen+Dots&family=Montserrat:wght@400;500;600&family=Open+Sans:wght@400;500;600&display=swap');
-
 *,
 *::before,
 *::after {
@@ -9,48 +7,102 @@
 }
 
 :root {
-  --bg: #000000;
-  --bg2: #111111;
-  --bg3: #222222;
-  --bg4: #333333;
-  --bg5: #444444;
-  --blue: #656565;
-  --blue2: #767676;
-  --blue3: #868686;
-  --blue-dim: rgba(101, 101, 101, .12);
-  --cyan: #656565;
-  --green: #656565;
-  --green-dim: rgba(101, 101, 101, .12);
-  --amber: #868686;
-  --amber-dim: rgba(134, 134, 134, .1);
-  --red: #868686;
-  --red-dim: rgba(134, 134, 134, .1);
-  --purple: #656565;
-  --t1: #E0E0E0;
-  --t2: #999999;
-  --t3: #666666;
-  --t4: #444444;
-  --border: rgba(255, 255, 255, .04);
-  --border2: rgba(255, 255, 255, .08);
-  --card: rgba(255, 255, 255, .02);
-  --card2: rgba(255, 255, 255, .04);
-  --radius: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
-  --font-d: 'Zen Dots', cursive;
-  --font-s: 'Montserrat', sans-serif;
-  --font-b: 'Open Sans', sans-serif;
-  --shadow: 0 4px 24px rgba(0, 0, 0, .4);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, .5);
+  /* ═══════════════════════════════════════════════════════════
+     ORCA Design System — Deep Ocean Intelligence
+     Typography: Inter (refined)
+     Colors: Ocean-inspired dark palette
+     ═══════════════════════════════════════════════════════════ */
+
+  /* ── PREMIUM TYPEFACE SYSTEM ── */
+  --font-d: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-s: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-b: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* ── DEEP OCEAN COLOR PALETTE ── */
+  /* Background layers - from abyssal black to deep ocean */
+  --orca-bg:          #05070A;    /* Abyssal black */
+  --orca-bg-2:        #0B1F2E;    /* Deep ocean */
+  --orca-bg-3:        #0E3A5D;    /* Mid ocean */
+  --orca-surface:     rgba(11, 31, 46, 0.7);
+  --orca-surface-2:   rgba(14, 58, 93, 0.4);
+
+  /* Accent colors - bioluminescent ocean blues */
+  --orca-accent:      #00C2FF;    /* Neon ocean blue */
+  --orca-accent-2:    #4FDFFF;    /* Soft cyan */
+  --orca-accent-glow: rgba(0, 194, 255, 0.08);
+  --orca-accent-glow-strong: rgba(0, 194, 255, 0.25);
+
+  /* Text colors - ice white to muted steel */
+  --orca-text:        #EAF6FF;    /* Ice white */
+  --orca-text-muted:  #9FB3C8;    /* Muted steel */
+  --orca-text-dim:    rgba(159, 179, 200, 0.5);
+
+  /* Border system - subtle and refined */
+  --orca-border:      rgba(159, 179, 200, 0.08);
+  --orca-border-glow: rgba(0, 194, 255, 0.12);
+
+  /* Status colors */
+  --orca-hot:         #00C2FF;
+  --orca-warm:        #4FDFFF;
+  --orca-cold:        #9FB3C8;
+  --orca-purple:      #5B3DF5;
+
+  /* Gradients */
+  --orca-gradient:    linear-gradient(135deg, #05070A 0%, #0B1F2E 50%, #0E3A5D 100%);
+  --orca-gradient-radial: radial-gradient(ellipse at center, #0B1F2E 0%, #05070A 70%);
+
+  /* Legacy aliases for compatibility */
+  --bg: var(--orca-bg);
+  --bg2: var(--orca-surface);
+  --bg3: var(--orca-surface-2);
+  --bg4: var(--orca-surface-2);
+  --bg5: var(--orca-border);
+  --blue: var(--orca-accent);
+  --blue2: #38BDF8;
+  --blue3: var(--orca-accent);
+  --blue-dim: var(--orca-accent-glow);
+  --cyan: var(--orca-accent);
+  --green: var(--orca-hot);
+  --green-dim: rgba(16, 217, 160, 0.12);
+  --amber: var(--orca-warm);
+  --amber-dim: rgba(245, 158, 11, 0.1);
+  --red: #EF4444;
+  --red-dim: rgba(239, 68, 68, 0.1);
+  --purple: #8B5CF6;
+  --t1: var(--orca-text);
+  --t2: var(--orca-text-muted);
+  --t3: var(--orca-text-muted);
+  --t4: #2D3748;
+  --border: var(--orca-border);
+  --border2: rgba(26, 43, 69, 0.6);
+  --card: rgba(17, 29, 51, 0.5);
+  --card2: rgba(17, 29, 51, 0.8);
+  --radius: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --font-d: 'Inter', sans-serif;
+  --font-s: 'Inter', sans-serif;
+  --font-b: 'Inter', sans-serif;
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
   --transition: 200ms cubic-bezier(.4, 0, .2, 1);
   --transition-slow: 300ms cubic-bezier(.4, 0, .2, 1);
 }
 
-html,
-body,
-#root {
+html {
   height: 100%;
-  overflow: hidden
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 body {
@@ -234,12 +286,14 @@ body {
 }
 
 .nav-item.active {
-  background: var(--blue-dim);
-  color: var(--blue3)
+  background: rgba(0, 194, 255, 0.06);
+  color: var(--color-accent-primary);
+  border-left: 2px solid var(--color-accent-primary);
+  padding-left: 8px;
 }
 
 .nav-item.active .nav-icon {
-  color: var(--blue3)
+  color: var(--color-accent-primary)
 }
 
 .nav-icon {
@@ -353,15 +407,20 @@ body {
   white-space: nowrap;
 }
 
-.btn-primary {
-  background: var(--blue);
-  color: #fff
-}
-
-.btn-primary:hover {
-  background: var(--blue2);
-  transform: translateY(-1px)
-}
+    .btn-primary {
+        background: linear-gradient(135deg, #00C2FF 0%, #004E7A 100%);
+        color: #EAF6FF;
+        border: 1px solid rgba(0, 194, 255, 0.3);
+        box-shadow: 0 2px 12px rgba(0, 194, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #4FDFFF 0%, #00699E 100%);
+        border-color: rgba(0, 194, 255, 0.5);
+        box-shadow: 0 4px 20px rgba(0, 194, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+        transform: translateY(-1px);
+    }
 
 .btn-primary:active {
   transform: translateY(0)
@@ -408,15 +467,23 @@ body {
 
 /* ── CARDS ── */
 .card {
-  background: var(--bg3);
-  border: 1px solid var(--border);
+  background: rgba(11, 31, 46, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 194, 255, 0.06);
   border-radius: var(--radius-lg);
-  padding: 24px
+  padding: 24px;
+  transition: all var(--transition-smooth);
+}
+
+.card:hover {
+  border-color: rgba(0, 194, 255, 0.12);
+  box-shadow: 0 0 20px rgba(0, 194, 255, 0.08);
 }
 
 .card-sm {
-  background: var(--bg3);
-  border: 1px solid var(--border);
+  background: rgba(11, 31, 46, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 194, 255, 0.06);
   border-radius: var(--radius);
   padding: 18px
 }
@@ -430,17 +497,20 @@ body {
 }
 
 .kpi {
-  background: var(--bg3);
-  border: 1px solid var(--border);
+  background: rgba(11, 31, 46, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 194, 255, 0.06);
   border-radius: var(--radius-lg);
   padding: 20px 22px;
   position: relative;
   overflow: hidden;
-  transition: border-color var(--transition);
+  transition: all var(--transition-smooth);
 }
 
 .kpi:hover {
-  border-color: var(--border2)
+  border-color: rgba(0, 194, 255, 0.15);
+  box-shadow: 0 0 20px rgba(0, 194, 255, 0.1);
+  transform: translateY(-1px);
 }
 
 .kpi::before {
@@ -469,20 +539,21 @@ body {
 .kpi-label {
   font-family: var(--font-s);
   font-size: 11px;
-  color: var(--t3);
+  color: #9FB3C8;
   text-transform: uppercase;
-  letter-spacing: .08em;
-  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-weight: 500;
   margin-bottom: 10px
 }
 
 .kpi-val {
   font-family: var(--font-d);
-  font-size: 32px;
-  font-weight: 400;
+  font-size: 30px;
+  font-weight: 700;
   line-height: 1;
   margin-bottom: 4px;
-  letter-spacing: 5px
+  letter-spacing: 0.02em;
+  color: #EAF6FF;
 }
 
 .kpi-val.green {
@@ -1217,6 +1288,30 @@ select.input {
   to {
     opacity: 1;
     transform: translateY(0)
+  }
+}
+
+/* Radar pulse animation for Sonar */
+@keyframes radarPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.5;
+  }
+}
+
+/* Sonar wave animation */
+@keyframes sonarWave {
+  0% {
+    r: 10;
+    opacity: 0.8;
+  }
+  100% {
+    r: 40;
+    opacity: 0;
   }
 }
 

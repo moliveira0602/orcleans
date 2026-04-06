@@ -184,7 +184,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                                                             display: 'flex', alignItems: 'center', justifyContent: 'center'
                                                         }}
                                                     >
-                                                        🗺️
+                                                        📍
                                                     </button>
                                                 ) : l.linkOrigem ? (
                                                     <a href={String(l.linkOrigem)} target="_blank" rel="noreferrer" style={{ color: 'var(--blue3)', fontSize: 12 }}>🔗</a>

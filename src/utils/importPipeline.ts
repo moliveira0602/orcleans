@@ -319,6 +319,7 @@ export function createLeadFromImport(
         email: normalized.email || '',
         servicos: [],
         foto: '',
+        fotos: [],
         linkOrigem: normalized.linkOrigem || '',
         linkPedido: '',
         observacoes: normalized.observacoes || '',

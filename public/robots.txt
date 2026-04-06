@@ -1,0 +1,12 @@
+# ORCA - Inteligência Comercial B2B
+# Robots.txt para indexação nos motores de busca
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://orca.ai/sitemap.xml
+
+# Desallow paths that shouldn't be indexed
+Disallow: /app/
+Disallow: /private/

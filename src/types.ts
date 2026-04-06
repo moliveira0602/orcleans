@@ -61,6 +61,7 @@ export interface Lead {
     email: string;          // Contact email
     servicos: string[];     // Services offered (array)
     foto: string;           // Photo URL (thumbnail)
+    fotos: string[];        // Array of photo URLs (from Google/Foursquare)
     linkOrigem: string;     // Source URL (Google Maps, LinkedIn, etc.)
     linkPedido: string;     // Order/contact URL
     observacoes: string;    // Free notes field

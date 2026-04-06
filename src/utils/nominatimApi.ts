@@ -57,8 +57,10 @@ export interface NominatimResult {
     };
     website?: string;
     phone?: string;
+    email?: string;
     openingHours?: string;
     placeId: string;
+    extratags?: Record<string, string>;
 }
 
 // ============================================================================
@@ -69,6 +71,8 @@ export async function searchNominatim(
     request: NominatimSearchRequest
 ): Promise<NominatimResult[]> {
     const { query, limit = 50, countrycodes = 'pt' } = request;
+
+    console.log('[Nominatim] Searching:', query, 'limit:', limit, 'country:', countrycodes);
 
     // Nominatim requires User-Agent
     const headers = {
@@ -85,31 +89,46 @@ export async function searchNominatim(
         extratags: '1',
     })}`;
 
+    console.log('[Nominatim] URL:', url);
+
     // Rate limiting: wait 1 second between requests
     await delay(1000);
 
     const response = await fetch(url, { headers });
+    
     if (!response.ok) {
-        throw new Error(`Nominatim error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('[Nominatim] Error:', response.status, errorText);
+        throw new Error(`Nominatim error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const data: NominatimPlace[] = await response.json();
+    console.log('[Nominatim] Results:', data.length, 'for query:', query);
 
-    return data
+    const results = data
         .filter(place => {
-            // Filter by class/type for businesses
+            // More permissive filter - include any place with a name
+            const hasName = !!place.name || !!place.address?.amenity || !!place.address?.name;
+            
+            // Include businesses and points of interest
             const isBusiness = place.class === 'amenity' || 
                               place.class === 'shop' || 
                               place.class === 'tourism' ||
                               place.class === 'healthcare' ||
-                              (place.class === 'office' && place.type === 'company');
+                              place.class === 'office' ||
+                              place.class === 'leisure' ||
+                              place.class === 'craft' ||
+                              place.class === 'building';
             
-            // Also check if name exists (avoid generic locations)
-            const hasName = !!place.name || !!place.address?.amenity || !!place.address?.name;
+            // If no name, only include if it's clearly a business
+            if (!hasName && !isBusiness) return false;
             
-            return isBusiness && hasName;
+            return true;
         })
         .map(place => nominatimToResult(place));
+    
+    console.log('[Nominatim] Filtered results:', results.length);
+    return results;
 }
 
 // ============================================================================
@@ -121,6 +140,9 @@ function nominatimToResult(place: NominatimPlace): NominatimResult {
     
     // Extract contact info from extratags
     const extratags = place.extratags || {};
+    
+    // Try to extract email from various sources
+    const email = extratags.email || extratags['contact:email'] || '';
     
     return {
         name,
@@ -139,10 +161,12 @@ function nominatimToResult(place: NominatimPlace): NominatimResult {
             country: place.address?.country,
             country_code: place.address?.country_code,
         },
-        website: extratags.website || extratags['contact:website'],
-        phone: extratags.phone || extratags['contact:phone'],
+        website: extratags.website || extratags['contact:website'] || '',
+        phone: extratags.phone || extratags['contact:phone'] || '',
+        email: email,
         openingHours: extratags.opening_hours,
         placeId: `nominatim_${place.place_id}`,
+        extratags: extratags,
     };
 }
 
@@ -166,6 +190,50 @@ export function nominatimToLead(
         address.country,
     ].filter(Boolean).join(', ');
 
+    // Extract additional info from extratags
+    const extratags = result.extratags || {};
+    
+    // Try to extract services from category/type
+    const services: string[] = [];
+    if (result.type) services.push(result.type);
+    if (result.class) services.push(result.class);
+    
+    // Extract additional contact info
+    const email = result.email || extratags.email || extratags['contact:email'] || '';
+    const phone = result.phone || extratags.phone || extratags['contact:phone'] || '';
+    const website = result.website || extratags.website || extratags['contact:website'] || '';
+    
+    // Try to generate email from website if not available
+    let finalEmail = email;
+    if (!finalEmail && website) {
+        try {
+            const url = new URL(website.startsWith('http') ? website : `https://${website}`);
+            const domain = url.hostname.replace('www.', '');
+            finalEmail = `contato@${domain}`;
+        } catch {
+            // If URL parsing fails, try simple string manipulation
+            const domain = website.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+            if (domain) {
+                finalEmail = `contato@${domain}`;
+            }
+        }
+    }
+    
+    // Extract opening hours
+    const openingHours = result.openingHours || extratags.opening_hours || '';
+    
+    // Generate a contact link based on available data
+    let linkPedido = '';
+    if (website) {
+        linkPedido = website;
+    } else if (phone) {
+        // Create WhatsApp link if phone is available
+        const cleanPhone = phone.replace(/\D/g, '');
+        if (cleanPhone.length >= 9) {
+            linkPedido = `https://wa.me/${cleanPhone}`;
+        }
+    }
+
     return {
         nome: result.name,
         segmento: segment,
@@ -174,10 +242,17 @@ export function nominatimToLead(
         distrito_estado: address.state,
         codigo_postal: address.postcode,
         pais: address.country,
-        telefone: result.phone || '',
-        website: result.website || '',
-        observacoes: result.openingHours ? `Horário: ${result.openingHours}` : '',
+        telefone: phone,
+        website: website,
+        email: finalEmail,
+        servicos: services,
+        horario: openingHours,
+        observacoes: openingHours ? `Horário: ${openingHours}` : '',
         linkOrigem: `https://www.openstreetmap.org/?mlat=${result.lat}&mlon=${result.lon}#map=17/${result.lat}/${result.lon}`,
+        linkPedido: linkPedido,
+        status: 'Aberto',
+        preco: '',
+        foto: '',
         // No rating/reviews from Nominatim
         avaliacao: null,
         reviews: null,
@@ -234,31 +309,112 @@ export async function searchNominatimBatch(
 export function getNominatimQueries(segment: string, city: string): string[] {
     const segmentLower = segment.toLowerCase();
     
-    // Map common segments to OSM categories
+    // Map common segments to Portuguese and English search terms
+    // Nominatim works best with simple text queries
     const queryMap: Record<string, string[]> = {
         'clínica médica': [
-            `${segment} em ${city}`,
-            `clinics in ${city}`,
+            `clinic in ${city}`,
             `medical clinic ${city}`,
-            `doctors ${city}`,
+            `clínica médica ${city}`,
+            `clínica ${city}`,
+            `consultório médico ${city}`,
+            `doctor ${city}`,
             `healthcare ${city}`,
         ],
         'restaurante': [
-            `${segment} em ${city}`,
-            `restaurants in ${city}`,
-            `food ${city}`,
+            `restaurant in ${city}`,
+            `restaurante em ${city}`,
+            `restaurante ${city}`,
+            `café ${city}`,
+            `comida ${city}`,
             `dining ${city}`,
         ],
         'pet shop': [
-            `${segment} em ${city}`,
-            `pet shop ${city}`,
+            `pet shop in ${city}`,
             `pet store ${city}`,
+            `loja de animais ${city}`,
+            `veterinário ${city}`,
             `veterinary ${city}`,
+            `pet ${city}`,
+        ],
+        'academia': [
+            `gym in ${city}`,
+            `fitness center ${city}`,
+            `academia ${city}`,
+            `ginásio ${city}`,
+            `fitness ${city}`,
+            `sports center ${city}`,
+        ],
+        'loja': [
+            `shop in ${city}`,
+            `store ${city}`,
+            `loja ${city}`,
+            `shopping ${city}`,
+            `retail ${city}`,
+        ],
+        'café': [
+            `cafe in ${city}`,
+            `café ${city}`,
+            `coffee shop ${city}`,
+            `cafetaria ${city}`,
+            `coffee ${city}`,
+        ],
+        'hotel': [
+            `hotel in ${city}`,
+            `hotel ${city}`,
+            `hospedagem ${city}`,
+            `pousada ${city}`,
+            `guest house ${city}`,
+            `accommodation ${city}`,
+        ],
+        'farmácia': [
+            `pharmacy in ${city}`,
+            `farmácia ${city}`,
+            `drogaria ${city}`,
+            `chemist ${city}`,
+            `drugstore ${city}`,
+        ],
+        'supermercado': [
+            `supermarket in ${city}`,
+            `supermercado ${city}`,
+            `grocery ${city}`,
+            `mercado ${city}`,
+            `food store ${city}`,
+        ],
+        'escola': [
+            `school in ${city}`,
+            `escola ${city}`,
+            `colégio ${city}`,
+            `education ${city}`,
+            `college ${city}`,
+        ],
+        'salão de beleza': [
+            `hairdresser in ${city}`,
+            `beauty salon ${city}`,
+            `salão de beleza ${city}`,
+            `cabeleireiro ${city}`,
+            `barbearia ${city}`,
+            `barber ${city}`,
+        ],
+        'oficina': [
+            `car repair in ${city}`,
+            `auto repair ${city}`,
+            `oficina ${city}`,
+            `mecânico ${city}`,
+            `garage ${city}`,
+            `workshop ${city}`,
         ],
     };
 
-    return queryMap[segmentLower] || [
-        `${segment} em ${city}`,
+    // Return mapped queries or fall back to generic search
+    if (queryMap[segmentLower]) {
+        return queryMap[segmentLower];
+    }
+    
+    // Generic fallback - try multiple formats
+    return [
+        `${segment} in ${city}`,
         `${segment} ${city}`,
+        `${segmentLower} ${city}`,
     ];
 }
