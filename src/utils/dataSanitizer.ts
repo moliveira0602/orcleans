@@ -250,7 +250,7 @@ export function sanitizeLeadData(data: Record<string, unknown>): SanitizedLeadDa
     // Helper to safely get number-like value
     const getNum = (...keys: string[]): string | number | null | undefined => {
         for (const key of keys) {
-            const val = data[key];
+            const val = data[key] as string | number | null | undefined;
             if (val !== null && val !== undefined && val !== '') return val;
         }
         return null;
