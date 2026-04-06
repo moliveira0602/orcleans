@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import MistBackground from '../components/ui/MistBackground';
+import { NeonButton } from '../components/ui/NeonButton';
 
 // FAQ Data
 const faqItems = [
@@ -483,12 +484,13 @@ export default function LandingPage() {
                         <a href="/app" className="btn btn-primary btn-lg">
                             Entrar na Plataforma
                         </a>
-                        <button
-                            className="btn btn-ghost btn-lg"
+                        <NeonButton
+                            variant="ghost"
+                            size="lg"
                             onClick={() => scrollToSection('plataforma')}
                         >
                             Explorar a ORCA
-                        </button>
+                        </NeonButton>
                     </div>
                     <div className="hero-stats">
                         <div className="stat-item">
@@ -734,9 +736,9 @@ export default function LandingPage() {
                                     </div>
                                 </div>
                             </div>
-                            <a href="/app" className="btn btn-primary btn-lg">
+                            <NeonButton variant="solid" size="lg">
                                 Experimentar Sonar
-                            </a>
+                            </NeonButton>
                         </div>
                         <div className="sonar-visual">
                             <div className="sonar-circle sonar-circle-1" />
@@ -834,9 +836,13 @@ export default function LandingPage() {
                                         </li>
                                     ))}
                                 </ul>
-                                <button className={`btn ${plan.highlighted ? 'btn-primary' : 'btn-ghost'} pricing-cta`}>
+                                <NeonButton 
+                                    variant={plan.highlighted ? 'solid' : 'ghost'} 
+                                    size="lg"
+                                    className="pricing-cta w-full"
+                                >
                                     {plan.cta}
-                                </button>
+                                </NeonButton>
                             </div>
                         ))}
                     </div>
@@ -917,9 +923,9 @@ export default function LandingPage() {
                         qualificar e converter mais leads.
                     </p>
                     <div className="cta-buttons">
-                        <button className="btn btn-primary btn-lg" onClick={handleContactClick}>
+                        <NeonButton variant="solid" size="lg" onClick={handleContactClick}>
                             Falar com Especialista
-                        </button>
+                        </NeonButton>
                     </div>
                 </div>
             </section>
@@ -1028,7 +1034,12 @@ export default function LandingPage() {
                                         </div>
                                     </div>
                                     
-                                    <button type="submit" className="btn btn-primary btn-lg form-submit" disabled={isSubmitting}>
+                                    <NeonButton 
+                                        variant="solid" 
+                                        size="lg" 
+                                        className="form-submit w-full" 
+                                        disabled={isSubmitting}
+                                    >
                                         {isSubmitting ? (
                                             <span className="btn-loading">
                                                 <svg className="spinner" viewBox="0 0 24 24">
@@ -1039,7 +1050,7 @@ export default function LandingPage() {
                                         ) : (
                                             <span>Solicitar contacto</span>
                                         )}
-                                    </button>
+                                    </NeonButton>
                                     
                                     <div className="form-trust">
                                         <div className="trust-item">
@@ -1068,9 +1079,9 @@ export default function LandingPage() {
                                 </div>
                                 <h3 className="modal-title">Mensagem enviada!</h3>
                                 <p className="modal-subtitle">Obrigado pelo contato. Nossa equipe entrará em contato em até 24 horas.</p>
-                                <button className="btn btn-primary btn-lg" onClick={closeModal}>
+                                <NeonButton variant="solid" size="lg" onClick={closeModal}>
                                     Fechar
-                                </button>
+                                </NeonButton>
                             </div>
                         )}
                     </div>
