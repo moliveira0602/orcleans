@@ -146,6 +146,8 @@ function useScrollAnimation() {
             (entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
+                        // Add .visible class to the element
+                        entry.target.classList.add('visible');
                         setVisibleSections((prev) => new Set([...prev, entry.target.id]));
                     }
                 });
