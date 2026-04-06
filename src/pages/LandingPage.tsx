@@ -459,7 +459,7 @@ export default function LandingPage() {
                     <div className="clients-grid">
                         {clientLogos.map((logo, idx) => (
                             <div key={idx} className="client-logo" data-animate={`clients-${idx}`}>
-                                <span className="client-logo-text" style={{ color: logo.color }}>{logo.name}</span>
+                                <span className="client-logo-text">{logo.name}</span>
                             </div>
                         ))}
                     </div>
