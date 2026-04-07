@@ -360,7 +360,7 @@ export default function LandingPage() {
     const navItems = [
         { id: 'inicio', label: 'Início' },
         { id: 'problema', label: 'Problema' },
-        { id: 'features', label: 'Funcionalidades' },
+        { id: 'features', label: 'Soluções' },
         { id: 'como-funciona', label: 'Como Funciona' },
         { id: 'sonar', label: 'Sonar' },
         { id: 'pricing', label: 'Preços' },
