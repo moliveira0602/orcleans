@@ -1888,7 +1888,7 @@ export default function LandingPage() {
 
                 .float-contact {
                     position: fixed;
-                    bottom: 28px;
+                    bottom: 150px;
                     right: 28px;
                     z-index: 950;
                     display: flex;
