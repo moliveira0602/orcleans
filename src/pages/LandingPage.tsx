@@ -491,6 +491,43 @@ export default function LandingPage() {
                             <span className="stat-label">dos dados em conformidade com LGPD</span>
                         </div>
                     </div>
+
+                    {/* ===== HERO INLINE CAPTURE ===== */}
+                    <div className={`hero-capture-wrapper animate-fade-up${heroAnimated ? ' visible' : ''}`} style={{ animationDelay: '600ms' }}>
+                        {!heroCaptureSubmitted ? (
+                            <form className="hero-capture__form hero-capture__form-inline" onSubmit={handleHeroCapture}>
+                                <input className="hero-capture__input" type="email" placeholder="seu@email.com.br" required />
+                                <button type="submit" className="hero-capture__btn">
+                                    Ver meus leads grátis
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                        <polyline points="12 5 19 12 12 19"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        ) : (
+                            <div className="hero-capture__success hero-capture__success-inline">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <p>Perfeito! <span>Enviamos o acesso para seu email.</span> Verifique a caixa de entrada.</p>
+                            </div>
+                        )}
+                        <div className="hero-capture__trust">
+                            <span className="hero-capture__trust-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                Sem cartão de crédito
+                            </span>
+                            <span className="hero-capture__trust-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                14 dias grátis
+                            </span>
+                            <span className="hero-capture__trust-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                LGPD compliant
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -912,48 +949,9 @@ export default function LandingPage() {
                 </div>
             )}
 
-            {/* ===== HERO INLINE CAPTURE ===== */}
-            <div className="hero-capture-section">
-                <div className="container">
-                    {!heroCaptureSubmitted ? (
-                        <form className="hero-capture__form" onSubmit={handleHeroCapture}>
-                            <input className="hero-capture__input" type="email" placeholder="seu@email.com.br" required />
-                            <button type="submit" className="hero-capture__btn">
-                                Ver meus leads grátis
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                    <line x1="5" y1="12" x2="19" y2="12"/>
-                                    <polyline points="12 5 19 12 12 19"/>
-                                </svg>
-                            </button>
-                        </form>
-                    ) : (
-                        <div className="hero-capture__success">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <p>Perfeito! <span>Enviamos o acesso para seu email.</span> Verifique a caixa de entrada.</p>
-                        </div>
-                    )}
-                    <div className="hero-capture__trust">
-                        <span className="hero-capture__trust-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                            Sem cartão de crédito
-                        </span>
-                        <span className="hero-capture__trust-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                            14 dias grátis
-                        </span>
-                        <span className="hero-capture__trust-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                            LGPD compliant
-                        </span>
-                    </div>
-                </div>
-            </div>
-
             {/* ===== STICKY CTA BAR ===== */}
-            {!stickyBarDismissed && (
-                <div className={`sticky-bar${scrolled ? ' visible' : ''}`}>
+            {!stickyBarDismissed && scrolled && (
+                <div className="sticky-bar visible">
                     <div className="sticky-bar__left">
                         <span className="sticky-bar__logo">ORCA</span>
                         <span className="sticky-bar__sep"></span>
@@ -1687,8 +1685,8 @@ export default function LandingPage() {
                 /* ===== SCROLL TO TOP BUTTON ===== */
                 .scroll-to-top {
                     position: fixed;
-                    bottom: 32px;
-                    right: 32px;
+                    bottom: 90px;
+                    right: 28px;
                     width: 48px;
                     height: 48px;
                     background: #00C2FF;
@@ -1699,7 +1697,7 @@ export default function LandingPage() {
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
-                    z-index: 999;
+                    z-index: 940;
                     transition: all 0.3s ease;
                     box-shadow: 0 4px 16px rgba(0, 194, 255, 0.3);
                 }
@@ -1713,8 +1711,8 @@ export default function LandingPage() {
                 }
                 @media (max-width: 768px) {
                     .scroll-to-top {
-                        bottom: 24px;
-                        right: 24px;
+                        bottom: 72px;
+                        right: 16px;
                         width: 44px;
                         height: 44px;
                     }
@@ -1925,11 +1923,26 @@ export default function LandingPage() {
                 }
 
                 /* ===== FLOATING WHATSAPP ===== */
+                /* Hero Inline Capture Wrapper */
+                .hero-capture-wrapper {
+                    max-width: 600px;
+                    margin: 0 auto;
+                }
+                .hero-capture__form-inline {
+                    max-width: 520px;
+                    margin: 0 auto;
+                }
+                .hero-capture__success-inline {
+                    max-width: 520px;
+                    margin: 0 auto;
+                    justify-content: center;
+                }
+
                 .float-contact {
                     position: fixed;
                     bottom: 28px;
                     right: 28px;
-                    z-index: 900;
+                    z-index: 950;
                     display: flex;
                     flex-direction: column;
                     align-items: flex-end;
