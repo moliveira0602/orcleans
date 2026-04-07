@@ -985,58 +985,6 @@ export default function LandingPage() {
                 </a>
             </div>
 
-            {/* ===== DEMO MODAL ===== */}
-            {demoModalOpen && (
-                <div className="demo-modal-overlay" onClick={closeDemoModal}>
-                    <div className="demo-modal" onClick={(e) => e.stopPropagation()}>
-                        <button className="demo-modal__close" onClick={closeDemoModal}>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                            </svg>
-                        </button>
-                        <div className="demo-modal__eyebrow">Demonstração gratuita</div>
-                        <div className="demo-modal__title">Veja a ORCA funcionando com seus dados</div>
-                        <div className="demo-modal__subtitle">Setup em 10 minutos. Um especialista entra em contato em até 2h.</div>
-                        <form className="demo-modal__form" onSubmit={handleDemoSubmit}>
-                            <div className="demo-form-row">
-                                <div className="demo-form-field">
-                                    <label>Nome</label>
-                                    <input type="text" name="firstName" value={demoFormData.firstName} onChange={handleDemoInputChange} placeholder="Rafael" required />
-                                </div>
-                                <div className="demo-form-field">
-                                    <label>Sobrenome</label>
-                                    <input type="text" name="lastName" value={demoFormData.lastName} onChange={handleDemoInputChange} placeholder="Costa" required />
-                                </div>
-                            </div>
-                            <div className="demo-form-field">
-                                <label>Email corporativo</label>
-                                <input type="email" name="email" value={demoFormData.email} onChange={handleDemoInputChange} placeholder="rafael@empresa.com.br" required />
-                            </div>
-                            <div className="demo-form-row">
-                                <div className="demo-form-field">
-                                    <label>Empresa</label>
-                                    <input type="text" name="company" value={demoFormData.company} onChange={handleDemoInputChange} placeholder="Conta Azul" required />
-                                </div>
-                                <div className="demo-form-field">
-                                    <label>Tamanho do time</label>
-                                    <select name="teamSize" value={demoFormData.teamSize} onChange={handleDemoInputChange} required>
-                                        <option value="" disabled selected>Selecione</option>
-                                        <option>1–5 pessoas</option>
-                                        <option>5–15 pessoas</option>
-                                        <option>15–50 pessoas</option>
-                                        <option>50+ pessoas</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <button type="submit" className="demo-modal__submit">
-                                Quero ver a demonstração →
-                            </button>
-                        </form>
-                        <p className="demo-modal__fine-print">Sem cartão de crédito. Sem compromisso. LGPD compliant.</p>
-                    </div>
-                </div>
-            )}
-
             {/* ===== SCROLL TO TOP BUTTON ===== */}
             {scrolled && (
                 <button
