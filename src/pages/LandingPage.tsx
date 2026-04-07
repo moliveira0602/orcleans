@@ -1179,7 +1179,7 @@ export default function LandingPage() {
                 .btn-ghost { background: transparent; color: rgba(234, 246, 255, 0.7); border: 1px solid rgba(234, 246, 255, 0.15); }
                 .btn-ghost:hover { color: #EAF6FF; border-color: rgba(234, 246, 255, 0.3); background: rgba(234, 246, 255, 0.05); }
                 .btn-lg { padding: 14px 32px; font-size: 16px; }
-                .hero-stats { display: flex; gap: 32px; justify-content: center; align-items: center; flex-wrap: wrap; }
+                .hero-stats { display: flex; gap: 32px; justify-content: center; align-items: center; flex-wrap: nowrap; }
                 .stat-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
                 .stat-value { font-size: 28px; font-weight: 700; color: #00C2FF; }
                 .stat-label { font-size: 13px; color: rgba(234, 246, 255, 0.5); }
@@ -1960,10 +1960,11 @@ export default function LandingPage() {
                     color: white;
                 }
                 @media (max-width: 768px) {
-                    .float-contact {
-                        bottom: 16px;
-                        right: 16px;
-                    }
+                    .landing-nav { display: none; }
+                    .mobile-menu-btn { display: flex; }
+                    .mobile-menu { display: block; }
+                    .hero-stats { flex-wrap: wrap; }
+                }
                     .float-contact__btn {
                         width: 48px;
                         height: 48px;
