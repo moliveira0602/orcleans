@@ -223,6 +223,18 @@ export default function LandingPage() {
     const [formSubmitted, setFormSubmitted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [heroAnimated, setHeroAnimated] = useState(false);
+    const [demoModalOpen, setDemoModalOpen] = useState(false);
+    const [heroCaptureSubmitted, setHeroCaptureSubmitted] = useState(false);
+    const [stickyBarDismissed, setStickyBarDismissed] = useState(() => {
+        return typeof window !== 'undefined' ? sessionStorage.getItem('orca_bar_dismissed') === 'true' : false;
+    });
+    const [demoFormData, setDemoFormData] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        company: '',
+        teamSize: ''
+    });
     const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
 
     const visibleSections = useScrollAnimation();
@@ -349,13 +361,43 @@ export default function LandingPage() {
 
     const closeModal = () => setContactModalOpen(false);
 
+    // Demo modal handlers
+    const openDemoModal = () => setDemoModalOpen(true);
+    const closeDemoModal = () => setDemoModalOpen(false);
+
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && contactModalOpen) closeModal();
+            if (e.key === 'Escape' && demoModalOpen) closeDemoModal();
         };
         window.addEventListener('keydown', handleEscape);
         return () => window.removeEventListener('keydown', handleEscape);
-    }, [contactModalOpen]);
+    }, [contactModalOpen, demoModalOpen]);
+
+    // Sticky bar dismiss
+    const dismissStickyBar = () => {
+        setStickyBarDismissed(true);
+        sessionStorage.setItem('orca_bar_dismissed', 'true');
+    };
+
+    // Hero capture handler
+    const handleHeroCapture = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await new Promise(resolve => setTimeout(resolve, 800));
+        setHeroCaptureSubmitted(true);
+    };
+
+    // Demo form handler
+    const handleDemoSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        closeDemoModal();
+    };
+
+    const handleDemoInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setDemoFormData(prev => ({ ...prev, [name]: value }));
+    };
 
     const navItems = [
         { id: 'inicio', label: 'Início' },
@@ -866,6 +908,133 @@ export default function LandingPage() {
                                 <button className="btn btn-primary btn-lg" onClick={closeModal}>Fechar</button>
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* ===== HERO INLINE CAPTURE ===== */}
+            <div className="hero-capture-section">
+                <div className="container">
+                    {!heroCaptureSubmitted ? (
+                        <form className="hero-capture__form" onSubmit={handleHeroCapture}>
+                            <input className="hero-capture__input" type="email" placeholder="seu@email.com.br" required />
+                            <button type="submit" className="hero-capture__btn">
+                                Ver meus leads grátis
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                    <polyline points="12 5 19 12 12 19"/>
+                                </svg>
+                            </button>
+                        </form>
+                    ) : (
+                        <div className="hero-capture__success">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            <p>Perfeito! <span>Enviamos o acesso para seu email.</span> Verifique a caixa de entrada.</p>
+                        </div>
+                    )}
+                    <div className="hero-capture__trust">
+                        <span className="hero-capture__trust-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            Sem cartão de crédito
+                        </span>
+                        <span className="hero-capture__trust-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            14 dias grátis
+                        </span>
+                        <span className="hero-capture__trust-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            LGPD compliant
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {/* ===== STICKY CTA BAR ===== */}
+            {!stickyBarDismissed && (
+                <div className={`sticky-bar${scrolled ? ' visible' : ''}`}>
+                    <div className="sticky-bar__left">
+                        <span className="sticky-bar__logo">ORCA</span>
+                        <span className="sticky-bar__sep"></span>
+                        <span className="sticky-bar__copy">Primeiros leads ainda hoje — setup em 10 min</span>
+                    </div>
+                    <div className="sticky-bar__right">
+                        <button className="sticky-bar__cta" onClick={openDemoModal}>
+                            Começar grátis
+                        </button>
+                        <button className="sticky-bar__dismiss" onClick={dismissStickyBar} title="Fechar">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ===== FLOATING WHATSAPP ===== */}
+            <div className="float-contact">
+                <div className="float-contact__bubble">
+                    <strong>Falar com especialista</strong>
+                    Resposta em menos de 5 minutos
+                </div>
+                <a href="https://wa.me/351900000000?text=Olá%2C%20quero%20conhecer%20a%20ORCA" target="_blank" rel="noopener">
+                    <button className="float-contact__btn" title="Falar no WhatsApp">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                        </svg>
+                    </button>
+                </a>
+            </div>
+
+            {/* ===== DEMO MODAL ===== */}
+            {demoModalOpen && (
+                <div className="demo-modal-overlay" onClick={closeDemoModal}>
+                    <div className="demo-modal" onClick={(e) => e.stopPropagation()}>
+                        <button className="demo-modal__close" onClick={closeDemoModal}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                        <div className="demo-modal__eyebrow">Demonstração gratuita</div>
+                        <div className="demo-modal__title">Veja a ORCA funcionando com seus dados</div>
+                        <div className="demo-modal__subtitle">Setup em 10 minutos. Um especialista entra em contato em até 2h.</div>
+                        <form className="demo-modal__form" onSubmit={handleDemoSubmit}>
+                            <div className="demo-form-row">
+                                <div className="demo-form-field">
+                                    <label>Nome</label>
+                                    <input type="text" name="firstName" value={demoFormData.firstName} onChange={handleDemoInputChange} placeholder="Rafael" required />
+                                </div>
+                                <div className="demo-form-field">
+                                    <label>Sobrenome</label>
+                                    <input type="text" name="lastName" value={demoFormData.lastName} onChange={handleDemoInputChange} placeholder="Costa" required />
+                                </div>
+                            </div>
+                            <div className="demo-form-field">
+                                <label>Email corporativo</label>
+                                <input type="email" name="email" value={demoFormData.email} onChange={handleDemoInputChange} placeholder="rafael@empresa.com.br" required />
+                            </div>
+                            <div className="demo-form-row">
+                                <div className="demo-form-field">
+                                    <label>Empresa</label>
+                                    <input type="text" name="company" value={demoFormData.company} onChange={handleDemoInputChange} placeholder="Conta Azul" required />
+                                </div>
+                                <div className="demo-form-field">
+                                    <label>Tamanho do time</label>
+                                    <select name="teamSize" value={demoFormData.teamSize} onChange={handleDemoInputChange} required>
+                                        <option value="" disabled selected>Selecione</option>
+                                        <option>1–5 pessoas</option>
+                                        <option>5–15 pessoas</option>
+                                        <option>15–50 pessoas</option>
+                                        <option>50+ pessoas</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" className="demo-modal__submit">
+                                Quero ver a demonstração →
+                            </button>
+                        </form>
+                        <p className="demo-modal__fine-print">Sem cartão de crédito. Sem compromisso. LGPD compliant.</p>
                     </div>
                 </div>
             )}
@@ -1548,6 +1717,458 @@ export default function LandingPage() {
                         right: 24px;
                         width: 44px;
                         height: 44px;
+                    }
+                }
+
+                /* ===== HERO INLINE CAPTURE ===== */
+                .hero-capture-section {
+                    padding: 40px 0;
+                    background: #05070A;
+                    border-top: 1px solid rgba(0, 194, 255, 0.05);
+                    border-bottom: 1px solid rgba(0, 194, 255, 0.05);
+                }
+                .hero-capture__form {
+                    display: flex;
+                    gap: 0;
+                    background: rgba(11, 31, 46, 0.5);
+                    border: 1px solid rgba(0, 194, 255, 0.1);
+                    border-radius: 16px;
+                    overflow: hidden;
+                    transition: all 0.3s ease;
+                    max-width: 520px;
+                    margin: 0 auto;
+                }
+                .hero-capture__form:focus-within {
+                    border-color: rgba(0, 194, 255, 0.4);
+                    box-shadow: 0 0 0 3px rgba(0, 194, 255, 0.1), 0 0 40px rgba(0, 194, 255, 0.1);
+                }
+                .hero-capture__input {
+                    flex: 1;
+                    background: transparent;
+                    border: none;
+                    outline: none;
+                    padding: 14px 18px;
+                    font-family: inherit;
+                    font-size: 14px;
+                    color: #EAF6FF;
+                }
+                .hero-capture__input::placeholder {
+                    color: rgba(234, 246, 255, 0.3);
+                }
+                .hero-capture__btn {
+                    background: #00C2FF;
+                    color: #05070A;
+                    border: none;
+                    padding: 14px 22px;
+                    font-family: 'Sora', 'Inter', sans-serif;
+                    font-size: 13px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    white-space: nowrap;
+                    transition: all 0.2s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+                .hero-capture__btn:hover {
+                    background: #33CFFF;
+                }
+                .hero-capture__btn svg {
+                    width: 14px;
+                    height: 14px;
+                    transition: transform 0.2s ease;
+                }
+                .hero-capture__btn:hover svg {
+                    transform: translateX(3px);
+                }
+                .hero-capture__success {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    background: rgba(0, 229, 160, 0.1);
+                    border: 1px solid rgba(0, 229, 160, 0.2);
+                    border-radius: 12px;
+                    padding: 14px 18px;
+                    max-width: 520px;
+                    margin: 0 auto;
+                }
+                .hero-capture__success svg {
+                    width: 18px;
+                    height: 18px;
+                    color: #00E5A0;
+                    flex-shrink: 0;
+                }
+                .hero-capture__success p {
+                    font-size: 14px;
+                    color: #EAF6FF;
+                }
+                .hero-capture__success span {
+                    color: #00E5A0;
+                    font-weight: 500;
+                }
+                .hero-capture__trust {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 24px;
+                    flex-wrap: wrap;
+                    margin-top: 16px;
+                }
+                .hero-capture__trust-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    font-size: 12px;
+                    color: rgba(234, 246, 255, 0.4);
+                }
+                .hero-capture__trust-item svg {
+                    width: 12px;
+                    height: 12px;
+                    color: #00E5A0;
+                    flex-shrink: 0;
+                }
+                @media (max-width: 600px) {
+                    .hero-capture__form {
+                        flex-direction: column;
+                        border-radius: 12px;
+                    }
+                    .hero-capture__btn {
+                        justify-content: center;
+                    }
+                }
+
+                /* ===== STICKY CTA BAR ===== */
+                .sticky-bar {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    z-index: 800;
+                    background: rgba(9, 12, 16, 0.95);
+                    backdrop-filter: blur(12px);
+                    border-bottom: 1px solid rgba(0, 194, 255, 0.08);
+                    padding: 12px 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 16px;
+                    transform: translateY(-100%);
+                    transition: transform 0.3s ease;
+                }
+                .sticky-bar.visible {
+                    transform: translateY(0);
+                }
+                .sticky-bar__left {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+                .sticky-bar__logo {
+                    font-family: 'Sora', 'Inter', sans-serif;
+                    font-size: 16px;
+                    font-weight: 800;
+                    color: #EAF6FF;
+                    letter-spacing: 0.05em;
+                }
+                .sticky-bar__sep {
+                    width: 1px;
+                    height: 20px;
+                    background: rgba(234, 246, 255, 0.1);
+                }
+                .sticky-bar__copy {
+                    font-size: 13px;
+                    color: rgba(234, 246, 255, 0.6);
+                }
+                .sticky-bar__right {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    flex-shrink: 0;
+                }
+                .sticky-bar__cta {
+                    background: #00C2FF;
+                    color: #05070A;
+                    border: none;
+                    border-radius: 8px;
+                    padding: 9px 18px;
+                    font-family: 'Sora', 'Inter', sans-serif;
+                    font-size: 13px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    white-space: nowrap;
+                }
+                .sticky-bar__cta:hover {
+                    background: #33CFFF;
+                }
+                .sticky-bar__dismiss {
+                    background: none;
+                    border: none;
+                    color: rgba(234, 246, 255, 0.4);
+                    cursor: pointer;
+                    padding: 4px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s ease;
+                }
+                .sticky-bar__dismiss:hover {
+                    color: #EAF6FF;
+                }
+                .sticky-bar__dismiss svg {
+                    width: 16px;
+                    height: 16px;
+                }
+                @media (max-width: 600px) {
+                    .sticky-bar__copy { display: none; }
+                    .sticky-bar__sep { display: none; }
+                }
+
+                /* ===== FLOATING WHATSAPP ===== */
+                .float-contact {
+                    position: fixed;
+                    bottom: 28px;
+                    right: 28px;
+                    z-index: 900;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-end;
+                    gap: 10px;
+                }
+                .float-contact__bubble {
+                    background: rgba(11, 31, 46, 0.95);
+                    border: 1px solid rgba(0, 194, 255, 0.1);
+                    border-radius: 16px;
+                    padding: 14px 16px;
+                    font-size: 13px;
+                    color: rgba(234, 246, 255, 0.6);
+                    white-space: nowrap;
+                    opacity: 0;
+                    transform: translateX(10px);
+                    transition: all 0.3s ease;
+                    pointer-events: none;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+                    backdrop-filter: blur(12px);
+                }
+                .float-contact__bubble strong {
+                    color: #EAF6FF;
+                    display: block;
+                    font-size: 13px;
+                    font-weight: 500;
+                    margin-bottom: 2px;
+                }
+                .float-contact:hover .float-contact__bubble {
+                    opacity: 1;
+                    transform: translateX(0);
+                    pointer-events: all;
+                }
+                .float-contact__btn {
+                    width: 54px;
+                    height: 54px;
+                    border-radius: 50%;
+                    background: #25D366;
+                    border: none;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    box-shadow: 0 4px 20px rgba(37, 211, 102, 0.35);
+                    transition: all 0.3s ease;
+                    position: relative;
+                }
+                .float-contact__btn::before {
+                    content: '';
+                    position: absolute;
+                    inset: -3px;
+                    border-radius: 50%;
+                    border: 2px solid rgba(37, 211, 102, 0.3);
+                    animation: pulse-ring 2.5s ease-out infinite;
+                }
+                @keyframes pulse-ring {
+                    0% { transform: scale(1); opacity: 0.6; }
+                    100% { transform: scale(1.4); opacity: 0; }
+                }
+                .float-contact__btn:hover {
+                    background: #20C45A;
+                    transform: scale(1.08);
+                    box-shadow: 0 6px 28px rgba(37, 211, 102, 0.5);
+                }
+                .float-contact__btn svg {
+                    width: 26px;
+                    height: 26px;
+                    color: white;
+                }
+                @media (max-width: 768px) {
+                    .float-contact {
+                        bottom: 16px;
+                        right: 16px;
+                    }
+                    .float-contact__btn {
+                        width: 48px;
+                        height: 48px;
+                    }
+                }
+
+                /* ===== DEMO MODAL ===== */
+                .demo-modal-overlay {
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(5, 7, 10, 0.92);
+                    backdrop-filter: blur(8px);
+                    z-index: 2000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 24px;
+                    animation: fadeIn 0.25s ease;
+                }
+                .demo-modal {
+                    background: rgba(11, 31, 46, 0.98);
+                    border: 1px solid rgba(0, 194, 255, 0.15);
+                    border-radius: 24px;
+                    width: 100%;
+                    max-width: 480px;
+                    padding: 36px;
+                    position: relative;
+                    animation: slideInUp 0.3s ease;
+                }
+                @keyframes slideInUp {
+                    from { opacity: 0; transform: translateY(20px) scale(0.97); }
+                    to { opacity: 1; transform: translateY(0) scale(1); }
+                }
+                .demo-modal__close {
+                    position: absolute;
+                    top: 16px;
+                    right: 16px;
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    background: rgba(5, 7, 10, 0.5);
+                    border: 1px solid rgba(234, 246, 255, 0.1);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    color: rgba(234, 246, 255, 0.5);
+                    transition: all 0.2s ease;
+                }
+                .demo-modal__close:hover {
+                    background: rgba(5, 7, 10, 0.8);
+                    color: #EAF6FF;
+                }
+                .demo-modal__close svg {
+                    width: 14px;
+                    height: 14px;
+                }
+                .demo-modal__eyebrow {
+                    font-family: 'Sora', 'Inter', sans-serif;
+                    font-size: 11px;
+                    font-weight: 600;
+                    letter-spacing: 0.1em;
+                    text-transform: uppercase;
+                    color: #00C2FF;
+                    margin-bottom: 10px;
+                }
+                .demo-modal__title {
+                    font-family: 'Sora', 'Inter', sans-serif;
+                    font-size: 22px;
+                    font-weight: 700;
+                    color: #EAF6FF;
+                    line-height: 1.3;
+                    margin-bottom: 6px;
+                }
+                .demo-modal__subtitle {
+                    font-size: 14px;
+                    color: rgba(234, 246, 255, 0.5);
+                    margin-bottom: 28px;
+                }
+                .demo-modal__form {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                }
+                .demo-form-row {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 12px;
+                }
+                .demo-form-field {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                }
+                .demo-form-field label {
+                    font-size: 12px;
+                    font-weight: 500;
+                    color: rgba(234, 246, 255, 0.5);
+                    letter-spacing: 0.02em;
+                }
+                .demo-form-field input,
+                .demo-form-field select {
+                    background: rgba(5, 7, 10, 0.5);
+                    border: 1px solid rgba(234, 246, 255, 0.1);
+                    border-radius: 10px;
+                    padding: 11px 14px;
+                    font-family: inherit;
+                    font-size: 14px;
+                    color: #EAF6FF;
+                    outline: none;
+                    transition: all 0.2s ease;
+                    width: 100%;
+                    appearance: none;
+                    -webkit-appearance: none;
+                }
+                .demo-form-field input::placeholder {
+                    color: rgba(234, 246, 255, 0.25);
+                }
+                .demo-form-field input:focus,
+                .demo-form-field select:focus {
+                    border-color: rgba(0, 194, 255, 0.5);
+                    background: rgba(5, 7, 10, 0.8);
+                    box-shadow: 0 0 0 3px rgba(0, 194, 255, 0.1);
+                }
+                .demo-form-field select {
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+                    background-repeat: no-repeat;
+                    background-position: right 14px center;
+                    padding-right: 36px;
+                    cursor: pointer;
+                }
+                .demo-form-field select option {
+                    background: rgba(11, 31, 46, 0.98);
+                    color: #EAF6FF;
+                }
+                .demo-modal__submit {
+                    width: 100%;
+                    background: #00C2FF;
+                    color: #05070A;
+                    border: none;
+                    border-radius: 10px;
+                    padding: 14px;
+                    font-family: 'Sora', 'Inter', sans-serif;
+                    font-size: 14px;
+                    font-weight: 700;
+                    letter-spacing: 0.02em;
+                    cursor: pointer;
+                    margin-top: 4px;
+                    transition: all 0.2s ease;
+                }
+                .demo-modal__submit:hover {
+                    background: #33CFFF;
+                    transform: translateY(-1px);
+                }
+                .demo-modal__fine-print {
+                    font-size: 11px;
+                    color: rgba(234, 246, 255, 0.3);
+                    text-align: center;
+                    margin-top: 12px;
+                }
+                @media (max-width: 600px) {
+                    .demo-form-row {
+                        grid-template-columns: 1fr;
+                    }
+                    .demo-modal {
+                        padding: 24px;
                     }
                 }
             `}</style>
