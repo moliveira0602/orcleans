@@ -953,7 +953,7 @@ export default function LandingPage() {
             {!stickyBarDismissed && scrolled && (
                 <div className="sticky-bar visible">
                     <div className="sticky-bar__left">
-                        <span className="sticky-bar__logo">ORCA</span>
+                        <img src="/images/ORCA-white.png" alt="ORCA" className="sticky-bar__logo" />
                         <span className="sticky-bar__sep"></span>
                         <span className="sticky-bar__copy">Primeiros leads ainda hoje — setup em 10 min</span>
                     </div>
@@ -1786,19 +1786,19 @@ export default function LandingPage() {
                 /* ===== STICKY CTA BAR ===== */
                 .sticky-bar {
                     position: fixed;
-                    top: 0;
+                    bottom: 0;
                     left: 0;
                     right: 0;
                     z-index: 1100;
                     background: rgba(9, 12, 16, 0.95);
                     backdrop-filter: blur(12px);
-                    border-bottom: 1px solid rgba(0, 194, 255, 0.08);
+                    border-top: 1px solid rgba(0, 194, 255, 0.08);
                     padding: 12px 24px;
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
                     gap: 16px;
-                    transform: translateY(-100%);
+                    transform: translateY(100%);
                     transition: transform 0.3s ease;
                 }
                 .sticky-bar.visible {
@@ -1810,11 +1810,8 @@ export default function LandingPage() {
                     gap: 12px;
                 }
                 .sticky-bar__logo {
-                    font-family: 'Sora', 'Inter', sans-serif;
-                    font-size: 16px;
-                    font-weight: 800;
-                    color: #EAF6FF;
-                    letter-spacing: 0.05em;
+                    height: 20px;
+                    width: auto;
                 }
                 .sticky-bar__sep {
                     width: 1px;
