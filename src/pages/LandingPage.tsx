@@ -491,43 +491,6 @@ export default function LandingPage() {
                             <span className="stat-label">dos dados em conformidade com LGPD</span>
                         </div>
                     </div>
-
-                    {/* ===== HERO INLINE CAPTURE ===== */}
-                    <div className={`hero-capture-wrapper animate-fade-up${heroAnimated ? ' visible' : ''}`} style={{ animationDelay: '600ms' }}>
-                        {!heroCaptureSubmitted ? (
-                            <form className="hero-capture__form hero-capture__form-inline" onSubmit={handleHeroCapture}>
-                                <input className="hero-capture__input" type="email" placeholder="seu@email.com.br" required />
-                                <button type="submit" className="hero-capture__btn">
-                                    Ver meus leads grátis
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                        <line x1="5" y1="12" x2="19" y2="12"/>
-                                        <polyline points="12 5 19 12 12 19"/>
-                                    </svg>
-                                </button>
-                            </form>
-                        ) : (
-                            <div className="hero-capture__success hero-capture__success-inline">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <polyline points="20 6 9 17 4 12"/>
-                                </svg>
-                                <p>Perfeito! <span>Enviamos o acesso para seu email.</span> Verifique a caixa de entrada.</p>
-                            </div>
-                        )}
-                        <div className="hero-capture__trust">
-                            <span className="hero-capture__trust-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                                Sem cartão de crédito
-                            </span>
-                            <span className="hero-capture__trust-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                                14 dias grátis
-                            </span>
-                            <span className="hero-capture__trust-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                                LGPD compliant
-                            </span>
-                        </div>
-                    </div>
                 </div>
             </section>
 
@@ -667,6 +630,43 @@ export default function LandingPage() {
                                 <h3>Seu time foca apenas no que importa</h3>
                                 <p>Leads quentes vão direto para o pipeline. Alertas automáticos avisam quando agir. Relatórios mostram resultados.</p>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* ===== HOW IT WORKS INLINE CAPTURE ===== */}
+                    <div className="hero-capture-wrapper" style={{ marginTop: '48px' }}>
+                        {!heroCaptureSubmitted ? (
+                            <form className="hero-capture__form hero-capture__form-inline" onSubmit={handleHeroCapture}>
+                                <input className="hero-capture__input" type="email" placeholder="seu@email.com.br" required />
+                                <button type="submit" className="hero-capture__btn">
+                                    Ver meus leads grátis
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                        <polyline points="12 5 19 12 12 19"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        ) : (
+                            <div className="hero-capture__success hero-capture__success-inline">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <p>Perfeito! <span>Enviamos o acesso para seu email.</span> Verifique a caixa de entrada.</p>
+                            </div>
+                        )}
+                        <div className="hero-capture__trust">
+                            <span className="hero-capture__trust-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                Sem cartão de crédito
+                            </span>
+                            <span className="hero-capture__trust-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                14 dias grátis
+                            </span>
+                            <span className="hero-capture__trust-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                LGPD compliant
+                            </span>
                         </div>
                     </div>
                 </div>
