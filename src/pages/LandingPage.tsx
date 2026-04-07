@@ -738,9 +738,9 @@ export default function LandingPage() {
                                     </div>
                                 </div>
                             </div>
-                            <a href="/app" className="btn btn-primary btn-lg">
+                            <button className="btn btn-primary btn-lg" onClick={openDemoModal}>
                                 Experimentar Sonar
-                            </a>
+                            </button>
                         </div>
                         <div className="sonar-visual">
                             <div className="sonar-circle sonar-circle-1" />
