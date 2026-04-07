@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import Sidebar from './Sidebar';
-import Topbar from './Topbar';
+import { Topbar } from './Topbar';
 import Dashboard from '../pages/Dashboard';
 import Leads from '../pages/Leads';
 import Pipeline from '../pages/Pipeline';

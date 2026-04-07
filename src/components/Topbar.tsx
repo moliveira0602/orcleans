@@ -1,6 +1,7 @@
 import { Search, Bell, LogOut } from 'lucide-react';
 import { useAppState } from '../store';
 import { useToast } from './Toast';
+import { useAuth } from '../auth';
 
 type Page = 'dashboard' | 'leads' | 'pipeline' | 'insights' | 'import' | 'segments' | 'settings';
 
@@ -28,12 +29,12 @@ interface TopbarProps {
     currentPage: Page;
     onNavigate: (page: Page) => void;
     onSearch: (query: string) => void;
-    onLogout?: () => void;
 }
 
-export default function Topbar({ currentPage, onNavigate, onSearch }: TopbarProps) {
+export function Topbar({ currentPage, onNavigate, onSearch }: TopbarProps) {
     const { leads, settings } = useAppState();
     const toast = useToast();
+    const { logout } = useAuth();
 
     const showNotif = () => {
         const hot = leads.filter((l) => l._score >= settings.hotThreshold).length;
@@ -78,14 +79,12 @@ export default function Topbar({ currentPage, onNavigate, onSearch }: TopbarProp
                 <button className="btn-icon" onClick={showNotif}>
                     <Bell size={16} />
                 </button>
-                <button 
-                    className="btn-icon" 
-                    onClick={() => window.location.href = '/'}
-                    title="Sair da plataforma"
-                >
+                <button className="btn-icon" onClick={logout} title="Sair">
                     <LogOut size={16} />
                 </button>
             </div>
         </div>
     );
 }
+
+export default Topbar;

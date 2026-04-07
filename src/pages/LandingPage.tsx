@@ -223,6 +223,7 @@ export default function LandingPage() {
     const [formSubmitted, setFormSubmitted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [heroAnimated, setHeroAnimated] = useState(false);
+    const [heroPhrase, setHeroPhrase] = useState(0);
     const [demoModalOpen, setDemoModalOpen] = useState(false);
     const [heroCaptureSubmitted, setHeroCaptureSubmitted] = useState(false);
     const [stickyBarDismissed, setStickyBarDismissed] = useState(() => {
@@ -250,6 +251,21 @@ export default function LandingPage() {
     useEffect(() => {
         const timer = setTimeout(() => setHeroAnimated(true), 100);
         return () => clearTimeout(timer);
+    }, []);
+
+    // Rotate hero phrases
+    const heroPhrases = [
+        'Encontre, qualifique e converta leads B2B',
+        'Prospecção inteligente, resultados reais',
+        'Leads qualificados direto no seu CRM',
+        'Dados de mercado, decisões certeiras',
+        'Mais vendas, menos suposições',
+    ];
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setHeroPhrase((prev) => (prev + 1) % heroPhrases.length);
+        }, 6000);
+        return () => clearInterval(interval);
     }, []);
 
     // Active section tracking
@@ -353,9 +369,27 @@ export default function LandingPage() {
         }
 
         setIsSubmitting(true);
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        console.log('Form submitted:', formData);
-        setFormSubmitted(true);
+        try {
+            const res = await fetch('/sendmail.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: formData.name,
+                    email: formData.email,
+                    phone: formData.phone,
+                    company: formData.company,
+                    message: formData.message,
+                }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setFormSubmitted(true);
+            } else {
+                alert('Erro ao enviar mensagem. Tente novamente ou escreva para moliveira@etos.pt');
+            }
+        } catch {
+            alert('Erro de conexão. Tente novamente ou escreva para moliveira@etos.pt');
+        }
         setIsSubmitting(false);
     };
 
@@ -429,7 +463,7 @@ export default function LandingPage() {
                         ))}
                     </nav>
                     <div className="landing-header-actions">
-                        <a href="/app" className="btn btn-login">Login</a>
+                        <a href="/login" className="btn btn-login">Login</a>
                         <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Menu">
                             <span /><span /><span />
                         </button>
@@ -443,7 +477,7 @@ export default function LandingPage() {
                                     {item.label}
                                 </button>
                             ))}
-                            <a href="/app" className="btn btn-login mobile-login">Login</a>
+                            <a href="/login" className="btn btn-login mobile-login">Login</a>
                         </nav>
                     </div>
                 )}
@@ -461,14 +495,21 @@ export default function LandingPage() {
                 <div className="hero-content">
                     <div className={`hero-badge animate-fade-up${heroAnimated ? ' visible' : ''}`}>Inteligência Comercial B2B</div>
                     <h1 className={`hero-title animate-fade-up${heroAnimated ? ' visible' : ''}`} style={{ animationDelay: '120ms' }}>
-                        Encontre, qualifique e converta leads B2B<br />
+                        <span
+                            key={heroPhrase}
+                            className="hero-title-rotating"
+                            style={{ display: 'inline-block', animation: 'heroFade 1s ease forwards' }}
+                        >
+                            {heroPhrases[heroPhrase]}
+                        </span>
+                        <br />
                         <em>sem depender de achismo.</em>
                     </h1>
                     <p className={`hero-subtitle animate-fade-up${heroAnimated ? ' visible' : ''}`} style={{ animationDelay: '240ms' }}>
                         A ORCA analisa dados de mercado em tempo real e entrega listas de prospecção qualificadas direto para o seu time comercial. Sem planilha manual. Sem leads frios.
                     </p>
                     <div className={`hero-cta animate-fade-up${heroAnimated ? ' visible' : ''}`} style={{ animationDelay: '360ms' }}>
-                        <a href="/app" className="btn btn-primary btn-lg pulse-animation">
+                        <a href="/login" className="btn btn-primary btn-lg pulse-animation">
                             Ver minha lista de leads grátis
                         </a>
                         <button className="btn btn-ghost btn-lg" onClick={() => scrollToSection('sonar')}>
@@ -858,7 +899,7 @@ export default function LandingPage() {
                     <h2 className="cta-title">Pronto para parar de perder leads para a concorrência?</h2>
                     <p className="cta-subtitle">Setup em menos de 10 minutos. Primeiros leads ainda hoje.</p>
                     <div className="cta-buttons">
-                        <a href="/app" className="btn btn-primary btn-lg pulse-animation">
+                        <a href="/login" className="btn btn-primary btn-lg pulse-animation">
                             Começar agora — é grátis por 14 dias
                         </a>
                     </div>
@@ -1068,7 +1109,7 @@ export default function LandingPage() {
                             <ul>
                                 <li><button onClick={() => scrollToSection('features')}>Funcionalidades</button></li>
                                 <li><button onClick={() => scrollToSection('sonar')}>Sonar</button></li>
-                                <li><a href="/app">Login</a></li>
+                                <li><a href="/login">Login</a></li>
                             </ul>
                         </div>
                         <div className="footer-links">
@@ -1082,8 +1123,8 @@ export default function LandingPage() {
                         <div className="footer-links">
                             <h4>Legal</h4>
                             <ul>
-                                <li><a href="#">Privacidade</a></li>
-                                <li><a href="#">Termos de Uso</a></li>
+                                <li><a href="/privacidade">Privacidade</a></li>
+                                <li><a href="/termos">Termos de Uso</a></li>
                             </ul>
                         </div>
                     </div>
@@ -1115,6 +1156,10 @@ export default function LandingPage() {
                 @keyframes fadeIn {
                     from { opacity: 0; }
                     to { opacity: 1; }
+                }
+                @keyframes heroFade {
+                    0% { opacity: 0; transform: translateY(6px); filter: blur(2px); }
+                    100% { opacity: 1; transform: translateY(0); filter: blur(0); }
                 }
                 @keyframes pulse {
                     0%, 100% { box-shadow: 0 0 0 0 rgba(0, 194, 255, 0.4); }
@@ -1362,7 +1407,7 @@ export default function LandingPage() {
                 .sonar-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; position: relative; z-index: 1; }
                 .sonar-content { max-width: 500px; }
                 .sonar-badge { background: rgba(0, 194, 255, 0.15); border-color: rgba(0, 194, 255, 0.3); }
-                .sonar-title { font-size: clamp(48px, 8vw, 72px); font-weight: 500; line-height: 1; margin-bottom: 24px; letter-spacing: -0.01em; font-family: 'Sora', 'Inter', sans-serif; }
+                .sonar-title { font-size: clamp(48px, 8vw, 72px); font-weight: 700; line-height: 1; margin-bottom: 24px; letter-spacing: -0.01em; font-family: 'Sora', 'Inter', sans-serif; }
                 .sonar-title-accent { color: #00C2FF; }
                 .sonar-narrative {
                     font-size: 16px; line-height: 1.8; color: rgba(234, 246, 255, 0.6);
@@ -2013,7 +2058,6 @@ export default function LandingPage() {
                     .mobile-menu-btn { display: flex; }
                     .mobile-menu { display: block; }
                     .hero-stats { flex-wrap: wrap; }
-                }
                     .float-contact__btn {
                         width: 48px;
                         height: 48px;
