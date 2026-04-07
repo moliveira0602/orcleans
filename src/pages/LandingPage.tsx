@@ -949,6 +949,58 @@ export default function LandingPage() {
                 </div>
             )}
 
+            {/* ===== DEMO MODAL ===== */}
+            {demoModalOpen && (
+                <div className="demo-modal-overlay" onClick={closeDemoModal}>
+                    <div className="demo-modal" onClick={(e) => e.stopPropagation()}>
+                        <button className="demo-modal__close" onClick={closeDemoModal}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                        <div className="demo-modal__eyebrow">Demo Personalizada</div>
+                        <h3 className="demo-modal__title">Veja a ORCA em ação</h3>
+                        <p className="demo-modal__subtitle">Preencha os dados abaixo e receba uma demo personalizada da plataforma.</p>
+                        <form className="demo-modal__form" onSubmit={handleDemoSubmit}>
+                            <div className="demo-form-row">
+                                <div className="demo-form-field">
+                                    <label htmlFor="demo-firstName">Nome</label>
+                                    <input type="text" id="demo-firstName" name="firstName" value={demoFormData.firstName} onChange={handleDemoInputChange} placeholder="Seu nome" required />
+                                </div>
+                                <div className="demo-form-field">
+                                    <label htmlFor="demo-lastName">Sobrenome</label>
+                                    <input type="text" id="demo-lastName" name="lastName" value={demoFormData.lastName} onChange={handleDemoInputChange} placeholder="Seu sobrenome" required />
+                                </div>
+                            </div>
+                            <div className="demo-form-field">
+                                <label htmlFor="demo-email">E-mail corporativo</label>
+                                <input type="email" id="demo-email" name="email" value={demoFormData.email} onChange={handleDemoInputChange} placeholder="seu@empresa.com" required />
+                            </div>
+                            <div className="demo-form-row">
+                                <div className="demo-form-field">
+                                    <label htmlFor="demo-company">Empresa</label>
+                                    <input type="text" id="demo-company" name="company" value={demoFormData.company} onChange={handleDemoInputChange} placeholder="Nome da empresa" required />
+                                </div>
+                                <div className="demo-form-field">
+                                    <label htmlFor="demo-teamSize">Tamanho do time</label>
+                                    <select id="demo-teamSize" name="teamSize" value={demoFormData.teamSize} onChange={handleDemoInputChange} required>
+                                        <option value="">Selecione...</option>
+                                        <option value="1-5">1-5 pessoas</option>
+                                        <option value="6-20">6-20 pessoas</option>
+                                        <option value="21-50">21-50 pessoas</option>
+                                        <option value="51+">51+ pessoas</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" className="demo-modal__submit">
+                                Receber demo personalizada
+                            </button>
+                        </form>
+                        <p className="demo-modal__fine-print">Sem cartão de crédito. Setup em 10 minutos.</p>
+                    </div>
+                </div>
+            )}
+
             {/* ===== STICKY CTA BAR ===== */}
             {!stickyBarDismissed && scrolled && (
                 <div className="sticky-bar visible">
