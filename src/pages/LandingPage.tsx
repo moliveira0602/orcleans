@@ -1789,7 +1789,7 @@ export default function LandingPage() {
                     top: 0;
                     left: 0;
                     right: 0;
-                    z-index: 800;
+                    z-index: 1100;
                     background: rgba(9, 12, 16, 0.95);
                     backdrop-filter: blur(12px);
                     border-bottom: 1px solid rgba(0, 194, 255, 0.08);
