@@ -1979,7 +1979,7 @@ export default function LandingPage() {
                     backdrop-filter: blur(8px);
                     z-index: 2000;
                     display: flex;
-                    align-items: center;
+                    align-items: flex-end;
                     justify-content: center;
                     padding: 24px;
                     animation: fadeIn 0.25s ease;
@@ -1995,7 +1995,7 @@ export default function LandingPage() {
                     animation: slideInUp 0.3s ease;
                 }
                 @keyframes slideInUp {
-                    from { opacity: 0; transform: translateY(20px) scale(0.97); }
+                    from { opacity: 0; transform: translateY(40px) scale(0.97); }
                     to { opacity: 1; transform: translateY(0) scale(1); }
                 }
                 .demo-modal__close {
