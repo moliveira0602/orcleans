@@ -1874,7 +1874,7 @@ export default function LandingPage() {
                 /* Hero Inline Capture Wrapper */
                 .hero-capture-wrapper {
                     max-width: 600px;
-                    margin: 0 auto;
+                    margin: 32px auto 0;
                 }
                 .hero-capture__form-inline {
                     max-width: 520px;
