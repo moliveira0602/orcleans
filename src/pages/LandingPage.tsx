@@ -1979,7 +1979,7 @@ export default function LandingPage() {
                     backdrop-filter: blur(8px);
                     z-index: 2000;
                     display: flex;
-                    align-items: flex-end;
+                    align-items: center;
                     justify-content: center;
                     padding: 24px;
                     animation: fadeIn 0.25s ease;
