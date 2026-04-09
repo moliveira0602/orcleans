@@ -47,7 +47,8 @@ router.get('/textsearch', async (req: Request, res: Response) => {
       return res.json(cached.data);
     }
 
-    // Text Search with basic fields
+    // Text Search with basic fields - limit to 10 results to save costs
+    const MAX_RESULTS = 10;
     const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&location=${location}&radius=${radius}&language=${language || 'pt'}&fields=${BASIC_FIELDS}&key=${GOOGLE_API_KEY}`;
 
     const response = await fetch(url);
@@ -58,11 +59,13 @@ router.get('/textsearch', async (req: Request, res: Response) => {
       return res.status(response.status).json(data);
     }
 
+    // Limit results to MAX_RESULTS
+    data.results = data.results.slice(0, MAX_RESULTS);
+
     // Fetch details for each place to get phone and website
-    // Limit to first 10 results to save API costs ($17 per 1000 instead of $17 per 20)
-    const maxDetailsCalls = 10;
+    // Already limited to MAX_RESULTS from textsearch
     const resultsWithDetails = await Promise.all(
-      data.results.slice(0, maxDetailsCalls).map(async (place: any) => {
+      data.results.map(async (place: any) => {
         try {
           const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,formatted_phone_number,website,opening_hours,business_status,rating,user_ratings_total,geometry&language=pt&key=${GOOGLE_API_KEY}`;
           const detailsRes = await fetch(detailsUrl);
