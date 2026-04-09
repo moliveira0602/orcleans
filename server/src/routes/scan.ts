@@ -28,7 +28,7 @@ cache.clear();
 
 const BASIC_FIELDS = 'place_id,name,formatted_address,geometry,types,business_status,rating,user_ratings_total,price_level,opening_hours,formatted_phone_number,website,utc_offset_minutes,vicinity';
 
-// Text Search endpoint - returns phone, website, and other basic fields
+// Details endpoint - only call when user explicitly needs more info
 router.get('/textsearch', async (req: Request, res: Response) => {
   try {
     const query = req.query.query as string;
@@ -47,11 +47,44 @@ router.get('/textsearch', async (req: Request, res: Response) => {
       return res.json(cached.data);
     }
 
-    // Text Search with basic fields (includes phone & website)
+    // Text Search with basic fields
     const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&location=${location}&radius=${radius}&language=${language || 'pt'}&fields=${BASIC_FIELDS}&key=${GOOGLE_API_KEY}`;
 
     const response = await fetch(url);
     const data = await response.json();
+
+    if (data.status !== 'OK' || !data.results) {
+      cache.set(cacheKey, { data, timestamp: Date.now() });
+      return res.status(response.status).json(data);
+    }
+
+    // Fetch details for each place to get phone and website
+    // This adds cost but is necessary for complete data
+    const resultsWithDetails = await Promise.all(
+      data.results.slice(0, 20).map(async (place: any) => {
+        try {
+          const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,formatted_phone_number,website,opening_hours,business_status,rating,user_ratings_total,geometry&language=pt&key=${GOOGLE_API_KEY}`;
+          const detailsRes = await fetch(detailsUrl);
+          const detailsData = await detailsRes.json();
+          
+          if (detailsData.result) {
+            return {
+              ...place,
+              formatted_phone_number: detailsData.result.formatted_phone_number || '',
+              website: detailsData.result.website || '',
+              opening_hours: detailsData.result.opening_hours || place.opening_hours,
+              rating: detailsData.result.rating || place.rating,
+              user_ratings_total: detailsData.result.user_ratings_total || place.user_ratings_total,
+            };
+          }
+        } catch (e) {
+          // Return original place if details fail
+        }
+        return place;
+      })
+    );
+
+    data.results = resultsWithDetails;
 
     // Cache the results
     cache.set(cacheKey, { data, timestamp: Date.now() });
