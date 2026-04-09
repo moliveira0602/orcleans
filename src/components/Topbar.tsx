@@ -1,7 +1,7 @@
 import { Search, Bell, LogOut } from 'lucide-react';
 import { useAppState } from '../store';
 import { useToast } from './Toast';
-import { useAuth } from '../auth';
+import { useAuth } from '../services/auth';
 
 type Page = 'dashboard' | 'leads' | 'pipeline' | 'insights' | 'import' | 'segments' | 'settings';
 

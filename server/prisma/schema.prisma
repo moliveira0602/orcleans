@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+  seed     = "tsx prisma/seed.ts"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id          String   @id @default(uuid())
+  name        String
+  plan        String   @default("starter")
+  maxLeads    Int      @default(500)
+  maxUsers    Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  leads       Lead[]
+  activities  Activity[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String   @id @default(uuid())
+  organizationId String
+  name           String
+  email          String   @unique
+  passwordHash   String
+  role           String   @default("member")
+  avatarUrl      String?
+  isActive       Boolean  @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  refreshTokens  RefreshToken[]
+  activities     Activity[]
+
+  @@index([organizationId])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Lead {
+  id            String   @id @default(uuid())
+  organizationId String
+  nome          String
+  segmento      String   @default("")
+  avaliacao     Float?
+  reviews       Int?
+  preco         String   @default("")
+  endereco      String   @default("")
+  status        String   @default("")
+  horario       String   @default("")
+  telefone      String   @default("")
+  website       String   @default("")
+  email         String   @default("")
+  servicos      String[] @default([])
+  foto          String   @default("")
+  fotos         String[] @default([])
+  linkOrigem    String   @default("")
+  linkPedido    String   @default("")
+  observacoes   String   @default("")
+  score         Int      @default(0)
+  pipelineStage String   @default("novo")
+  lat           Float?
+  lng           Float?
+  geocodeStatus String   @default("pending")
+  insight       Json?
+  notes         Json?    @default("[]")
+  raw           Json?
+  importFile    String?
+  importDate    DateTime?
+  importId      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  activities    Activity[]
+
+  @@index([organizationId])
+  @@index([pipelineStage])
+  @@index([score])
+  @@index([createdAt])
+  @@index([segmento])
+  @@map("leads")
+}
+
+model Activity {
+  id             String   @id @default(uuid())
+  organizationId String
+  userId         String
+  title          String
+  sub            String   @default("")
+  icon           String   @default("")
+  leadId         String?
+  createdAt      DateTime @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lead           Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("activities")
+}

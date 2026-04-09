@@ -1,12 +1,15 @@
 import { useState } from 'react';
-import { useAuth } from '../auth';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../services/auth';
 
 export default function LoginPage() {
     const { login, register } = useAuth();
+    const navigate = useNavigate();
     const [isRegister, setIsRegister] = useState(false);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [orgName, setOrgName] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -15,25 +18,26 @@ export default function LoginPage() {
         setError('');
         setLoading(true);
 
-        if (!email || !password || (isRegister && !name)) {
+        if (!email || !password || (isRegister && (!name || !orgName))) {
             setError('Preencha todos os campos.');
             setLoading(false);
             return;
         }
 
-        if (password.length < 6) {
-            setError('A senha deve ter pelo menos 6 caracteres.');
+        if (password.length < 8) {
+            setError('A senha deve ter pelo menos 8 caracteres.');
             setLoading(false);
             return;
         }
 
-        let ok: boolean;
-        if (isRegister) {
-            ok = await register(name, email, password);
-            if (!ok) setError('Este email já está registrado.');
-        } else {
-            ok = await login(email, password);
-            if (!ok) setError('Email ou senha incorretos.');
+        try {
+            if (isRegister) {
+                await register(name, email, password, orgName);
+            } else {
+                await login(email, password);
+            }
+        } catch (err: any) {
+            setError(err.message || 'Erro ao autenticar.');
         }
 
         setLoading(false);
@@ -49,7 +53,7 @@ export default function LoginPage() {
                 <div className="hero-particles" />
             </div>
             <div className="login-card">
-                <div className="login-logo">
+                <div className="login-logo" style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>
                     <img src="/images/ORCA-white.png" alt="ORCA" />
                 </div>
 
@@ -73,6 +77,17 @@ export default function LoginPage() {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="Seu nome"
+                            />
+                        </div>
+                    )}
+                    {isRegister && (
+                        <div className="login-field">
+                            <label>Empresa</label>
+                            <input
+                                type="text"
+                                value={orgName}
+                                onChange={(e) => setOrgName(e.target.value)}
+                                placeholder="Nome da sua empresa"
                             />
                         </div>
                     )}

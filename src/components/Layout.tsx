@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import { Topbar } from './Topbar';
 import Dashboard from '../pages/Dashboard';
@@ -10,16 +10,28 @@ import Segments from '../pages/Segments';
 import SettingsPage from '../pages/Settings';
 import LeadDetail from './LeadDetail';
 import { useAppState } from '../store';
+import { EmptyState } from './ErrorBoundary';
+import { Onboarding, useOnboarding } from './Onboarding';
+import { FolderPlus } from 'lucide-react';
 
 export type Page = 'dashboard' | 'leads' | 'pipeline' | 'insights' | 'import' | 'segments' | 'settings';
 
 export default function Layout() {
-    const { isLoading } = useAppState();
+    const { isLoading, leads } = useAppState();
+    const { isDone: onboardingDone } = useOnboarding();
+    const [showOnboarding, setShowOnboarding] = useState(!onboardingDone);
     const [currentPage, setCurrentPage] = useState<Page>('dashboard');
     const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
     const [mapLeadId, setMapLeadId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+    useEffect(() => {
+        if (!onboardingDone && leads.length > 0) {
+            setShowOnboarding(false);
+            localStorage.setItem('orca_onboarding_done', 'true');
+        }
+    }, [leads.length, onboardingDone]);
 
     const navigate = useCallback((page: Page) => {
         setCurrentPage(page);
@@ -48,8 +60,16 @@ export default function Layout() {
         setSelectedLeadId(null);
     }, []);
 
+    const handleOnboardingComplete = useCallback(() => {
+        setShowOnboarding(false);
+        localStorage.setItem('orca_onboarding_done', 'true');
+    }, []);
+
+    const isEmpty = !isLoading && leads.length === 0;
+
     return (
         <div className="app">
+            {showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
             <Sidebar currentPage={currentPage} onNavigate={navigate} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((c) => !c)} />
             <div className="main">
                 <Topbar currentPage={currentPage} onNavigate={navigate} onSearch={handleSearch} />
@@ -63,6 +83,13 @@ export default function Layout() {
                                 ))}
                             </div>
                         </div>
+                    ) : isEmpty ? (
+                        <EmptyState
+                            icon={<FolderPlus size={32} />}
+                            title="Sem leads ainda"
+                            description="Comece importando os seus leads ou use o Sonar para descobrir novos negócios na sua área."
+                            action={{ label: 'Importar leads', onClick: () => navigate('import') }}
+                        />
                     ) : (
                         <>
                             {currentPage === 'dashboard' && (

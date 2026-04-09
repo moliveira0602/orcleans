@@ -1,13 +1,16 @@
 import { defineConfig } from 'vite';
 
-// Base path for subdomain deployment
-// Set via .env file VITE_BASE_PATH or default to '/'
 const basePath = process.env.VITE_BASE_PATH || '/';
+const apiUrl = process.env.VITE_API_URL || 'http://localhost:3333';
 
 export default defineConfig({
   base: basePath,
   server: {
     proxy: {
+      '/api': {
+        target: apiUrl,
+        changeOrigin: true,
+      },
       '/proxy/google': {
         target: 'https://maps.googleapis.com',
         changeOrigin: true,
@@ -27,6 +30,6 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: false, // Disable source maps in production for security
+    sourcemap: false,
   },
 });

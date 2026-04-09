@@ -57,7 +57,7 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle }
     return (
         <aside className={`sidebar${collapsed ? ' collapsed' : ''}`}>
             <div className="sidebar-logo">
-                <img src={collapsed ? "/images/logo/favicon-white.ico" : "/images/ORCA-white.png"} alt="ORCA" className="logo-img" style={{ height: collapsed ? '28px' : '22px' }} />
+                <img src="/images/ORCA-white.png" alt="ORCA" className="logo-img" style={{ height: collapsed ? '24px' : '22px' }} />
             </div>
             
             <nav className="sidebar-nav">

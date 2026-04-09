@@ -2,8 +2,11 @@ import React, { createContext, useContext, useReducer, useEffect, type ReactNode
 import type { Lead, ImportRecord, PipelineMap, AppSettings, AppState, ActivityEntry, PipelineStage, NoteEntry } from './types';
 import { DEFAULT_SETTINGS } from './types';
 import { loadLeadsDB, saveLeadsDB } from './utils/db';
+import * as leadApi from './services/leads';
+import { api } from './services/api';
 
 const STORAGE_KEY = 'orcalens_meta';
+const USE_BACKEND = api.isAuthenticated();
 
 const initialState: AppState = {
     leads: [],
@@ -19,7 +22,10 @@ function loadMeta(): Partial<AppState> {
         const s = localStorage.getItem(STORAGE_KEY);
         if (s) {
             const d = JSON.parse(s);
-            return { ...d, settings: { ...DEFAULT_SETTINGS, ...d.settings } };
+            void d.isLoading;
+            void d.leads;
+            const { isLoading, leads, ...rest } = d;
+            return { ...rest, settings: { ...DEFAULT_SETTINGS, ...rest.settings } };
         }
     } catch { /* ignore */ }
     return {};
@@ -31,6 +37,41 @@ function saveMeta(state: AppState) {
         void leads; void isLoading;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(meta));
     } catch { /* ignore */ }
+}
+
+function leadFromBackendFormat(lead: any): Lead {
+    return {
+        id: lead.id,
+        nome: lead.nome,
+        segmento: lead.segmento,
+        avaliacao: lead.avaliacao,
+        reviews: lead.reviews,
+        preco: lead.preco,
+        endereco: lead.endereco,
+        status: lead.status,
+        horario: lead.horario,
+        telefone: lead.telefone,
+        website: lead.website,
+        email: lead.email,
+        servicos: lead.servicos || [],
+        foto: lead.foto || '',
+        fotos: lead.fotos || [],
+        linkOrigem: lead.linkOrigem || '',
+        linkPedido: lead.linkPedido || '',
+        observacoes: lead.observacoes || '',
+        _score: lead.score,
+        _pipeline: lead.pipelineStage,
+        _importedAt: lead.importDate ? new Date(lead.importDate).getTime() : Date.now(),
+        _importFile: lead.importFile,
+        _importDate: lead.importDate,
+        _importId: lead.importId,
+        _notes: lead.notes,
+        _lat: lead.lat,
+        _lng: lead.lng,
+        _geocodeStatus: lead.geocodeStatus,
+        _insight: lead.insight,
+        _raw: lead.raw || {},
+    };
 }
 
 /** Generate a fingerprint from key fields to detect duplicates */
@@ -59,8 +100,18 @@ type Action =
 
 function reducer(state: AppState, action: Action): AppState {
     switch (action.type) {
-        case 'FINISH_LOADING':
-            return { ...state, leads: action.payload, isLoading: false };
+        case 'FINISH_LOADING': {
+            const rebuilt: PipelineMap = { novo: [], qualificado: [], proposta: [], negociacao: [], ganho: [], perdido: [] };
+            for (const lead of action.payload) {
+                const stage = lead._pipeline as PipelineStage;
+                if (stage && rebuilt[stage] !== undefined) {
+                    rebuilt[stage].push(lead.id);
+                } else {
+                    rebuilt.novo.push(lead.id);
+                }
+            }
+            return { ...state, leads: action.payload, pipeline: rebuilt, isLoading: false };
+        }
         case 'IMPORT_LEADS': {
             const newLeads = [...state.leads, ...action.payload.leads];
             const newImports = [...state.imports, action.payload.record];
@@ -142,11 +193,9 @@ function reducer(state: AppState, action: Action): AppState {
             const importToDelete = state.imports.find(i => i.id === importId);
             if (!importToDelete) return state;
             
-            // Remove leads from this import
             const newLeads = state.leads.filter(l => l._importId !== importId);
             const newImports = state.imports.filter(i => i.id !== importId);
             
-            // Remove from pipeline
             const newPipeline: PipelineMap = { novo: [], qualificado: [], proposta: [], negociacao: [], ganho: [], perdido: [] };
             (Object.keys(state.pipeline) as PipelineStage[]).forEach((k) => {
                 newPipeline[k] = state.pipeline[k].filter((lid) => newLeads.some(l => l.id === lid));
@@ -184,23 +233,137 @@ const AppContext = createContext<AppContextType | null>(null);
 export function AppProvider({ children }: { children: ReactNode }) {
     const [state, dispatch] = useReducer(reducer, { ...initialState, ...loadMeta() });
 
-    // Load leads from IndexedDB on mount
     useEffect(() => {
-        loadLeadsDB().then((leads) => {
-            dispatch({ type: 'FINISH_LOADING', payload: leads });
-        }).catch(() => {
-            dispatch({ type: 'FINISH_LOADING', payload: [] });
-        });
+        if (USE_BACKEND) {
+            leadApi.fetchLeads({ page: 1, limit: 10000, sortBy: 'createdAt', sortOrder: 'desc' })
+                .then((res) => {
+                    const leads = res.leads.map(leadFromBackendFormat);
+                    dispatch({ type: 'FINISH_LOADING', payload: leads });
+                })
+                .catch(() => {
+                    loadLeadsDB().then((leads) => {
+                        dispatch({ type: 'FINISH_LOADING', payload: leads });
+                    }).catch(() => {
+                        dispatch({ type: 'FINISH_LOADING', payload: [] });
+                    });
+                });
+        } else {
+            loadLeadsDB().then((leads) => {
+                if (leads.length === 0) {
+                    const demoLeads: Lead[] = [
+                        {
+                            id: 'demo-1',
+                            nome: 'Clínica Saúde Olhão',
+                            segmento: 'Clínica Médica',
+                            avaliacao: 4.5,
+                            reviews: 127,
+                            preco: '€€',
+                            endereco: 'Rua Dr. Francisco Sá Carneiro, Olhão',
+                            status: 'Ativo',
+                            horario: '09:00-19:00',
+                            telefone: '+351 289 123 456',
+                            website: 'https://clinicasaude.pt',
+                            email: 'info@clinicasaude.pt',
+                            servicos: ['Consultas', 'Exames', 'Urgência'],
+                            foto: '',
+                            fotos: [],
+                            linkOrigem: '',
+                            linkPedido: '',
+                            observacoes: '',
+                            _score: 9,
+                            _pipeline: 'novo',
+                            _importedAt: Date.now(),
+                            _importFile: undefined,
+                            _importDate: undefined,
+                            _importId: undefined,
+                            _notes: [],
+                            _lat: 37.0267,
+                            _lng: -7.8369,
+                            _geocodeStatus: 'ok',
+                            _insight: undefined,
+                            _raw: {},
+                        },
+                        {
+                            id: 'demo-2',
+                            nome: 'Restaurante Marisqueira Ria',
+                            segmento: 'Restaurante',
+                            avaliacao: 4.8,
+                            reviews: 342,
+                            preco: '€€€',
+                            endereco: 'Cais da Ria Formosa, Olhão',
+                            status: 'Ativo',
+                            horario: '12:00-23:00',
+                            telefone: '+351 289 789 012',
+                            website: 'https://marisqueiraria.pt',
+                            email: 'reservas@marisqueiraria.pt',
+                            servicos: ['Marisco', 'Peixe fresco', 'Eventos'],
+                            foto: '',
+                            fotos: [],
+                            linkOrigem: '',
+                            linkPedido: '',
+                            observacoes: '',
+                            _score: 7,
+                            _pipeline: 'qualificado',
+                            _importedAt: Date.now(),
+_importFile: undefined,
+                            _importDate: undefined,
+                            _importId: undefined,
+                            _notes: [],
+                            _lat: 37.0267,
+                            _lng: -7.8369,
+                            _geocodeStatus: 'ok',
+                            _insight: undefined,
+                            _raw: {},
+                        },
+                        {
+                            id: 'demo-3',
+                            nome: 'Pet Shop Patinhas',
+                            segmento: 'Pet Shop',
+                            avaliacao: 4.2,
+                            reviews: 89,
+                            preco: '€€',
+                            endereco: 'Av. da República, Porto',
+                            status: 'Ativo',
+                            horario: '09:00-20:00',
+                            telefone: '+351 22 345 6789',
+                            website: 'https://patinhas.pt',
+                            email: 'loja@patinhas.pt',
+                            servicos: ['Banho', 'Tosa', 'Veterinário'],
+                            foto: '',
+                            fotos: [],
+                            linkOrigem: '',
+                            linkPedido: '',
+                            observacoes: '',
+                            _score: 5,
+                            _pipeline: 'proposta',
+                            _importedAt: Date.now(),
+                            _importFile: undefined,
+                            _importDate: undefined,
+                            _importId: undefined,
+                            _notes: [],
+                            _lat: 41.1579,
+                            _lng: -8.6291,
+                            _geocodeStatus: 'ok',
+                            _insight: undefined,
+                            _raw: {},
+                        },
+                    ];
+                    dispatch({ type: 'FINISH_LOADING', payload: demoLeads });
+                } else {
+                    dispatch({ type: 'FINISH_LOADING', payload: leads });
+                }
+            }).catch(() => {
+                dispatch({ type: 'FINISH_LOADING', payload: [] });
+            });
+        }
     }, []);
 
-    // Save meta to localStorage
     useEffect(() => {
         if (!state.isLoading) saveMeta(state);
     }, [state]);
 
-    // Save leads to IndexedDB periodically or on change
     useEffect(() => {
-        if (!state.isLoading) {
+        if (!state.isLoading && !USE_BACKEND) {
             saveLeadsDB(state.leads);
         }
     }, [state.leads, state.isLoading]);
