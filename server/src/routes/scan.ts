@@ -9,6 +9,9 @@ const GOOGLE_API_KEY = env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY || '';
 const cache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
+// Force cache clear on startup
+cache.clear();
+
 // ============================================================================
 // COST OPTIMIZATION STRATEGY
 // ============================================================================
