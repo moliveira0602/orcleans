@@ -51,7 +51,7 @@ router.get('/textsearch', async (req: Request, res: Response) => {
     const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&location=${location}&radius=${radius}&language=${language || 'pt'}&fields=${BASIC_FIELDS}&key=${GOOGLE_API_KEY}`;
 
     const response = await fetch(url);
-    const data = await response.json();
+    const data: any = await response.json();
 
     if (data.status !== 'OK' || !data.results) {
       cache.set(cacheKey, { data, timestamp: Date.now() });
@@ -65,7 +65,7 @@ router.get('/textsearch', async (req: Request, res: Response) => {
         try {
           const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,formatted_phone_number,website,opening_hours,business_status,rating,user_ratings_total,geometry&language=pt&key=${GOOGLE_API_KEY}`;
           const detailsRes = await fetch(detailsUrl);
-          const detailsData = await detailsRes.json();
+          const detailsData: any = await detailsRes.json();
           
           if (detailsData.result) {
             return {
