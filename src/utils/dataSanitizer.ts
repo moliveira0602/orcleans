@@ -251,7 +251,9 @@ export function sanitizeLeadData(data: Record<string, unknown>): SanitizedLeadDa
     const getNum = (...keys: string[]): string | number | null | undefined => {
         for (const key of keys) {
             const val = data[key];
-            if (val !== null && val !== undefined && val !== '') return val;
+            if (val !== null && val !== undefined && val !== '') {
+                if (typeof val === 'string' || typeof val === 'number') return val as string | number;
+            }
         }
         return null;
     };

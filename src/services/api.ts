@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3333/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://server-rose-tau.vercel.app/api';
 
 interface ApiOptions extends RequestInit {
   params?: Record<string, string>;

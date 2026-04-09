@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import { env } from './config/env.js';
 import authRoutes from './routes/auth.js';
 import leadRoutes from './routes/leads.js';
+import scanRoutes from './routes/scan.js';
 import { errorHandler } from './middleware/error.js';
 
 const app = express();
@@ -40,12 +41,14 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/leads', leadRoutes);
+app.use('/api/scan', scanRoutes);
 
 app.use(errorHandler);
 
-app.listen(env.PORT, () => {
-  console.log(`[ORCA API] Server running on http://localhost:${env.PORT}`);
-  console.log(`[ORCA API] Environment: ${env.NODE_ENV}`);
+const port = env.PORT || 3333;
+
+app.listen(port, () => {
+  console.log(`[ORCA API] Server running on http://localhost:${port}`);
 });
 
 export default app;

@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import 'dotenv/config';
 import { z } from 'zod';
 
 export const envSchema = z.object({
@@ -14,6 +13,7 @@ export const envSchema = z.object({
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(100),
   LOG_LEVEL: z.string().default('info'),
+  GOOGLE_API_KEY: z.string().default(''),
 });
 
 export const env = envSchema.parse(process.env);

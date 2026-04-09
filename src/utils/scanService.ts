@@ -12,16 +12,12 @@ import { getCached, setCached, generateCacheKey } from '../services/placesCache'
 const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
 const IS_PRODUCTION = import.meta.env.PROD || false;
 
-// API base URLs - use direct URLs in production, proxy in development
-const API_BASES = IS_PRODUCTION
-    ? {
-        google: 'https://maps.googleapis.com',
-        nominatim: 'https://nominatim.openstreetmap.org',
-    }
-    : {
-        google: '/proxy/google',
-        nominatim: '/proxy/nominatim',
-    };
+// Always use backend proxy to avoid CORS issues
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3333/api';
+const API_BASES = {
+    google: `${API_BASE}/scan`,
+    nominatim: 'https://nominatim.openstreetmap.org',
+};
 
 // ============================================================================
 // RATE LIMITING - Contador de chamadas por sessão
@@ -94,11 +90,11 @@ export async function loadLeadPhotos(placeId: string): Promise<string[]> {
 
     try {
         const res = await fetch(
-            `${API_BASES.google}/maps/api/place/details/json?place_id=${placeId}&fields=photos&key=${GOOGLE_KEY}`
+            `${API_BASES.google}/details?place_id=${placeId}&fields=photos`
         );
         const data = await res.json();
         const fotos = (data.result?.photos || []).slice(0, 3).map(
-            (ph: any) => `${API_BASES.google}/maps/api/place/photo?maxwidth=400&photo_reference=${ph.photo_reference}&key=${GOOGLE_KEY}`
+            (ph: any) => `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${ph.photo_reference}&key=${GOOGLE_KEY}`
         );
         setCached(cacheKey, fotos);
         return fotos;
@@ -112,74 +108,69 @@ export async function loadLeadPhotos(placeId: string): Promise<string[]> {
 // PROCESS PLACES HELPER - Extrai leads de lugares do Google Places
 // ============================================================================
 
-async function processPlaces(
+function processPlaces(
     places: any[],
     segment: string,
     lat: number,
     lon: number,
     city: string
-): Promise<(Lead | null)[]> {
-    return await Promise.all(
-        places.map(async (place: any) => {
-            try {
-                // Rate limit check for details
-                if (!trackApiCall('details')) {
-                    console.warn('[RateLimit] Limite de details atingido');
-                    return null;
-                }
-
-                // ESTRATÉGIA 3 — Campos mínimos (sem photos no scan)
-                const detailRes = await fetch(
-                    `${API_BASES.google}/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,formatted_phone_number,website,rating,user_ratings_total,opening_hours,geometry&language=pt&key=${GOOGLE_KEY}`
-                );
-                const detailData = await detailRes.json();
-                const d = detailData.result || {};
-
-                // Email: gerar do website se existir
-                let email = '';
-                if (d.website) {
-                    try { email = `info@${new URL(d.website).hostname.replace('www.', '')}` } catch {}
-                }
-
-                return {
-                    id: `google_${place.place_id}`,
-                    nome: d.name || place.name || 'Sem nome',
-                    endereco: d.formatted_address || place.formatted_address || '',
-                    cidade: city,
-                    distrito_estado: '',
-                    codigo_postal: '',
-                    pais: 'Portugal',
-                    telefone: d.formatted_phone_number || '',
-                    website: d.website || '',
-                    email,
-                    servicos: [segment],
-                    horario: d.opening_hours?.weekday_text?.join(' | ') || '',
-                    observacoes: '',
-                    linkOrigem: '',
-                    linkPedido: d.website || '',
-                    status: 'Aberto',
-                    preco: '',
-                    foto: '',
-                    fotos: [], // Fotos carregadas on-demand via loadLeadPhotos()
-                    avaliacao: d.rating || place.rating || null,
-                    reviews: d.user_ratings_total || place.user_ratings_total || null,
-                    segmento: segment,
-                    _lat: d.geometry?.location?.lat || place.geometry?.location?.lat || lat,
-                    _lng: d.geometry?.location?.lng || place.geometry?.location?.lng || lon,
-                    _score: (d.rating || 0) * 20,
-                    _pipeline: 'novo',
-                    _importedAt: Date.now(),
-                    _importFile: `Google Places: ${segment} em ${city}`,
-                    _importDate: new Date().toISOString(),
-                    _importId: `google_${Date.now()}`,
-                    _raw: d,
-                };
-            } catch (err) {
-                console.error('[GOOGLE DEBUG] Error fetching details for:', place.name, err);
-                return null;
+): (Lead | null)[] {
+    return places.map((place: any) => {
+        try {
+            // Use data from nearby/text search result directly (no extra API call)
+            // Nearby search returns basic fields for FREE
+            const d = place;
+            
+            // Extract address from vicinity (nearby search returns vicinity instead of formatted_address)
+            let endereco = d.formatted_address || d.vicinity || '';
+            let telefone = d.formatted_phone_number || '';
+            let website = d.website || '';
+            let horario = '';
+            
+            // Email: gerar do website se existir
+            let email = '';
+            if (website) {
+                try { email = `info@${new URL(website).hostname.replace('www.', '')}` } catch {}
             }
-        })
-    );
+
+            return {
+                id: `google_${place.place_id}`,
+                nome: d.name || 'Sem nome',
+                endereco,
+                cidade: city,
+                distrito_estado: '',
+                codigo_postal: '',
+                pais: 'Portugal',
+                telefone,
+                website,
+                email,
+                servicos: [segment],
+                horario,
+                observacoes: '',
+                linkOrigem: '',
+                linkPedido: website || '',
+                status: d.business_status === 'OPERATIONAL' ? 'Aberto' : 'Fechado',
+                preco: '',
+                foto: '',
+                fotos: [], // Fotos carregadas on-demand via loadLeadPhotos()
+                avaliacao: d.rating || null,
+                reviews: d.user_ratings_total || null,
+                segmento: segment,
+                _lat: d.geometry?.location?.lat || lat,
+                _lng: d.geometry?.location?.lng || lon,
+                _score: (d.rating || 0) * 20,
+                _pipeline: 'novo',
+                _importedAt: Date.now(),
+                _importFile: `Google Places: ${segment} em ${city}`,
+                _importDate: new Date().toISOString(),
+                _importId: `google_${Date.now()}`,
+                _raw: d,
+            };
+        } catch (err) {
+            console.error('[GOOGLE DEBUG] Error processing place:', place.name, err);
+            return null;
+        }
+    });
 }
 
 // ============================================================================
@@ -284,8 +275,8 @@ export async function runScan(
             onProgress?.(`${duplicateCount} duplicados removidos.`);
             onProgress?.(`Processando ${Math.min(newPlaces.length, 20)} lugares...`);
             
-            const leads = await processPlaces(newPlaces.slice(0, 20), segment, lat, lon, city);
-            const validLeads = leads.filter((l): l is Lead => l !== null);
+            const leads = processPlaces(newPlaces.slice(0, 20), segment, lat, lon, city);
+            const validLeads = leads.filter((l: Lead | null): l is Lead => l !== null);
             
             return {
                 success: true,
@@ -299,7 +290,7 @@ export async function runScan(
             };
         }
 
-        // Rate limit check for textsearch
+        // Rate limit check
         if (!trackApiCall('textsearch')) {
             onProgress?.(`⚠ Limite de chamadas atingido hoje. Tente novamente amanhã.`);
             return {
@@ -314,12 +305,12 @@ export async function runScan(
             };
         }
 
-        // PASSO 1 — Text Search: buscar lista de lugares
+        // PASSO 1 — Text Search: retorna telefone, website e outros campos básicos
+        // $17/1000 mas SEM chamada details adicional (economia de $17/1000 por lead)
         const query = `${segment} em ${city}`;
         onProgress?.(`Buscando "${query}" no Google Places...`);
-        
         const searchRes = await fetch(
-            `${API_BASES.google}/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&location=${lat},${lon}&radius=5000&language=pt&key=${GOOGLE_KEY}`
+            `${API_BASES.google}/textsearch?query=${encodeURIComponent(query)}&location=${lat},${lon}&radius=3000&language=pt`
         );
         const searchData = await searchRes.json();
         console.log('[GOOGLE DEBUG] Text Search status:', searchData.status);
@@ -346,81 +337,11 @@ export async function runScan(
         const duplicateCount = searchData.results.length - newPlaces.length;
         onProgress?.(`${duplicateCount} duplicados removidos.`);
 
-        // PASSO 2 — Para cada lugar, buscar detalhes completos
-        onProgress?.(`Obtendo detalhes de ${Math.min(newPlaces.length, 20)} lugares...`);
+        // Process places using data from nearby search (no extra API calls)
+        onProgress?.(`Processando ${Math.min(newPlaces.length, 20)} lugares...`);
         
-        const leads = await Promise.all(
-            newPlaces.slice(0, 20).map(async (place: any) => {
-                try {
-                    const detailRes = await fetch(
-                        `${API_BASES.google}/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,formatted_phone_number,website,rating,user_ratings_total,photos,opening_hours,geometry&language=pt&key=${GOOGLE_KEY}`
-                    );
-                    const detailData = await detailRes.json();
-                    const d = detailData.result || {};
-
-                    // Fotos: máximo 3
-                    const fotos = (d.photos || []).slice(0, 3).map(
-                        (ph: any) => `${API_BASES.google}/maps/api/place/photo?maxwidth=400&photo_reference=${ph.photo_reference}&key=${GOOGLE_KEY}`
-                    );
-
-                    // Email: gerar do website se existir
-                    let email = '';
-                    if (d.website) {
-                        try { email = `info@${new URL(d.website).hostname.replace('www.', '')}` } catch {}
-                    }
-
-                    const lead: Lead = {
-                        id: `google_${place.place_id}`,
-                        nome: d.name || place.name || 'Sem nome',
-                        endereco: d.formatted_address || place.formatted_address || '',
-                        cidade: city,
-                        distrito_estado: '',
-                        codigo_postal: '',
-                        pais: 'Portugal',
-                        telefone: d.formatted_phone_number || '',
-                        website: d.website || '',
-                        email,
-                        servicos: [segment],
-                        horario: d.opening_hours?.weekday_text?.join(' | ') || '',
-                        observacoes: '',
-                        linkOrigem: '',
-                        linkPedido: d.website || '',
-                        status: 'Aberto',
-                        preco: '',
-                        foto: '',
-                        fotos,
-                        avaliacao: d.rating || place.rating || null,
-                        reviews: d.user_ratings_total || place.user_ratings_total || null,
-                        segmento: segment,
-                        _lat: d.geometry?.location?.lat || place.geometry?.location?.lat || lat,
-                        _lng: d.geometry?.location?.lng || place.geometry?.location?.lng || lon,
-                        _score: (d.rating || 0) * 20,
-                        _pipeline: 'novo',
-                        _importedAt: Date.now(),
-                        _importFile: `Google Places: ${segment} em ${city}`,
-                        _importDate: new Date().toISOString(),
-                        _importId: `google_${Date.now()}`,
-                        _raw: d,
-                    };
-
-                    console.log('[GOOGLE DEBUG] Lead mapeado:', JSON.stringify({
-                        nome: lead.nome,
-                        telefone: lead.telefone,
-                        website: lead.website,
-                        avaliacao: lead.avaliacao,
-                        reviews: lead.reviews,
-                        fotos: lead.fotos.length
-                    }, null, 2));
-
-                    return lead;
-                } catch (err) {
-                    console.error('[GOOGLE DEBUG] Error fetching details for:', place.name, err);
-                    return null;
-                }
-            })
-        );
-
-        const validLeads = leads.filter((l): l is Lead => l !== null);
+        const leads = processPlaces(newPlaces.slice(0, 20), segment, lat, lon, city);
+        const validLeads = leads.filter((l: Lead | null): l is Lead => l !== null);
         console.log('[ScanService] Google Places retornou:', validLeads.length, 'leads');
 
         // Log first lead for verification
