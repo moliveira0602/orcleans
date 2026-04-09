@@ -59,9 +59,10 @@ router.get('/textsearch', async (req: Request, res: Response) => {
     }
 
     // Fetch details for each place to get phone and website
-    // This adds cost but is necessary for complete data
+    // Limit to first 10 results to save API costs ($17 per 1000 instead of $17 per 20)
+    const maxDetailsCalls = 10;
     const resultsWithDetails = await Promise.all(
-      data.results.slice(0, 20).map(async (place: any) => {
+      data.results.slice(0, maxDetailsCalls).map(async (place: any) => {
         try {
           const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,formatted_phone_number,website,opening_hours,business_status,rating,user_ratings_total,geometry&language=pt&key=${GOOGLE_API_KEY}`;
           const detailsRes = await fetch(detailsUrl);
