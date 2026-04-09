@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState, type ReactNode } from 'react';
 import type { Lead, ImportRecord, PipelineMap, AppSettings, AppState, ActivityEntry, PipelineStage, NoteEntry } from './types';
 import { DEFAULT_SETTINGS } from './types';
 import { loadLeadsDB, saveLeadsDB } from './utils/db';
@@ -232,131 +232,39 @@ const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
     const [state, dispatch] = useReducer(reducer, { ...initialState, ...loadMeta() });
+    const [initialLeadsLoaded, setInitialLeadsLoaded] = useState(false);
 
+    // ALWAYS load from IndexedDB first (works even when logged out)
     useEffect(() => {
-        if (USE_BACKEND) {
-            leadApi.fetchLeads({ page: 1, limit: 10000, sortBy: 'createdAt', sortOrder: 'desc' })
-                .then((res) => {
-                    const leads = res.leads.map(leadFromBackendFormat);
-                    dispatch({ type: 'FINISH_LOADING', payload: leads });
-                })
-                .catch(() => {
-                    loadLeadsDB().then((leads) => {
-                        dispatch({ type: 'FINISH_LOADING', payload: leads });
-                    }).catch(() => {
-                        dispatch({ type: 'FINISH_LOADING', payload: [] });
-                    });
-                });
-        } else {
-            loadLeadsDB().then((leads) => {
-                if (leads.length === 0) {
-                    const demoLeads: Lead[] = [
-                        {
-                            id: 'demo-1',
-                            nome: 'Clínica Saúde Olhão',
-                            segmento: 'Clínica Médica',
-                            avaliacao: 4.5,
-                            reviews: 127,
-                            preco: '€€',
-                            endereco: 'Rua Dr. Francisco Sá Carneiro, Olhão',
-                            status: 'Ativo',
-                            horario: '09:00-19:00',
-                            telefone: '+351 289 123 456',
-                            website: 'https://clinicasaude.pt',
-                            email: 'info@clinicasaude.pt',
-                            servicos: ['Consultas', 'Exames', 'Urgência'],
-                            foto: '',
-                            fotos: [],
-                            linkOrigem: '',
-                            linkPedido: '',
-                            observacoes: '',
-                            _score: 9,
-                            _pipeline: 'novo',
-                            _importedAt: Date.now(),
-                            _importFile: undefined,
-                            _importDate: undefined,
-                            _importId: undefined,
-                            _notes: [],
-                            _lat: 37.0267,
-                            _lng: -7.8369,
-                            _geocodeStatus: 'ok',
-                            _insight: undefined,
-                            _raw: {},
-                        },
-                        {
-                            id: 'demo-2',
-                            nome: 'Restaurante Marisqueira Ria',
-                            segmento: 'Restaurante',
-                            avaliacao: 4.8,
-                            reviews: 342,
-                            preco: '€€€',
-                            endereco: 'Cais da Ria Formosa, Olhão',
-                            status: 'Ativo',
-                            horario: '12:00-23:00',
-                            telefone: '+351 289 789 012',
-                            website: 'https://marisqueiraria.pt',
-                            email: 'reservas@marisqueiraria.pt',
-                            servicos: ['Marisco', 'Peixe fresco', 'Eventos'],
-                            foto: '',
-                            fotos: [],
-                            linkOrigem: '',
-                            linkPedido: '',
-                            observacoes: '',
-                            _score: 7,
-                            _pipeline: 'qualificado',
-                            _importedAt: Date.now(),
-_importFile: undefined,
-                            _importDate: undefined,
-                            _importId: undefined,
-                            _notes: [],
-                            _lat: 37.0267,
-                            _lng: -7.8369,
-                            _geocodeStatus: 'ok',
-                            _insight: undefined,
-                            _raw: {},
-                        },
-                        {
-                            id: 'demo-3',
-                            nome: 'Pet Shop Patinhas',
-                            segmento: 'Pet Shop',
-                            avaliacao: 4.2,
-                            reviews: 89,
-                            preco: '€€',
-                            endereco: 'Av. da República, Porto',
-                            status: 'Ativo',
-                            horario: '09:00-20:00',
-                            telefone: '+351 22 345 6789',
-                            website: 'https://patinhas.pt',
-                            email: 'loja@patinhas.pt',
-                            servicos: ['Banho', 'Tosa', 'Veterinário'],
-                            foto: '',
-                            fotos: [],
-                            linkOrigem: '',
-                            linkPedido: '',
-                            observacoes: '',
-                            _score: 5,
-                            _pipeline: 'proposta',
-                            _importedAt: Date.now(),
-                            _importFile: undefined,
-                            _importDate: undefined,
-                            _importId: undefined,
-                            _notes: [],
-                            _lat: 41.1579,
-                            _lng: -8.6291,
-                            _geocodeStatus: 'ok',
-                            _insight: undefined,
-                            _raw: {},
-                        },
-                    ];
-                    dispatch({ type: 'FINISH_LOADING', payload: demoLeads });
-                } else {
+        loadLeadsDB().then((leads) => {
+            dispatch({ type: 'FINISH_LOADING', payload: leads });
+            setInitialLeadsLoaded(true);
+        }).catch(() => {
+            dispatch({ type: 'FINISH_LOADING', payload: [] });
+            setInitialLeadsLoaded(true);
+        });
+    }, []);
+
+    // If authenticated, also try to sync from backend
+    useEffect(() => {
+        if (!initialLeadsLoaded || !USE_BACKEND) return;
+        
+        leadApi.fetchLeads({ page: 1, limit: 10000, sortBy: 'createdAt', sortOrder: 'desc' })
+            .then((res) => {
+                const leads = res.leads.map(leadFromBackendFormat);
+                if (leads.length > 0) {
                     dispatch({ type: 'FINISH_LOADING', payload: leads });
                 }
-            }).catch(() => {
-                dispatch({ type: 'FINISH_LOADING', payload: [] });
-            });
+            })
+            .catch(() => {});
+    }, [initialLeadsLoaded]);
+
+    // Save to IndexedDB when leads change (always, not just when logged out)
+    useEffect(() => {
+        if (!state.isLoading && state.leads.length > 0) {
+            saveLeadsDB(state.leads);
         }
-    }, []);
+    }, [state.leads, state.isLoading]);
 
     useEffect(() => {
         if (!state.isLoading) saveMeta(state);

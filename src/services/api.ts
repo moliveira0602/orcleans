@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'https://server-rose-tau.vercel.app/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://orca-api-6csw.onrender.com/api';
 
 interface ApiOptions extends RequestInit {
   params?: Record<string, string>;
