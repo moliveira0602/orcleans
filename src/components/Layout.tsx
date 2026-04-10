@@ -12,9 +12,19 @@ import LeadDetail from './LeadDetail';
 import { useAppState } from '../store';
 import { EmptyState } from './ErrorBoundary';
 import { Onboarding, useOnboarding } from './Onboarding';
-import { FolderPlus } from 'lucide-react';
+import { FolderPlus, LayoutDashboard, Users, Columns3, Sparkles, Upload, Grid3X3, Settings } from 'lucide-react';
 
 export type Page = 'dashboard' | 'leads' | 'pipeline' | 'insights' | 'import' | 'segments' | 'settings';
+
+const MOBILE_NAV_ITEMS: { id: Page; icon: React.ReactNode; label: string }[] = [
+    { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Início' },
+    { id: 'leads', icon: <Users size={18} />, label: 'Alvos' },
+    { id: 'pipeline', icon: <Columns3 size={18} />, label: 'Funil' },
+    { id: 'insights', icon: <Sparkles size={18} />, label: 'Sonar' },
+    { id: 'import', icon: <Upload size={18} />, label: 'Importar' },
+    { id: 'segments', icon: <Grid3X3 size={18} />, label: 'Segmentos' },
+    { id: 'settings', icon: <Settings size={18} />, label: 'Config' },
+];
 
 export default function Layout() {
     const { isLoading, leads } = useAppState();
@@ -25,6 +35,7 @@ export default function Layout() {
     const [mapLeadId, setMapLeadId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         if (!onboardingDone && leads.length > 0) {
@@ -38,6 +49,7 @@ export default function Layout() {
         setSearchQuery('');
         setSelectedLeadId(null);
         setMapLeadId(null);
+        setMobileMenuOpen(false);
     }, []);
 
     const openMapForLead = useCallback((leadId: string) => {
@@ -70,9 +82,24 @@ export default function Layout() {
     return (
         <div className="app">
             {showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
-            <Sidebar currentPage={currentPage} onNavigate={navigate} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((c) => !c)} />
+            <div 
+                className={`sidebar-overlay${mobileMenuOpen ? ' open' : ''}`} 
+                onClick={() => setMobileMenuOpen(false)}
+            />
+            <Sidebar 
+                currentPage={currentPage} 
+                onNavigate={navigate} 
+                collapsed={sidebarCollapsed} 
+                onToggle={() => setSidebarCollapsed((c) => !c)}
+                mobileOpen={mobileMenuOpen}
+            />
             <div className="main">
-                <Topbar currentPage={currentPage} onNavigate={navigate} onSearch={handleSearch} />
+                <Topbar 
+                    currentPage={currentPage} 
+                    onNavigate={navigate} 
+                    onSearch={handleSearch}
+                    onMobileMenuToggle={() => setMobileMenuOpen((o) => !o)}
+                />
                 <div className="content">
                     {isLoading ? (
                         <div className="skeleton-page">
@@ -114,6 +141,18 @@ export default function Layout() {
                 onClose={closeDetail}
                 onNavigate={setCurrentPage}
             />
+            <div className="mobile-bottom-nav">
+                {MOBILE_NAV_ITEMS.slice(0, 5).map((item) => (
+                    <button
+                        key={item.id}
+                        className={`mobile-nav-item${currentPage === item.id ? ' active' : ''}`}
+                        onClick={() => navigate(item.id)}
+                    >
+                        {item.icon}
+                        <span>{item.label}</span>
+                    </button>
+                ))}
+            </div>
         </div>
     );
 }

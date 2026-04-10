@@ -19,6 +19,7 @@ interface SidebarProps {
     onNavigate: (page: Page) => void;
     collapsed: boolean;
     onToggle: () => void;
+    mobileOpen?: boolean;
 }
 
 const NAV_ITEMS: { section: string; items: { id: Page; label: string; icon: React.ReactNode }[] }[] = [
@@ -46,7 +47,7 @@ const NAV_ITEMS: { section: string; items: { id: Page; label: string; icon: Reac
     },
 ];
 
-export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, mobileOpen }: SidebarProps) {
     const { leads, settings } = useAppState();
     const [scanModalOpen, setScanModalOpen] = useState(false);
     
@@ -55,7 +56,7 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle }
     const scanStatus = getScanStatus(preset.segment, preset.city);
 
     return (
-        <aside className={`sidebar${collapsed ? ' collapsed' : ''}`}>
+        <aside className={`sidebar${collapsed ? ' collapsed' : ''}${mobileOpen ? ' mobile-open' : ''}`}>
             <div className="sidebar-logo">
                 <img src="/images/ORCA-white.png" alt="ORCA" className="logo-img" style={{ height: collapsed ? '24px' : '22px' }} />
             </div>

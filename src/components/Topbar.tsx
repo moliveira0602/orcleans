@@ -1,4 +1,4 @@
-import { Search, Bell, LogOut } from 'lucide-react';
+import { Search, Bell, LogOut, Menu } from 'lucide-react';
 import { useAppState } from '../store';
 import { useToast } from './Toast';
 import { useAuth } from '../services/auth';
@@ -29,9 +29,10 @@ interface TopbarProps {
     currentPage: Page;
     onNavigate: (page: Page) => void;
     onSearch: (query: string) => void;
+    onMobileMenuToggle?: () => void;
 }
 
-export function Topbar({ currentPage, onNavigate, onSearch }: TopbarProps) {
+export function Topbar({ currentPage, onNavigate, onSearch, onMobileMenuToggle }: TopbarProps) {
     const { leads, settings } = useAppState();
     const toast = useToast();
     const { logout } = useAuth();
@@ -48,11 +49,21 @@ export function Topbar({ currentPage, onNavigate, onSearch }: TopbarProps) {
 
     return (
         <div className="topbar">
-            <div>
-                <div className="topbar-title" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, letterSpacing: '0.08em', fontSize: '16px' }}>
-                    {PAGE_TITLES[currentPage]}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <button 
+                    className="btn-icon mobile-menu-btn" 
+                    onClick={onMobileMenuToggle}
+                    style={{ display: 'none' }}
+                    title="Menu"
+                >
+                    <Menu size={18} />
+                </button>
+                <div>
+                    <div className="topbar-title" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, letterSpacing: '0.08em', fontSize: '16px' }}>
+                        {PAGE_TITLES[currentPage]}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--orca-text-muted)', marginTop: 2 }}>{PAGE_SUBTITLES[currentPage]}</div>
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--orca-text-muted)', marginTop: 2 }}>{PAGE_SUBTITLES[currentPage]}</div>
             </div>
             <div className="topbar-right">
                 <div className="search-wrap">
