@@ -113,7 +113,7 @@
 
 .onboarding-btn-primary {
     background: var(--orca-accent);
-    color: var(--orca-bg-primary);
+    color: #0A1E2E;
 }
 
 .onboarding-btn-primary:hover {

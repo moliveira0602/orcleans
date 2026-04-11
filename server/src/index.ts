@@ -16,7 +16,13 @@ app.use(helmet());
 
 const origins = env.CORS_ORIGIN.split(',').map((o) => o.trim());
 app.use(cors({
-  origin: origins,
+  origin: (origin, callback) => {
+    if (!origin || origins.some((o) => o === origin || o === '*' || origin.endsWith('.vercel.app'))) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
