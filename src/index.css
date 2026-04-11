@@ -416,8 +416,10 @@ body {
 
 .content {
   flex: 1;
+  overflow-x: auto;
   overflow-y: auto;
-  padding: 28px
+  padding: 28px;
+  min-width: 0;
 }
 
 /* ── BUTTONS ── */
@@ -1679,6 +1681,7 @@ select.input {
   
   .content {
     padding: 20px;
+    overflow-x: auto;
   }
   
   .topbar {
@@ -1762,6 +1765,7 @@ select.input {
 
   .content {
     padding: 16px;
+    overflow-x: auto;
   }
 
   .search-wrap input {
@@ -1890,6 +1894,7 @@ select.input {
 
   .content {
     padding: 12px;
+    overflow-x: auto;
   }
 
   .search-wrap {
@@ -2177,6 +2182,7 @@ select.input {
 
   .content {
     padding: 10px;
+    overflow-x: auto;
   }
 
   .topbar {
@@ -2358,7 +2364,8 @@ select.input {
 
   .content {
     padding: 0;
-    overflow: visible;
+    overflow-x: auto;
+    overflow-y: visible;
   }
 
   .kpi-grid,
