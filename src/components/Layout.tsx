@@ -142,7 +142,7 @@ export default function Layout() {
                 onNavigate={setCurrentPage}
             />
             <div className="mobile-bottom-nav">
-                {MOBILE_NAV_ITEMS.slice(0, 5).map((item) => (
+                {MOBILE_NAV_ITEMS.slice(0, 6).map((item) => (
                     <button
                         key={item.id}
                         className={`mobile-nav-item${currentPage === item.id ? ' active' : ''}`}

@@ -8,9 +8,11 @@ import {
     Upload,
     Grid3X3,
     Settings,
+    LogOut,
 } from 'lucide-react';
 import SonarButton from './SonarButton';
 import { getScanStatus, SCAN_PRESETS } from '../utils/scanService';
+import { useAuth } from '../services/auth';
 
 type Page = 'dashboard' | 'leads' | 'pipeline' | 'insights' | 'import' | 'segments' | 'settings';
 
@@ -54,6 +56,7 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, 
     // Get scan status for Sonar button
     const preset = SCAN_PRESETS['clinicasOlhao'];
     const scanStatus = getScanStatus(preset.segment, preset.city);
+    const { logout } = useAuth();
 
     return (
         <aside className={`sidebar${collapsed ? ' collapsed' : ''}${mobileOpen ? ' mobile-open' : ''}`}>
@@ -80,7 +83,7 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, 
                                 </button>
                                 {/* Sonar Quick Access - Right after Navegação */}
                                 {!collapsed && item.id === 'settings' && (
-                                    <div style={{ 
+                                    <div className="sonar-quick-access" style={{ 
                                         padding: '4px 12px 0 12px',
                                     }}>
                                         <SonarButton
@@ -106,6 +109,29 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, 
                     </div>
                 )}
             </div>
+            <button 
+                className="sidebar-logout-btn" 
+                onClick={logout}
+                title="Sair"
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    padding: '10px 12px',
+                    margin: '8px 12px 12px',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: 8,
+                    color: '#EF4444',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    fontWeight: 600,
+                }}
+            >
+                <LogOut size={14} />
+                <span>Sair</span>
+            </button>
 
             <button
                 className="sidebar-toggle"

@@ -106,7 +106,7 @@ interface InsightsProps {
     highlightedLeadId?: string | null;
 }
 
-export default function Insights({ highlightedLeadId }: InsightsProps) {
+export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsProps) {
     const { leads, settings } = useAppState();
     const dispatch = useAppDispatch();
     const toast = useToast();

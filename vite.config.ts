@@ -6,6 +6,7 @@ const apiUrl = process.env.VITE_API_URL || 'http://localhost:3333';
 export default defineConfig({
   base: basePath,
   server: {
+    open: true,
     proxy: {
       '/api': {
         target: apiUrl,

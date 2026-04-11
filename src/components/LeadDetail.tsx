@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppState, useAppDispatch } from '../store';
 import { useToast } from './Toast';
 import { useConfirm } from './ConfirmModal';
 import { detectNameCol, detectCatCol, getLeadName, getLeadCategory } from '../utils/detect';
 import { scoreClass, scoreLabel, scoreReason } from '../utils/scoring';
 import { PIPELINE_COLS } from '../types';
-import { generateLeadInsight } from '../utils/ai_expert';
+import { generateLeadInsight } from '../utils/ai_service';
 import { copyToClipboard } from '../utils/clipboard';
 import type { PipelineStage } from '../types';
 import type { Page } from './Layout';
@@ -25,7 +25,6 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     const [editValue, setEditValue] = useState('');
     const [noteText, setNoteText] = useState('');
     const [activeTab, setActiveTab] = useState<'info' | 'intel' | 'notes'>('info');
-    void onNavigate;
 
     const lead = leads.find((l) => l.id === leadId);
     if (!lead) {
@@ -280,10 +279,48 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
 }
 
 function IntelligenceView({ lead, settings }: { lead: any, settings: any }) {
-    const insight = generateLeadInsight(lead, settings);
+    const [insight, setInsight] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
     const toast = useToast();
+    
+    useEffect(() => {
+        let mounted = true;
+        
+        generateLeadInsight(lead, settings).then(result => {
+            if (mounted) {
+                setInsight(result);
+                setLoading(false);
+            }
+        }).catch(() => {
+            if (mounted) setLoading(false);
+        });
+        
+        return () => { mounted = false; };
+    }, [lead.id, settings]);
+    
     const copy = (text: string) => { copyToClipboard(text); toast('Copiado!', 'success'); };
-
+    
+    if (loading) {
+        return (
+            <div style={{ padding: 20, textAlign: 'center' }}>
+                <div style={{ fontSize: 12, color: 'var(--t3)' }}>🤖 Analisando lead com IA...</div>
+                <div style={{ marginTop: 8 }}>
+                    <div className="skeleton" style={{ height: 4, width: '100%', background: 'var(--card2)', borderRadius: 2 }}>
+                        <div className="skeleton-loading" style={{ height: '100%', background: 'var(--blue)', borderRadius: 2, animationDuration: '1.5s' }} />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    
+    if (!insight) {
+        return (
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--t3)' }}>
+                Não foi possível gerar análise. Configure a API da OpenRouter.
+            </div>
+        );
+    }
+    
     return (
         <div style={{ padding: 0 }}>
             <div className="detail-section" style={{ background: 'var(--blue-dim)', borderRadius: 0 }}>
@@ -292,26 +329,26 @@ function IntelligenceView({ lead, settings }: { lead: any, settings: any }) {
                         <div style={{ fontSize: 10, color: 'var(--blue)', fontWeight: 700 }}>ESTRATÉGIA B2B</div>
                         <div style={{ fontSize: 14, fontWeight: 700 }}>Especialista em {getLeadCategory(lead, 'segmento') || 'Mercado'}</div>
                     </div>
-                    <div className={`badge badge-${insight.strategy.qualification === 'quente' ? 'green' : 'amber'}`}>{insight.strategy.qualification.toUpperCase()}</div>
+                    <div className={`badge badge-${insight.strategy.qualification === 'quente' ? 'green' : insight.strategy.qualification === 'morno' ? 'amber' : 'gray'}`}>{insight.strategy.qualification?.toUpperCase() || 'N/A'}</div>
                 </div>
             </div>
             <div className="detail-section">
                 <div className="detail-section-title">Análise de Dores</div>
-                {insight.analysis.pains.map((p, i) => <div key={i} style={{ fontSize: 12, marginBottom: 4 }}>• {p}</div>)}
+                {insight.analysis?.pains?.map((p: string, i: number) => <div key={i} style={{ fontSize: 12, marginBottom: 4 }}>• {p}</div>)}
             </div>
             <div className="detail-section">
                 <div className="detail-section-title">Modelos Prontos</div>
                 <div style={{ marginBottom: 12 }}>
                     <div className="flex space-between items-center mb-4">
                         <span style={{ fontSize: 11, fontWeight: 600 }}>Email de Abordagem</span>
-                        <button className="btn btn-ghost btn-sm" onClick={() => copy(insight.templates.email[0])}>Copiar</button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => copy(insight.templates?.email?.[0] || '')}>Copiar</button>
                     </div>
-                    <pre style={{ fontSize: 11, background: 'var(--card2)', padding: 8, whiteSpace: 'pre-wrap' }}>{insight.templates.email[0]}</pre>
+                    <pre style={{ fontSize: 11, background: 'var(--card2)', padding: 8, whiteSpace: 'pre-wrap' }}>{insight.templates?.email?.[0] || 'N/A'}</pre>
                 </div>
             </div>
             <div className="detail-section">
                 <div className="detail-section-title">Plano de Ação</div>
-                {insight.actionPlan.sequence.map((s, i) => <div key={i} style={{ fontSize: 12, marginBottom: 4 }}>{i + 1}. {s}</div>)}
+                {insight.actionPlan?.sequence?.map((s: string, i: number) => <div key={i} style={{ fontSize: 12, marginBottom: 4 }}>{i + 1}. {s}</div>)}
             </div>
         </div>
     );
