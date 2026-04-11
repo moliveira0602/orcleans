@@ -1805,7 +1805,12 @@ select.input {
 
   .detail-panel {
     width: 100%;
-    max-width: 360px;
+    max-width: 100%;
+    right: -100%;
+  }
+
+  .detail-panel.open {
+    right: 0;
   }
 
   .pipeline-col {
@@ -1868,7 +1873,7 @@ select.input {
   .detail-panel {
     width: 100%;
     max-width: none;
-    right: 0;
+    right: -100%;
   }
 
   .detail-panel.open {
