@@ -307,16 +307,31 @@ export async function runScan(
 
         // PASSO 1 — Text Search: retorna telefone, website e outros campos básicos
         // $17/1000 mas SEM chamada details adicional (economia de $17/1000 por lead)
-        const query = `${segment} em ${city}`;
-        onProgress?.(`Buscando "${query}" no Google Places...`);
-        const searchRes = await fetch(
-            `${API_BASES.google}/textsearch?query=${encodeURIComponent(query)}&location=${lat},${lon}&radius=3000&language=pt`
+        const query = `${segment}`;
+        onProgress?.(`Buscando "${query}" próximo a ${lat.toFixed(4)},${lon.toFixed(4)} no Google Places...`);
+        
+        // Try with lat/lng first, if fails try city name
+        let searchRes;
+        let searchData;
+        
+        searchRes = await fetch(
+            `${API_BASES.google}/textsearch?query=${encodeURIComponent(query)}&location=${lat},${lon}&radius=5000&language=pt`
         );
-        const searchData = await searchRes.json();
-        console.log('[GOOGLE DEBUG] Text Search status:', searchData.status);
+        searchData = await searchRes.json();
+        
+        // If zero results, try nearbysearch instead
+        if (searchData.status === 'ZERO_RESULTS' || !searchData.results?.length) {
+            console.log('[GOOGLE DEBUG] Text search returned no results, trying nearby search...');
+            searchRes = await fetch(
+                `${API_BASES.google}/nearbysearch?location=${lat},${lon}&radius=5000&keyword=${encodeURIComponent(query)}&language=pt`
+            );
+            searchData = await searchRes.json();
+        }
+        
+        console.log('[GOOGLE DEBUG] Search status:', searchData.status);
         console.log('[GOOGLE DEBUG] Total resultados:', searchData.results?.length);
         
-        if (searchData.status !== 'OK') {
+        if (searchData.status !== 'OK' && searchData.status !== 'ZERO_RESULTS') {
             onProgress?.(`Erro Google Places: ${searchData.status}`);
             console.error('[GOOGLE DEBUG] Error:', searchData.error_message || searchData.results);
             return {
@@ -328,6 +343,20 @@ export async function runScan(
                 leads: [],
                 cached: false,
                 message: `Erro Google Places: ${searchData.status}`,
+            };
+        }
+        
+        if (!searchData.results?.length) {
+            onProgress?.(`Nenhum resultado encontrado para "${segment}". Tente outro segmento.`);
+            return {
+                success: false,
+                totalFound: 0,
+                imported: 0,
+                duplicates: 0,
+                errors: 1,
+                leads: [],
+                cached: false,
+                message: `ZERO_RESULTS: Nenhum estabelecimento encontrado para "${segment}" nesta localização.`,
             };
         }
 

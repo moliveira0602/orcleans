@@ -285,23 +285,11 @@ function IntelligenceView({ lead, settings }: { lead: any, settings: any }) {
     
     useEffect(() => {
         let mounted = true;
-        const cacheKey = `insight_${lead.id}`;
-        const cached = localStorage.getItem(cacheKey);
-        
-        if (cached) {
-            try {
-                const parsed = JSON.parse(cached);
-                setInsight(parsed);
-                setLoading(false);
-                return;
-            } catch {}
-        }
         
         generateLeadInsight(lead, settings).then(result => {
             if (mounted) {
                 setInsight(result);
                 setLoading(false);
-                localStorage.setItem(cacheKey, JSON.stringify(result));
             }
         }).catch(() => {
             if (mounted) setLoading(false);
@@ -309,6 +297,17 @@ function IntelligenceView({ lead, settings }: { lead: any, settings: any }) {
         
         return () => { mounted = false; };
     }, [lead.id]);
+    
+    const handleRegenerate = () => {
+        const cacheKey = `insight_${lead.id}`;
+        localStorage.removeItem(cacheKey);
+        setLoading(true);
+        generateLeadInsight(lead, settings).then(result => {
+            setInsight(result);
+            setLoading(false);
+            toast('Análise regenerada!', 'success');
+        });
+    };
     
     const copy = (text: string) => { copyToClipboard(text); toast('Copiado!', 'success'); };
     
@@ -335,18 +334,33 @@ function IntelligenceView({ lead, settings }: { lead: any, settings: any }) {
     
     return (
         <div style={{ padding: 0 }}>
+            <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
+                <button 
+                    className="btn btn-ghost btn-sm" 
+                    onClick={handleRegenerate}
+                    disabled={loading}
+                    style={{ fontSize: 10 }}
+                >
+                    🔄 Regenerar
+                </button>
+            </div>
             <div className="detail-section" style={{ background: 'var(--blue-dim)', borderRadius: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
                     <div>
                         <div style={{ fontSize: 10, color: 'var(--blue)', fontWeight: 700 }}>ESTRATÉGIA B2B</div>
                         <div style={{ fontSize: 14, fontWeight: 700 }}>Especialista em {getLeadCategory(lead, 'segmento') || 'Mercado'}</div>
+                        <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 4 }}>{lead.nome || lead.Name || 'Cliente'}</div>
                     </div>
-                    <div className={`badge badge-${insight.strategy.qualification === 'quente' ? 'green' : insight.strategy.qualification === 'morno' ? 'amber' : 'gray'}`}>{insight.strategy.qualification?.toUpperCase() || 'N/A'}</div>
+                    <div className={`badge badge-${insight.strategy?.qualification === 'quente' ? 'green' : insight.strategy?.qualification === 'morno' ? 'amber' : 'gray'}`}>{insight.strategy?.qualification?.toUpperCase() || 'N/A'}</div>
                 </div>
             </div>
             <div className="detail-section">
                 <div className="detail-section-title">Análise de Dores</div>
-                {insight.analysis?.pains?.map((p: string, i: number) => <div key={i} style={{ fontSize: 12, marginBottom: 4 }}>• {p}</div>)}
+                {insight.analysis?.pains?.length ? insight.analysis.pains.map((p: string, i: number) => <div key={i} style={{ fontSize: 12, marginBottom: 4 }}>• {p}</div>) : <div style={{ fontSize: 12, color: 'var(--t3)' }}>Sem dores identificadas</div>}
+            </div>
+            <div className="detail-section">
+                <div className="detail-section-title">Oportunidades</div>
+                {insight.analysis?.opportunities?.length ? insight.analysis.opportunities.map((o: string, i: number) => <div key={i} style={{ fontSize: 12, marginBottom: 4 }}>• {o}</div>) : <div style={{ fontSize: 12, color: 'var(--t3)' }}>Sem oportunidades identificadas</div>}
             </div>
             <div className="detail-section">
                 <div className="detail-section-title">Modelos Prontos</div>
@@ -360,7 +374,7 @@ function IntelligenceView({ lead, settings }: { lead: any, settings: any }) {
             </div>
             <div className="detail-section">
                 <div className="detail-section-title">Plano de Ação</div>
-                {insight.actionPlan?.sequence?.map((s: string, i: number) => <div key={i} style={{ fontSize: 12, marginBottom: 4 }}>{i + 1}. {s}</div>)}
+                {insight.actionPlan?.sequence?.length ? insight.actionPlan.sequence.map((s: string, i: number) => <div key={i} style={{ fontSize: 12, marginBottom: 4 }}>{i + 1}. {s}</div>) : <div style={{ fontSize: 12, color: 'var(--t3)' }}>Sem plano definido</div>}
             </div>
         </div>
     );
