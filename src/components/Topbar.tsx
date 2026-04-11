@@ -53,7 +53,6 @@ export function Topbar({ currentPage, onNavigate, onSearch, onMobileMenuToggle }
                 <button 
                     className="btn-icon mobile-menu-btn" 
                     onClick={onMobileMenuToggle}
-                    style={{ display: 'none' }}
                     title="Menu"
                 >
                     <Menu size={18} />
@@ -76,14 +75,10 @@ export function Topbar({ currentPage, onNavigate, onSearch, onMobileMenuToggle }
                     />
                 </div>
                 <button
-                    className="btn btn-primary btn-sm"
+                    type="button"
+                    className="btn-topbar-import"
                     onClick={() => onNavigate('import')}
-                    style={{
-                        background: 'transparent',
-                        border: '1px solid var(--orca-accent)',
-                        color: 'var(--orca-accent)',
-                        fontWeight: 500,
-                    }}
+                    title="Importar leads"
                 >
                     ↑ Importar
                 </button>
