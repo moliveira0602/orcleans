@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { ArrowRight, ArrowLeft, Check } from 'lucide-react';
 import './ui/Onboarding.css';
-import './ui/Onboarding.css';
 
 type Step = {
     title: string;
