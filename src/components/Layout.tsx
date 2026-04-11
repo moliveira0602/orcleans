@@ -8,13 +8,14 @@ import Insights from '../pages/Insights';
 import ImportPage from '../pages/Import';
 import Segments from '../pages/Segments';
 import SettingsPage from '../pages/Settings';
+import AdminPage from '../pages/Admin';
 import LeadDetail from './LeadDetail';
 import { useAppState } from '../store';
 import { EmptyState } from './ErrorBoundary';
 import { Onboarding, useOnboarding } from './Onboarding';
-import { FolderPlus, LayoutDashboard, Users, Columns3, Sparkles, Upload, Grid3X3, Settings } from 'lucide-react';
+import { FolderPlus, LayoutDashboard, Users, Columns3, Sparkles, Upload, Grid3X3, Settings, Crown } from 'lucide-react';
 
-export type Page = 'dashboard' | 'leads' | 'pipeline' | 'insights' | 'import' | 'segments' | 'settings';
+export type Page = 'dashboard' | 'leads' | 'pipeline' | 'insights' | 'import' | 'segments' | 'settings' | 'admin';
 
 const MOBILE_NAV_ITEMS: { id: Page; icon: React.ReactNode; label: string }[] = [
     { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Início' },
@@ -132,6 +133,7 @@ export default function Layout() {
                             {currentPage === 'import' && <ImportPage onNavigate={navigate} />}
                             {currentPage === 'segments' && <Segments onNavigate={navigate} />}
                             {currentPage === 'settings' && <SettingsPage />}
+                            {currentPage === 'admin' && <AdminPage />}
                         </>
                     )}
                 </div>

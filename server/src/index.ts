@@ -7,6 +7,7 @@ import { env } from './config/env.js';
 import authRoutes from './routes/auth.js';
 import leadRoutes from './routes/leads.js';
 import scanRoutes from './routes/scan.js';
+import adminRoutes from './routes/admin.js';
 import { errorHandler } from './middleware/error.js';
 
 const app = express();
@@ -42,6 +43,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/scan', scanRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use(errorHandler);
 

@@ -9,12 +9,13 @@ import {
     Grid3X3,
     Settings,
     LogOut,
+    Crown,
 } from 'lucide-react';
 import SonarButton from './SonarButton';
 import { getScanStatus, SCAN_PRESETS } from '../utils/scanService';
 import { useAuth } from '../services/auth';
 
-type Page = 'dashboard' | 'leads' | 'pipeline' | 'insights' | 'import' | 'segments' | 'settings';
+type Page = 'dashboard' | 'leads' | 'pipeline' | 'insights' | 'import' | 'segments' | 'settings' | 'admin';
 
 interface SidebarProps {
     currentPage: Page;
@@ -45,6 +46,7 @@ const NAV_ITEMS: { section: string; items: { id: Page; label: string; icon: Reac
         section: 'CONTA',
         items: [
             { id: 'settings', label: 'Navegação', icon: <Settings size={16} /> },
+            { id: 'admin', label: 'Admin', icon: <Crown size={16} /> },
         ],
     },
 ];

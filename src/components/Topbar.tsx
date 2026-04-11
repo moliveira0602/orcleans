@@ -3,7 +3,7 @@ import { useAppState } from '../store';
 import { useToast } from './Toast';
 import { useAuth } from '../services/auth';
 
-type Page = 'dashboard' | 'leads' | 'pipeline' | 'insights' | 'import' | 'segments' | 'settings';
+type Page = 'dashboard' | 'leads' | 'pipeline' | 'insights' | 'import' | 'segments' | 'settings' | 'admin';
 
 const PAGE_TITLES: Record<Page, string> = {
     dashboard: 'CENTRO DE COMANDO',
@@ -13,6 +13,7 @@ const PAGE_TITLES: Record<Page, string> = {
     import: 'CAPTURA',
     segments: 'CARDUMES',
     settings: 'NAVEGAÇÃO',
+    admin: 'ADMIN',
 };
 
 const PAGE_SUBTITLES: Record<Page, string> = {
@@ -23,6 +24,7 @@ const PAGE_SUBTITLES: Record<Page, string> = {
     import: 'Carregue novos leads',
     segments: 'Segmentação automática',
     settings: 'Personalize sua experiência',
+    admin: 'Estatísticas do sistema',
 };
 
 interface TopbarProps {
