@@ -245,15 +245,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
     }, []);
 
-    // If authenticated, also try to sync from backend
+    // If authenticated, also try to sync from backend and MERGE with local data
     useEffect(() => {
         if (!initialLeadsLoaded || !USE_BACKEND) return;
         
         leadApi.fetchLeads({ page: 1, limit: 10000, sortBy: 'createdAt', sortOrder: 'desc' })
             .then((res) => {
-                const leads = res.leads.map(leadFromBackendFormat);
-                if (leads.length > 0) {
-                    dispatch({ type: 'FINISH_LOADING', payload: leads });
+                const backendLeads = res.leads.map(leadFromBackendFormat);
+                if (backendLeads.length > 0) {
+                    // Merge: use backend leads as source of truth, update local
+                    dispatch({ type: 'FINISH_LOADING', payload: backendLeads });
+                    // Save merged data to IndexedDB for offline access
+                    saveLeadsDB(backendLeads);
                 }
             })
             .catch(() => {});
@@ -265,6 +268,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
             saveLeadsDB(state.leads);
         }
     }, [state.leads, state.isLoading]);
+
+    // Force sync from backend on mount to ensure consistency
+    const [forcedSync, setForcedSync] = useState(false);
+    useEffect(() => {
+        if (forcedSync || !USE_BACKEND || !initialLeadsLoaded) return;
+        
+        leadApi.fetchLeads({ page: 1, limit: 10000, sortBy: 'createdAt', sortOrder: 'desc' })
+            .then((res) => {
+                const backendLeads = res.leads.map(leadFromBackendFormat);
+                if (backendLeads.length > 0) {
+                    dispatch({ type: 'FINISH_LOADING', payload: backendLeads });
+                    saveLeadsDB(backendLeads);
+                }
+                setForcedSync(true);
+            })
+            .catch(() => setForcedSync(true));
+    }, [initialLeadsLoaded, forcedSync]);
 
     useEffect(() => {
         if (!state.isLoading) saveMeta(state);
