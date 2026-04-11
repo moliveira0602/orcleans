@@ -285,18 +285,30 @@ function IntelligenceView({ lead, settings }: { lead: any, settings: any }) {
     
     useEffect(() => {
         let mounted = true;
+        const cacheKey = `insight_${lead.id}`;
+        const cached = localStorage.getItem(cacheKey);
+        
+        if (cached) {
+            try {
+                const parsed = JSON.parse(cached);
+                setInsight(parsed);
+                setLoading(false);
+                return;
+            } catch {}
+        }
         
         generateLeadInsight(lead, settings).then(result => {
             if (mounted) {
                 setInsight(result);
                 setLoading(false);
+                localStorage.setItem(cacheKey, JSON.stringify(result));
             }
         }).catch(() => {
             if (mounted) setLoading(false);
         });
         
         return () => { mounted = false; };
-    }, [lead.id, settings]);
+    }, [lead.id]);
     
     const copy = (text: string) => { copyToClipboard(text); toast('Copiado!', 'success'); };
     
