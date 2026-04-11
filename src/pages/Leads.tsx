@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useAppState } from '../store';
 import { LEAD_COLUMNS } from '../utils/leadMapper';
 import ScoreRing from '../components/ScoreRing';
@@ -16,6 +16,7 @@ interface LeadsProps {
 export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpenMap }: LeadsProps) {
     const { leads, settings, imports } = useAppState();
     const toast = useToast();
+    const tableRef = useRef<HTMLDivElement>(null);
     const [search, setSearch] = useState(searchQuery);
     const [importFilter, setImportFilter] = useState('');
     const [scoreFilter, setScoreFilter] = useState('');
@@ -23,7 +24,33 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
     const [sortCol, setSortCol] = useState<string | null>(null);
     const [sortDir, setSortDir] = useState(1);
     const [page, setPage] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
+    const [startX, setStartX] = useState(0);
+    const [scrollLeft, setScrollLeft] = useState(0);
     const perPage = 25;
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (!tableRef.current) return;
+        setIsDragging(true);
+        setStartX(e.pageX - tableRef.current.offsetLeft);
+        setScrollLeft(tableRef.current.scrollLeft);
+    };
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!isDragging || !tableRef.current) return;
+        e.preventDefault();
+        const x = e.pageX - tableRef.current.offsetLeft;
+        const walk = (x - startX) * 2;
+        tableRef.current.scrollLeft = scrollLeft - walk;
+    };
+
+    const handleMouseUp = () => setIsDragging(false);
+
+    useEffect(() => {
+        const handleGlobalMouseUp = () => setIsDragging(false);
+        window.addEventListener('mouseup', handleGlobalMouseUp);
+        return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+    }, []);
 
     // Sync external search query
     useEffect(() => {
@@ -142,7 +169,26 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                 </div>
             </div>
 
-            <div className="table-wrap">
+            <div 
+                ref={tableRef}
+                className="table-wrap" 
+                style={{ 
+                    overflowX: 'auto', 
+                    scrollbarWidth: 'thin', 
+                    scrollbarColor: 'var(--blue) var(--bg4)',
+                    cursor: isDragging ? 'grabbing' : 'grab',
+                    userSelect: 'none'
+                }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+            >
+                <style>{`
+                    .table-wrap::-webkit-scrollbar { height: 8px; }
+                    .table-wrap::-webkit-scrollbar-track { background: var(--bg4); border-radius: 4px; }
+                    .table-wrap::-webkit-scrollbar-thumb { background: var(--blue); border-radius: 4px; }
+                `}</style>
                 <table>
                     <thead>
                         <tr>
