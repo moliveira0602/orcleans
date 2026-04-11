@@ -11,14 +11,14 @@ interface TokenPayload {
 
 export function generateAccessToken(payload: TokenPayload): string {
   const options: SignOptions = {
-    expiresIn: jwtConfig.accessExpiresIn as SignOptions['expiresIn'],
+    expiresIn: '15m',
   };
   return jwt.sign(payload, jwtConfig.accessSecret, options);
 }
 
 export function generateRefreshToken(userId: string): string {
   const options: SignOptions = {
-    expiresIn: jwtConfig.refreshExpiresIn as SignOptions['expiresIn'],
+    expiresIn: '7d',
   };
   return jwt.sign({ sub: userId }, jwtConfig.refreshSecret, options);
 }

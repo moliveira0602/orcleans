@@ -40,28 +40,6 @@ function clearSession() {
   localStorage.removeItem('orca_session');
 }
 
-function simpleHash(str: string): string {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) {
-    const c = str.charCodeAt(i);
-    h = ((h << 5) - h) + c;
-    h |= 0;
-  }
-  return h.toString(36);
-}
-
-function getLocalUsers(): Array<{ id: string; name: string; email: string; passwordHash: string; role: string; organizationId: string; organizationName: string }> {
-  try {
-    const raw = localStorage.getItem('orcalens_auth_users');
-    if (raw) return JSON.parse(raw);
-  } catch { /* ignore */ }
-  return [];
-}
-
-function saveLocalUsers(users: Array<{ id: string; name: string; email: string; passwordHash: string; role: string; organizationId: string; organizationName: string }>) {
-  localStorage.setItem('orcalens_auth_users', JSON.stringify(users));
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(loadSession);
   const [isLoading, setIsLoading] = useState(true);
@@ -93,80 +71,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    try {
-      const result = await api.post<any>('/auth/login', { email, password });
-      api.setTokens(result.accessToken, result.refreshToken);
-      const userData: User = result.user;
-      setUser(userData);
-      saveSession(userData);
-      return;
-    } catch {
-      // fallback local
-    }
-
-    const users = getLocalUsers();
-    const hash = simpleHash(password);
-    const found = users.find((u) => u.email === email.toLowerCase() && u.passwordHash === hash);
-
-    if (!found) {
-      throw new Error('Email ou senha incorretos.');
-    }
-
-    const userData: User = {
-      id: found.id,
-      name: found.name,
-      email: found.email,
-      role: found.role,
-      organizationId: found.organizationId,
-      organizationName: found.organizationName,
-    };
-
+    const result = await api.post<any>('/auth/login', { email, password });
+    api.setTokens(result.accessToken, result.refreshToken);
+    const userData: User = result.user;
     setUser(userData);
     saveSession(userData);
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string, organizationName: string) => {
-    try {
-      const result = await api.post<any>('/auth/register', { name, email, password, organizationName });
-      api.setTokens(result.accessToken, result.refreshToken);
-      const userData: User = result.user;
-      setUser(userData);
-      saveSession(userData);
-      return;
-    } catch {
-      // fallback local
-    }
-
-    const users = getLocalUsers();
-    const existing = users.find((u) => u.email === email.toLowerCase());
-    if (existing) {
-      throw new Error('Este email já está registado.');
-    }
-
-    const id = crypto.randomUUID();
-    const orgId = crypto.randomUUID();
-    const newUser = {
-      id,
-      name,
-      email: email.toLowerCase(),
-      passwordHash: simpleHash(password),
-      role: 'admin',
-      organizationId: orgId,
-      organizationName,
-    };
-
-    users.push(newUser);
-    saveLocalUsers(users);
-
-    const userData: User = {
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
-      role: newUser.role,
-      organizationId: newUser.organizationId,
-      organizationName: newUser.organizationName,
-    };
-
+    const result = await api.post<any>('/auth/register', { name, email, password, organizationName });
+    api.setTokens(result.accessToken, result.refreshToken);
+    const userData: User = result.user;
     setUser(userData);
     saveSession(userData);
   }, []);
