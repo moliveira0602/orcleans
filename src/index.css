@@ -2149,27 +2149,36 @@ select.input {
   }
 
   .kpi-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
   }
 
   .kpi {
-    padding: 14px 16px;
+    padding: 12px;
+    border-radius: 10px;
   }
 
   .kpi-val {
-    font-size: 22px;
+    font-size: 20px;
   }
 
   .kpi-label {
-    font-size: 10px;
+    font-size: 9px;
+    margin-bottom: 6px;
   }
 
   .kpi-sub {
-    font-size: 10px;
+    font-size: 9px;
+  }
+
+  .kpi-delta {
+    font-size: 9px;
   }
 
   .grid-2, .grid-3 {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .insight-grid {
@@ -2177,7 +2186,65 @@ select.input {
   }
 
   .card {
-    padding: 14px;
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .content {
+    padding: 10px;
+    overflow-x: auto;
+  }
+
+  .topbar {
+    padding: 0 10px;
+  }
+
+  .main {
+    width: 100%;
+    background: var(--bg);
+    min-height: 100vh;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .kpi {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .kpi-val {
+    font-size: 20px;
+  }
+
+  .kpi-label {
+    font-size: 9px;
+    margin-bottom: 6px;
+  }
+
+  .kpi-sub {
+    font-size: 9px;
+  }
+
+  .kpi-delta {
+    font-size: 9px;
+  }
+
+  .grid-2, .grid-3 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .insight-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 12px;
+    border-radius: 10px;
   }
 
   .content {
@@ -2805,5 +2872,51 @@ select.input {
   .settings-actions .btn {
     width: 100%;
     justify-content: center;
+  }
+
+  /* Dashboard mobile specific */
+  .kpi-grid .kpi {
+    padding: 10px;
+  }
+
+  .kpi-grid .kpi-val {
+    font-size: 18px;
+  }
+
+  .kpi-grid .kpi-label {
+    font-size: 8px;
+    letter-spacing: 0.02em;
+  }
+
+  .kpi-grid .kpi-sub {
+    font-size: 8px;
+  }
+
+  .card {
+    padding: 10px;
+  }
+
+  .sec-header {
+    margin-bottom: 12px;
+  }
+
+  .sec-title {
+    font-size: 9px;
+  }
+
+  .sec-sub {
+    font-size: 10px;
+  }
+
+  .activity-item {
+    padding: 8px 0;
+  }
+
+  .activity-title {
+    font-size: 12px;
+  }
+
+  .activity-sub {
+    font-size: 10px;
   }
 }

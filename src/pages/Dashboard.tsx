@@ -198,7 +198,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
     return (
         <>
             {/* ===== ROW 1: Core Metrics (5 cols) ===== */}
-            <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', marginBottom: 24 }}>
+            <div className="kpi-grid" style={{ marginBottom: 24 }}>
                 <div className="kpi">
                     <div className="kpi-label">Total de Leads</div>
                     <div className="kpi-val">{leads.length}</div>
@@ -229,7 +229,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
             </div>
 
             {/* ===== ROW 2: Engagement & Performance ===== */}
-            <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', marginBottom: 24 }}>
+            <div className="kpi-grid" style={{ marginBottom: 24 }}>
                 <div className="kpi">
                     <div className="kpi-label">Em Negociação</div>
                     <div className="kpi-val" style={{ fontSize: 28, color: 'var(--orca-accent)' }}>{followUpNeeded}</div>
