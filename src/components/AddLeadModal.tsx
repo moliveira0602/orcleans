@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAppDispatch, useAppState } from '../store';
 import { useToast } from './Toast';
 import { computeScore } from '../utils/scoring';
+import * as leadApi from '../services/leads';
 
 interface AddLeadModalProps {
     open: boolean;
@@ -20,40 +21,42 @@ export default function AddLeadModal({ open, onClose }: AddLeadModalProps) {
         setForm((f) => ({ ...f, [field]: value }));
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!form.Name.trim()) {
             toast('Nome é obrigatório.', 'error');
             return;
         }
         const row = { ...form };
         const score = computeScore(row, null, [row, ...leads.map((l) => l as unknown as Record<string, unknown>)]);
-        const lead = {
-            id: 'lead_' + Date.now(),
-            _score: score,
-            _pipeline: 'novo' as const,
-            _importedAt: Date.now(),
-            _importFile: 'Manual',
-            _importDate: new Date().toISOString(),
-            nome: form.Name,
-            segmento: form.Category,
-            telefone: form.Phone,
-            email: form.Email,
-            website: form.Website,
-            endereco: form.City,
-            observacoes: form.Notes,
-            avaliacao: null,
-            reviews: null,
-            preco: '',
-            status: '',
-            horario: '',
-            servicos: [],
-            foto: '',
-            fotos: [],
-            linkOrigem: '',
-            linkPedido: '',
-            _raw: row,
-        };
-        dispatch({ type: 'ADD_LEAD', payload: lead });
+        try {
+            const serverLead = await leadApi.createLead({
+                nome: form.Name,
+                segmento: form.Category,
+                telefone: form.Phone,
+                email: form.Email,
+                website: form.Website,
+                endereco: form.City,
+                observacoes: form.Notes,
+                score: Math.round(score),
+                pipelineStage: 'novo',
+            });
+            const lead = {
+                ...serverLead,
+                id: serverLead.id,
+                _score: serverLead.score,
+                _pipeline: serverLead.pipelineStage as 'novo' | 'qualificado' | 'proposta' | 'negociacao' | 'ganho' | 'perdido',
+                _importedAt: Date.now(),
+                _importFile: 'Manual',
+                _importDate: new Date().toISOString(),
+                _notes: [],
+                _raw: row,
+            };
+            dispatch({ type: 'ADD_LEAD', payload: lead });
+        } catch (err) {
+            console.error('Failed to create lead on server:', err);
+            toast('Erro ao criar lead no servidor.', 'error');
+            return;
+        }
         toast(`Lead "${form.Name}" adicionado com score ${score.toFixed(1)}.`, 'success');
         dispatch({
             type: 'ADD_ACTIVITY',

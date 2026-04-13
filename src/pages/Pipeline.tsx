@@ -6,6 +6,7 @@ import AddLeadModal from '../components/AddLeadModal';
 import { PIPELINE_COLS } from '../types';
 import type { PipelineStage } from '../types';
 import { useToast } from '../components/Toast';
+import * as leadApi from '../services/leads';
 
 interface PipelineProps {
     onOpenDetail: (id: string) => void;
@@ -45,10 +46,15 @@ export default function Pipeline({ onOpenDetail }: PipelineProps) {
         setDragOverCol(null);
     }, []);
 
-    const handleDrop = useCallback((e: React.DragEvent, colId: PipelineStage) => {
+    const handleDrop = useCallback(async (e: React.DragEvent, colId: PipelineStage) => {
         e.preventDefault();
         setDragOverCol(null);
         if (!dragId) return;
+        try {
+            await leadApi.moveLeadPipeline(dragId, colId);
+        } catch (err) {
+            console.error('Failed to move lead on server:', err);
+        }
         dispatch({ type: 'MOVE_PIPELINE', payload: { leadId: dragId, stage: colId } });
         const label = PIPELINE_COLS.find((c) => c.id === colId)?.label || colId;
         toast(`Lead movido para "${label}"`, 'success');

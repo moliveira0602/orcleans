@@ -9,6 +9,7 @@ import { sanitizeImportedData, getSanitizationSummary, type SanitizationSummary,
 import type { Lead } from '../types';
 import type { Page } from '../components/Layout';
 import { createLeadsBulk } from '../services/leads';
+import * as leadApi from '../services/leads';
 
 interface ImportPageProps {
     onNavigate?: (page: Page) => void;
@@ -183,6 +184,44 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
             count: pending.rows,
         };
 
+        // Sync to backend API FIRST
+        let serverLeads: any[] = [];
+        try {
+            const result = await createLeadsBulk(newLeads.map(l => ({
+                nome: l.nome,
+                segmento: l.segmento,
+                avaliacao: l.avaliacao,
+                reviews: l.reviews,
+                preco: l.preco,
+                endereco: l.endereco,
+                status: l.status,
+                horario: l.horario,
+                telefone: l.telefone,
+                website: l.website,
+                email: l.email,
+                servicos: l.servicos,
+                foto: l.foto,
+                fotos: l.fotos,
+                linkOrigem: l.linkOrigem,
+                linkPedido: l.linkPedido,
+                observacoes: l.observacoes,
+                score: l._score,
+                pipelineStage: l._pipeline,
+                importFile: l._importFile,
+                importDate: l._importDate,
+                importId: l._importId,
+            })));
+            
+            // Fetch the newly created leads to get server IDs
+            const freshLeads = await leadApi.fetchLeads({ page: 1, limit: result.count || newLeads.length, sortBy: 'createdAt', sortOrder: 'desc' });
+            serverLeads = freshLeads.leads.slice(0, result.count || newLeads.length);
+            console.log('[Import] Leads synced to backend');
+        } catch (err) {
+            console.error('[Import] Failed to sync leads to backend:', err);
+            toast('Erro ao sincronizar leads com o servidor.', 'error');
+            return;
+        }
+
         const hasDupes = dupeStats.dupeCount > 0;
         if (hasDupes) {
             dispatch({
@@ -207,14 +246,6 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                 },
             });
             toast(`✓ ${pending.rows} leads importados · Fonte: ${sourceType === 'google_maps' ? 'Google Maps' : sourceType === 'linkedin' ? 'LinkedIn' : 'Genérica'}`, 'success');
-        }
-
-        // Sync to backend API
-        try {
-            await createLeadsBulk(newLeads);
-            console.log('[Import] Leads synced to backend');
-        } catch (err) {
-            console.error('[Import] Failed to sync leads to backend:', err);
         }
 
         dispatch({

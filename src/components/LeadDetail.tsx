@@ -7,6 +7,7 @@ import { scoreClass, scoreLabel, scoreReason } from '../utils/scoring';
 import { PIPELINE_COLS } from '../types';
 import { generateLeadInsight } from '../utils/ai_service';
 import { copyToClipboard } from '../utils/clipboard';
+import * as leadApi from '../services/leads';
 import type { PipelineStage } from '../types';
 import type { Page } from './Layout';
 
@@ -89,7 +90,12 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
         return map[k] || k;
     };
 
-    const movePipeline = (stage: PipelineStage) => {
+    const movePipeline = async (stage: PipelineStage) => {
+        try {
+            await leadApi.moveLeadPipeline(lead.id, stage);
+        } catch (err) {
+            console.error('Failed to move lead on server:', err);
+        }
         dispatch({ type: 'MOVE_PIPELINE', payload: { leadId: lead.id, stage } });
         const label = PIPELINE_COLS.find((c) => c.id === stage)?.label || stage;
         toast(`Lead movido para "${label}"`, 'success');
@@ -104,8 +110,13 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
         setEditValue(value);
     };
 
-    const saveEdit = () => {
+    const saveEdit = async () => {
         if (editingField) {
+            try {
+                await leadApi.updateLead(lead.id, { [editingField]: editValue });
+            } catch (err) {
+                console.error('Failed to update lead on server:', err);
+            }
             dispatch({ type: 'UPDATE_LEAD', payload: { id: lead.id, fields: { [editingField]: editValue } } });
             toast(`Campo "${editingField}" atualizado.`, 'success');
             setEditingField(null);
@@ -118,11 +129,18 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
         setEditValue('');
     };
 
-    const addNote = () => {
+    const addNote = async () => {
         if (!noteText.trim()) return;
+        const note = { text: noteText.trim(), date: new Date().toISOString() };
+        try {
+            const existingNotes = lead._notes || [];
+            await leadApi.updateLead(lead.id, { notes: [note, ...existingNotes] });
+        } catch (err) {
+            console.error('Failed to add note on server:', err);
+        }
         dispatch({
             type: 'ADD_NOTE',
-            payload: { leadId: lead.id, note: { text: noteText.trim(), date: new Date().toISOString() } },
+            payload: { leadId: lead.id, note },
         });
         toast('Nota adicionada.', 'success');
         setNoteText('');
@@ -148,6 +166,11 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
             variant: 'danger',
         });
         if (!ok) return;
+        try {
+            await leadApi.deleteLead(lead.id);
+        } catch (err) {
+            console.error('Failed to delete lead on server:', err);
+        }
         dispatch({ type: 'DELETE_LEAD', payload: lead.id });
         toast('Lead removido.', 'info');
         onClose();
