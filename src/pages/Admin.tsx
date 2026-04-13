@@ -247,7 +247,7 @@ export default function AdminPage() {
         try {
             await api.post(`/admin/users/${userId}/heartbeat`);
         } catch {
-            // ignore
+            // ignore - session may have expired
         }
     };
 
@@ -333,13 +333,19 @@ export default function AdminPage() {
         setLoading(true);
         setError(null);
         try {
-            await Promise.all([
+            const results = await Promise.allSettled([
                 fetchOverview(),
                 fetchTenants(),
                 fetchUsers(),
                 fetchLogs(),
                 fetchDiagnostics(),
             ]);
+
+            // Check if auth failed - redirect to login
+            const hasAuthError = results.some(r => r.status === 'rejected' && (r as PromiseRejectedResult).reason?.message === 'Sessão expirada');
+            if (hasAuthError) {
+                return; // auth.tsx already redirects
+            }
         } catch (err: any) {
             console.error('Admin fetch error:', err);
             setError(err.message || 'Erro ao carregar painel admin');
@@ -357,12 +363,16 @@ export default function AdminPage() {
         if (auth?.id) {
             sendHeartbeat(auth.id);
             const interval = setInterval(() => sendHeartbeat(auth.id), 60000);
-            return () => clearInterval(interval);
+            return () => {
+                clearInterval(interval);
+            };
         }
     }, []);
 
     useEffect(() => {
-        const interval = setInterval(fetchUsers, 30000);
+        const interval = setInterval(() => {
+            fetchUsers().catch(() => {});
+        }, 30000);
         return () => clearInterval(interval);
     }, []);
 
@@ -606,7 +616,14 @@ export default function AdminPage() {
             <div style={{ padding: 40, textAlign: 'center' }}>
                 <AlertTriangle size={48} style={{ color: 'var(--red)', marginBottom: 16 }} />
                 <div style={{ color: 'var(--red)', marginBottom: 16 }}>Erro: {error}</div>
-                <button className="btn btn-primary" onClick={fetchData}>Tentar novamente</button>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 16 }}>
+                    <button className="btn btn-primary" onClick={fetchData}>
+                        <RefreshCw size={16} /> Tentar novamente
+                    </button>
+                    <button className="btn btn-ghost" onClick={() => window.location.href = '/'}>
+                        <LogOut size={16} /> Voltar ao Dashboard
+                    </button>
+                </div>
             </div>
         );
     }

@@ -123,9 +123,12 @@ class ApiClient {
 
           if (retryResponse.status === 204) return {} as T;
           return retryResponse.json();
-        } catch {
+        } catch (refreshError) {
           this.clearTokens();
-          window.location.href = '/login';
+          localStorage.removeItem('orca_user');
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
           throw new Error('Sessão expirada');
         }
       }
@@ -138,7 +141,13 @@ class ApiClient {
       if (response.status === 204) return {} as T;
       return response.json();
     } catch (error) {
-      if (error instanceof Error) throw error;
+      if (error instanceof Error) {
+        if (error.message === 'Sessão expirada') throw error;
+        if (error.name === 'TypeError' || error.message.includes('fetch')) {
+          throw new Error('Erro de conexão. Verifique sua internet.');
+        }
+        throw error;
+      }
       throw new Error('Erro de rede');
     }
   }
