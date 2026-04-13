@@ -59,6 +59,7 @@ export function leadFingerprint(lead: Record<string, unknown>): string {
 
 type Action =
     | { type: 'IMPORT_LEADS'; payload: { leads: Lead[]; record: ImportRecord } }
+    | { type: 'UPSERT_LEADS'; payload: { leads: Lead[]; record: ImportRecord; mode: 'skip' | 'update' } }
     | { type: 'ADD_LEAD'; payload: Lead }
     | { type: 'UPDATE_LEAD'; payload: { id: string; fields: Record<string, unknown> } }
     | { type: 'DELETE_LEAD'; payload: string }
@@ -68,7 +69,8 @@ type Action =
     | { type: 'ADD_ACTIVITY'; payload: ActivityEntry }
     | { type: 'ADD_NOTE'; payload: { leadId: string; note: NoteEntry } }
     | { type: 'SET_LEADS'; payload: Lead[] }
-    | { type: 'SET_LOADING'; payload: boolean };
+    | { type: 'SET_LOADING'; payload: boolean }
+    | { type: 'DELETE_IMPORT'; payload: string };
 
 interface AppContextType {
     state: AppState;
@@ -194,12 +196,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
             case 'SET_LOADING':
                 updateState({ isLoading: action.payload });
                 break;
-            case 'IMPORT_LEADS':
+            case 'IMPORT_LEADS': {
+                updateState({ imports: [...state.imports, { ...action.payload.record, rows: action.payload.leads.length }] });
+                break;
+            }
+            case 'UPSERT_LEADS': {
+                updateState({ imports: [...state.imports, { ...action.payload.record, rows: action.payload.leads.length }] });
+                break;
+            }
+            case 'DELETE_IMPORT': {
+                const importId = action.payload;
+                updateState({ imports: state.imports.filter(i => i.id !== importId) });
+                break;
+            }
             case 'CLEAR_ALL':
-                // These should trigger server sync in the calling component
                 break;
         }
-    }, [updateState, state.settings, state.activities]);
+    }, [updateState, state.settings, state.activities, state.imports]);
 
     return <AppContext.Provider value={{ state, dispatch, refreshLeads }}>{children}</AppContext.Provider>;
 }
