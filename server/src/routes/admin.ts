@@ -118,6 +118,7 @@ router.get('/users', async (_req: AuthRequest, res: Response) => {
         role: true,
         isActive: true,
         lastLoginAt: true,
+        lastSeenAt: true,
         createdAt: true,
         organization: {
           select: {
@@ -130,7 +131,16 @@ router.get('/users', async (_req: AuthRequest, res: Response) => {
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json(users);
+    const usersWithLeads = await Promise.all(
+      users.map(async (user) => {
+        const leadCount = await prisma.lead.count({
+          where: { organizationId: user.organizationId },
+        });
+        return { ...user, leadCount };
+      })
+    );
+
+    res.json(usersWithLeads);
   } catch (error) {
     console.error('Admin users error:', error);
     res.status(500).json({ error: 'Erro ao listar utilizadores' });
@@ -813,6 +823,26 @@ router.get('/users/:id/pipeline', async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('View as user pipeline error:', error);
     res.status(500).json({ error: 'Erro ao obter pipeline do utilizador' });
+  }
+});
+
+router.post('/users/:id/heartbeat', async (req: AuthRequest, res: Response) => {
+  try {
+    const id = getParamId(req.params as Record<string, string | string[]>);
+
+    if (!id) {
+      return res.status(400).json({ error: 'ID é obrigatório' });
+    }
+
+    await prisma.user.update({
+      where: { id },
+      data: { lastSeenAt: new Date() },
+    });
+
+    res.json({ status: 'ok' });
+  } catch (error) {
+    console.error('Heartbeat error:', error);
+    res.status(500).json({ error: 'Erro ao atualizar presença' });
   }
 });
 

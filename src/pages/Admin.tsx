@@ -59,6 +59,8 @@ interface User {
     role: string;
     isActive: boolean;
     lastLoginAt: string | null;
+    lastSeenAt: string | null;
+    leadCount: number;
     createdAt: string;
     organization: { id: string; name: string; plan: string };
 }
@@ -241,6 +243,21 @@ export default function AdminPage() {
         }
     };
 
+    const sendHeartbeat = async (userId: string) => {
+        try {
+            await api.post(`/admin/users/${userId}/heartbeat`);
+        } catch {
+            // ignore
+        }
+    };
+
+    const isUserOnline = (lastSeenAt: string | null): boolean => {
+        if (!lastSeenAt) return false;
+        const lastSeen = new Date(lastSeenAt).getTime();
+        const now = Date.now();
+        return (now - lastSeen) < 120000;
+    };
+
     const fetchLogs = async (page = 1) => {
         try {
             const result = await api.get<{ logs: AuditLog[]; total: number }>(`/admin/logs?page=${page}&limit=20`);
@@ -333,6 +350,20 @@ export default function AdminPage() {
 
     useEffect(() => {
         fetchData();
+    }, []);
+
+    useEffect(() => {
+        const auth = JSON.parse(localStorage.getItem('orca_user') || 'null');
+        if (auth?.id) {
+            sendHeartbeat(auth.id);
+            const interval = setInterval(() => sendHeartbeat(auth.id), 60000);
+            return () => clearInterval(interval);
+        }
+    }, []);
+
+    useEffect(() => {
+        const interval = setInterval(fetchUsers, 30000);
+        return () => clearInterval(interval);
     }, []);
 
     const handleAddUser = async () => {
@@ -765,11 +796,13 @@ export default function AdminPage() {
                     <table>
                         <thead>
                             <tr>
+                                <th>Live</th>
                                 <th>Nome</th>
                                 <th>Email</th>
                                 <th>Organização</th>
                                 <th>Plano</th>
                                 <th>Role</th>
+                                <th>Leads</th>
                                 <th>Ativo</th>
                                 <th>Último Login</th>
                                 <th style={{ width: 140 }}>Ações</th>
@@ -778,6 +811,22 @@ export default function AdminPage() {
                         <tbody>
                             {users.map((user) => (
                                 <tr key={user.id}>
+                                    <td>
+                                        <span
+                                            className={`badge badge-${isUserOnline(user.lastSeenAt) ? 'green' : 'red'}`}
+                                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                                        >
+                                            <span
+                                                style={{
+                                                    width: 6,
+                                                    height: 6,
+                                                    borderRadius: '50%',
+                                                    background: isUserOnline(user.lastSeenAt) ? 'var(--green)' : 'var(--red)',
+                                                }}
+                                            />
+                                            {isUserOnline(user.lastSeenAt) ? 'Live' : 'Off'}
+                                        </span>
+                                    </td>
                                     <td>{user.name}</td>
                                     <td>{user.email}</td>
                                     <td>{user.organization.name}</td>
@@ -786,6 +835,9 @@ export default function AdminPage() {
                                         <span className={`badge ${user.role === 'super_admin' ? 'badge-red' : 'badge-gray'}`}>
                                             {user.role === 'super_admin' ? 'Super Admin' : user.role === 'admin' ? 'Admin' : 'Membro'}
                                         </span>
+                                    </td>
+                                    <td>
+                                        <span className="badge badge-green">{user.leadCount}</span>
                                     </td>
                                     <td>
                                         <span className={`badge badge-${user.isActive ? 'green' : 'red'}`}>
