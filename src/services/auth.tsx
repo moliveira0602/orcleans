@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { api } from '../services/api';
 
 type Role = 'super_admin' | 'admin' | 'member';
@@ -87,6 +87,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     }
   }, []);
+
+  // Global heartbeat - updates lastSeenAt every 60s
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const sendHeartbeat = async () => {
+      try {
+        await api.post(`/admin/users/${user.id}/heartbeat`);
+      } catch {
+        // ignore - session may have expired
+      }
+    };
+
+    // Send initial heartbeat
+    sendHeartbeat();
+
+    // Send heartbeat every 60 seconds
+    const interval = setInterval(sendHeartbeat, 60000);
+    return () => clearInterval(interval);
+  }, [user?.id]);
 
   const login = useCallback(async (email: string, password: string) => {
     const result = await api.post<any>('/auth/login', { email, password });

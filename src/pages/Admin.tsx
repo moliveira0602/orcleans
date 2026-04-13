@@ -359,17 +359,6 @@ export default function AdminPage() {
     }, []);
 
     useEffect(() => {
-        const auth = JSON.parse(localStorage.getItem('orca_user') || 'null');
-        if (auth?.id) {
-            sendHeartbeat(auth.id);
-            const interval = setInterval(() => sendHeartbeat(auth.id), 60000);
-            return () => {
-                clearInterval(interval);
-            };
-        }
-    }, []);
-
-    useEffect(() => {
         const interval = setInterval(() => {
             fetchUsers().catch(() => {});
         }, 30000);
