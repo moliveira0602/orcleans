@@ -46,6 +46,7 @@ export default function Layout() {
     }, [leads.length, onboardingDone]);
 
     const navigate = useCallback((page: Page) => {
+        console.log('[Layout] navigate called with:', page);
         setCurrentPage(page);
         setSearchQuery('');
         setSelectedLeadId(null);
@@ -78,7 +79,7 @@ export default function Layout() {
         localStorage.setItem('orca_onboarding_done', 'true');
     }, []);
 
-    const isEmpty = !isLoading && leads.length === 0;
+    const showEmptyState = !isLoading && leads.length === 0;
 
     return (
         <div className="app">
@@ -111,7 +112,7 @@ export default function Layout() {
                                 ))}
                             </div>
                         </div>
-                    ) : isEmpty ? (
+                    ) : showEmptyState ? (
                         <EmptyState
                             icon={<FolderPlus size={32} />}
                             title="Sem leads ainda"

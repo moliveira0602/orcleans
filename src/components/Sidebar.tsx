@@ -10,6 +10,7 @@ import {
     Settings,
     LogOut,
     Crown,
+    Shield,
 } from 'lucide-react';
 import SonarButton from './SonarButton';
 import { getScanStatus, SCAN_PRESETS } from '../utils/scanService';
@@ -25,31 +26,38 @@ interface SidebarProps {
     mobileOpen?: boolean;
 }
 
-const NAV_ITEMS: { section: string; items: { id: Page; label: string; icon: React.ReactNode }[] }[] = [
-    {
-        section: 'PRINCIPAL',
-        items: [
-            { id: 'dashboard', label: 'Centro de Comando', icon: <LayoutDashboard size={16} /> },
-            { id: 'leads', label: 'Alvos', icon: <Users size={16} /> },
-            { id: 'pipeline', label: 'Corrente', icon: <Columns3 size={16} /> },
-            { id: 'insights', label: 'Sonar', icon: <Sparkles size={16} /> },
-        ],
-    },
-    {
-        section: 'DADOS',
-        items: [
-            { id: 'import', label: 'Captura', icon: <Upload size={16} /> },
-            { id: 'segments', label: 'Cardumes', icon: <Grid3X3 size={16} /> },
-        ],
-    },
-    {
-        section: 'CONTA',
-        items: [
-            { id: 'settings', label: 'Navegação', icon: <Settings size={16} /> },
-            { id: 'admin', label: 'Admin', icon: <Crown size={16} /> },
-        ],
-    },
-];
+function buildNavItems(isSuperAdmin: boolean): { section: string; items: { id: Page; label: string; icon: React.ReactNode }[] }[] {
+    const items: { section: string; items: { id: Page; label: string; icon: React.ReactNode }[] }[] = [
+        {
+            section: 'PRINCIPAL',
+            items: [
+                { id: 'dashboard', label: 'Centro de Comando', icon: <LayoutDashboard size={16} /> },
+                { id: 'leads', label: 'Alvos', icon: <Users size={16} /> },
+                { id: 'pipeline', label: 'Corrente', icon: <Columns3 size={16} /> },
+                { id: 'insights', label: 'Sonar', icon: <Sparkles size={16} /> },
+            ],
+        },
+        {
+            section: 'DADOS',
+            items: [
+                { id: 'import', label: 'Captura', icon: <Upload size={16} /> },
+                { id: 'segments', label: 'Cardumes', icon: <Grid3X3 size={16} /> },
+            ],
+        },
+        {
+            section: 'CONTA',
+            items: [
+                { id: 'settings', label: 'Navegação', icon: <Settings size={16} /> },
+            ],
+        },
+    ];
+
+    if (isSuperAdmin) {
+        items[2].items.push({ id: 'admin', label: 'Admin', icon: <Shield size={16} /> });
+    }
+
+    return items;
+}
 
 export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, mobileOpen }: SidebarProps) {
     const { leads, settings } = useAppState();
@@ -58,7 +66,9 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, 
     // Get scan status for Sonar button
     const preset = SCAN_PRESETS['clinicasOlhao'];
     const scanStatus = getScanStatus(preset.segment, preset.city);
-    const { logout } = useAuth();
+    const { logout, isSuperAdmin } = useAuth();
+
+    const navItems = buildNavItems(isSuperAdmin);
 
     return (
         <aside className={`sidebar${collapsed ? ' collapsed' : ''}${mobileOpen ? ' mobile-open' : ''}`}>
@@ -67,14 +77,14 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, 
             </div>
             
             <nav className="sidebar-nav">
-                {NAV_ITEMS.map((section) => (
+                {navItems.map((section) => (
                     <div key={section.section}>
                         {!collapsed && <div className="nav-section-label">{section.section}</div>}
                         {section.items.map((item) => (
                             <div key={item.id}>
                                 <button
                                     className={`nav-item${currentPage === item.id ? ' active' : ''}`}
-                                    onClick={() => onNavigate(item.id)}
+                                    onClick={() => { console.log('[Sidebar] onNavigate:', item.id); onNavigate(item.id); }}
                                     title={collapsed ? item.label : undefined}
                                 >
                                     <span className="nav-icon">{item.icon}</span>

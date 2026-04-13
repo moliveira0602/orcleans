@@ -14,10 +14,20 @@ async function seed() {
 
   const org = await prisma.organization.create({
     data: {
-      name: 'ETOS Demo',
+      name: 'ETOS Admin',
       plan: 'growth',
       maxLeads: 5000,
       maxUsers: 10,
+    },
+  });
+
+  const superAdmin = await prisma.user.create({
+    data: {
+      organizationId: org.id,
+      name: 'Super Admin',
+      email: 'test@etos.pt',
+      passwordHash,
+      role: 'super_admin',
     },
   });
 
@@ -119,7 +129,8 @@ async function seed() {
 
   console.log(`Seed complete!`);
   console.log(`  Organization: ${org.name} (${org.id})`);
-  console.log(`  User: ${user.name} (${user.email})`);
+  console.log(`  Super Admin: ${superAdmin.name} (${superAdmin.email})`);
+  console.log(`  Admin User: ${user.name} (${user.email})`);
   console.log(`  Leads: ${leads.count}`);
   console.log(`  Password: Orca1234!`);
 }

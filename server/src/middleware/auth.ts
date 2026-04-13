@@ -1,11 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { jwtConfig } from '../config/jwt.js';
+import { isSuperAdmin, type Role } from '../types/auth.js';
 
 export interface AuthRequest extends Request {
   userId?: string;
   organizationId?: string;
-  userRole?: string;
+  userRole?: Role;
+  headers: Request['headers'] & { 'x-user-email'?: string };
 }
 
 export async function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
@@ -26,7 +28,7 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
 
     req.userId = decoded.sub;
     req.organizationId = decoded.organizationId;
-    req.userRole = decoded.role;
+    req.userRole = decoded.role as Role;
 
     return next();
   } catch {
@@ -34,11 +36,18 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
   }
 }
 
-export function authorize(...allowedRoles: string[]) {
+export function authorize(...allowedRoles: Role[]) {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.userRole || !allowedRoles.includes(req.userRole)) {
       return res.status(403).json({ error: 'Permissão negada' });
     }
     return next();
   };
+}
+
+export function requireSuperAdmin(req: AuthRequest, res: Response, next: NextFunction) {
+  if (!req.userRole || !isSuperAdmin(req.userRole)) {
+    return res.status(403).json({ error: 'Acesso restrito a Super Admin' });
+  }
+  return next();
 }

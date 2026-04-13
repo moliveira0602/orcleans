@@ -1,18 +1,36 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { api } from '../services/api';
 
+type Role = 'super_admin' | 'admin' | 'member';
+
 interface User {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: Role;
   organizationId: string;
   organizationName: string;
+}
+
+const ROLES = {
+  SUPER_ADMIN: 'super_admin',
+  ADMIN: 'admin',
+  MEMBER: 'member',
+} as const;
+
+function isSuperAdmin(role: Role): boolean {
+  return role === ROLES.SUPER_ADMIN;
+}
+
+function isAdmin(role: Role): boolean {
+  return role === ROLES.ADMIN || role === ROLES.SUPER_ADMIN;
 }
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  isSuperAdmin: boolean;
+  isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, organizationName: string) => Promise<void>;
   logout: () => void;
@@ -111,7 +129,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, refreshProfile }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoading, 
+      isSuperAdmin: isSuperAdmin(user?.role as Role),
+      isAdmin: isAdmin(user?.role as Role),
+      login, 
+      register, 
+      logout, 
+      refreshProfile 
+    }}>
       {children}
     </AuthContext.Provider>
   );
@@ -122,3 +149,6 @@ export function useAuth() {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }
+
+export { ROLES, isSuperAdmin, isAdmin };
+export type { Role };

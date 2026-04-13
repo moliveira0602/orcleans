@@ -253,10 +253,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
             .then((res) => {
                 const backendLeads = res.leads.map(leadFromBackendFormat);
                 if (backendLeads.length > 0) {
-                    // Merge: use backend leads as source of truth, update local
-                    dispatch({ type: 'FINISH_LOADING', payload: backendLeads });
-                    // Save merged data to IndexedDB for offline access
-                    saveLeadsDB(backendLeads);
+                    // Merge: combine local and backend leads, remove duplicates
+                    const existingIds = new Set(state.leads.map(l => l.id));
+                    const newLeads = [...state.leads, ...backendLeads.filter(bl => !existingIds.has(bl.id))];
+                    dispatch({ type: 'FINISH_LOADING', payload: newLeads });
+                    saveLeadsDB(newLeads);
                 }
             })
             .catch(() => {});
@@ -278,8 +279,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
             .then((res) => {
                 const backendLeads = res.leads.map(leadFromBackendFormat);
                 if (backendLeads.length > 0) {
-                    dispatch({ type: 'FINISH_LOADING', payload: backendLeads });
-                    saveLeadsDB(backendLeads);
+                    const existingIds = new Set(state.leads.map(l => l.id));
+                    const newLeads = [...state.leads, ...backendLeads.filter(bl => !existingIds.has(bl.id))];
+                    dispatch({ type: 'FINISH_LOADING', payload: newLeads });
+                    saveLeadsDB(newLeads);
                 }
                 setForcedSync(true);
             })

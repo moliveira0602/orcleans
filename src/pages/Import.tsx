@@ -8,6 +8,7 @@ import { analyzeColumns, getColumnAnalysisSummary, type ColumnMapping, type Stan
 import { sanitizeImportedData, getSanitizationSummary, type SanitizationSummary, type SanitizedLeadData } from '../utils/dataSanitizer';
 import type { Lead } from '../types';
 import type { Page } from '../components/Layout';
+import { createLeadsBulk } from '../services/leads';
 
 interface ImportPageProps {
     onNavigate?: (page: Page) => void;
@@ -103,7 +104,7 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
         else reader.readAsArrayBuffer(file);
     };
 
-    const confirmImport = () => {
+    const confirmImport = async () => {
         if (!pending) return;
         const { data, file, cols } = pending;
         const numCol = scoreCol || null;
@@ -206,6 +207,14 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                 },
             });
             toast(`✓ ${pending.rows} leads importados · Fonte: ${sourceType === 'google_maps' ? 'Google Maps' : sourceType === 'linkedin' ? 'LinkedIn' : 'Genérica'}`, 'success');
+        }
+
+        // Sync to backend API
+        try {
+            await createLeadsBulk(newLeads);
+            console.log('[Import] Leads synced to backend');
+        } catch (err) {
+            console.error('[Import] Failed to sync leads to backend:', err);
         }
 
         dispatch({

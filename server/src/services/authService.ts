@@ -100,6 +100,10 @@ export async function login(input: LoginInput) {
 
   const refreshToken = generateRefreshToken(user.id);
 
+  await prisma.refreshToken.deleteMany({
+    where: { userId: user.id },
+  });
+
   await prisma.refreshToken.create({
     data: {
       userId: user.id,

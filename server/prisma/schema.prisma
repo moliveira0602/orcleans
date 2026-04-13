@@ -122,3 +122,23 @@ model Activity {
   @@index([createdAt])
   @@map("activities")
 }
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  userId        String?
+  userEmail     String?
+  action        String
+  entityType    String   @default("")
+  entityId      String?
+  details       Json     @default("{}")
+  ipAddress     String?
+  userAgent     String?
+  organizationId String?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([entityType])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

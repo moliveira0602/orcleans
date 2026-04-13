@@ -11,6 +11,7 @@ import { runScan, getScanStatus, SCAN_PRESETS, type ScanPresetKey } from '../uti
 import { useToast } from '../components/Toast';
 import type { Page } from '../components/Layout';
 import { PIPELINE_COLS } from '../types';
+import { createLeadsBulk } from '../services/leads';
 
 interface DashboardProps {
     onNavigate: (page: Page) => void;
@@ -73,6 +74,13 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                         },
                     },
                 });
+
+                // Sync to backend
+                try {
+                    await createLeadsBulk(result.leads);
+                } catch (err) {
+                    console.error('[Dashboard] Failed to sync leads to backend:', err);
+                }
 
                 // Add activity
                 dispatch({
