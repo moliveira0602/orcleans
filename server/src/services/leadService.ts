@@ -100,12 +100,15 @@ export async function getLeads(organizationId: string | undefined, query: LeadsQ
     where.segmento = { contains: segmento, mode: 'insensitive' };
   }
 
+  const pageNum = Number(page);
+  const limitNum = Number(limit);
+
   const [leads, total] = await Promise.all([
     prisma.lead.findMany({
       where,
       orderBy: { [sortBy]: sortOrder },
-      skip: (page - 1) * limit,
-      take: limit,
+      skip: (pageNum - 1) * limitNum,
+      take: limitNum,
     }),
     prisma.lead.count({ where }),
   ]);
@@ -113,10 +116,10 @@ export async function getLeads(organizationId: string | undefined, query: LeadsQ
   return {
     leads,
     pagination: {
-      page,
-      limit,
+      page: pageNum,
+      limit: limitNum,
       total,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(total / limitNum),
     },
   };
 }
