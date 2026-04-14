@@ -89,14 +89,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Load leads from server ONLY
     const refreshLeads = useCallback(async () => {
+        console.log('[Store] refreshLeads called, USE_BACKEND:', USE_BACKEND);
         if (!USE_BACKEND) {
+            console.log('[Store] USE_BACKEND is false, setting empty leads');
             updateState({ leads: [], pipeline: { novo: [], qualificado: [], proposta: [], negociacao: [], ganho: [], perdido: [] }, isLoading: false });
             return;
         }
 
         try {
+            console.log('[Store] Fetching leads from API...');
             const res = await leadApi.fetchLeads({ page: 1, limit: 10000, sortBy: 'createdAt', sortOrder: 'desc' });
+            console.log('[Store] API response:', res);
             const leads = res.leads.map(leadFromBackendFormat);
+            console.log('[Store] Processed leads:', leads.length);
 
             const pipeline: PipelineMap = { novo: [], qualificado: [], proposta: [], negociacao: [], ganho: [], perdido: [] };
             for (const lead of leads) {
@@ -110,7 +115,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
             updateState({ leads, pipeline, isLoading: false });
         } catch (err) {
-            console.error('Failed to load leads from server:', err);
+            console.error('[Store] Failed to load leads from server:', err);
             updateState({ isLoading: false });
         }
     }, [updateState]);
