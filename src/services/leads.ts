@@ -72,7 +72,17 @@ export async function fetchLeads(params?: {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }): Promise<LeadsResponse> {
-  return api.get<LeadsResponse>('/leads', { params: params as any });
+  const queryParams: Record<string, string> = {};
+  if (params?.page) queryParams.page = String(params.page);
+  if (params?.limit) queryParams.limit = String(params.limit);
+  if (params?.search) queryParams.search = params.search;
+  if (params?.pipelineStage) queryParams.pipelineStage = params.pipelineStage;
+  if (params?.scoreMin !== undefined) queryParams.scoreMin = String(params.scoreMin);
+  if (params?.scoreMax !== undefined) queryParams.scoreMax = String(params.scoreMax);
+  if (params?.segmento) queryParams.segmento = params.segmento;
+  if (params?.sortBy) queryParams.sortBy = params.sortBy;
+  if (params?.sortOrder) queryParams.sortOrder = params.sortOrder;
+  return api.get<LeadsResponse>('/leads', { params: queryParams });
 }
 
 export async function fetchLeadById(id: string): Promise<Lead> {
