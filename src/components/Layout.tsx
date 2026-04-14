@@ -56,8 +56,9 @@ export default function Layout() {
     }, [currentPage]);
 
     const navigate = useCallback((page: Page) => {
-        console.log('[LAYOUT] navigate called with:', page);
+        console.log('[LAYOUT] navigate called with:', page, 'currentPage was:', currentPage);
         setCurrentPage(page);
+        console.log('[LAYOUT] setCurrentPage called, currentPage is now:', currentPage);
         setSearchQuery('');
         setSelectedLeadId(null);
         setMapLeadId(null);
@@ -144,6 +145,7 @@ export default function Layout() {
                             {currentPage === 'import' && <ImportPage onNavigate={navigate} />}
                             {currentPage === 'segments' && <Segments onNavigate={navigate} />}
                             {currentPage === 'settings' && <SettingsPage />}
+                            {currentPage === 'admin' && <div style={{padding: 20, background: 'red', color: 'white'}}>ADMIN CLICKED - currentPage={currentPage}</div>}
                             {currentPage === 'admin' && <AdminPage />}
                         </>
                     )}
