@@ -18,10 +18,12 @@ class ApiClient {
   private loadTokens() {
     try {
       const session = localStorage.getItem('orca_session');
+      console.log('[API] loadTokens - session from localStorage:', session ? 'EXISTS' : 'NULL');
       if (session) {
         const data = JSON.parse(session);
         this.token = data.accessToken;
         this.refreshToken = data.refreshToken;
+        console.log('[API] loadTokens - token loaded:', this.token ? 'YES' : 'NO');
       }
     } catch {
       this.token = null;

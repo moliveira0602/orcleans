@@ -4,7 +4,10 @@ import { DEFAULT_SETTINGS } from './types';
 import * as leadApi from './services/leads';
 import { api } from './services/api';
 
+const token = api.getAccessToken();
+console.log('[Store] Initial token check:', token ? 'TOKEN EXISTS' : 'NO TOKEN');
 const USE_BACKEND = api.isAuthenticated();
+console.log('[Store] USE_BACKEND set to:', USE_BACKEND);
 
 const initialState: AppState = {
     leads: [],
