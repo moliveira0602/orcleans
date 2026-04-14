@@ -134,7 +134,7 @@ router.get('/users', async (_req: AuthRequest, res: Response) => {
     const usersWithLeads = await Promise.all(
       users.map(async (user) => {
         const leadCount = await prisma.lead.count({
-          where: { organizationId: user.organizationId },
+          where: { organizationId: user.organization.id },
         });
         return { ...user, leadCount };
       })
