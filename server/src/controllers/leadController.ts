@@ -1,10 +1,12 @@
 import { Response } from 'express';
 import * as leadService from '../services/leadService.js';
 import type { AuthRequest } from '../middleware/auth.js';
+import { isSuperAdmin } from '../types/auth.js';
 
 export async function getLeads(req: AuthRequest, res: Response) {
   try {
-    const result = await leadService.getLeads(req.organizationId!, req.query as any);
+    const orgId = isSuperAdmin(req.userRole!) ? undefined : req.organizationId;
+    const result = await leadService.getLeads(orgId, req.query as any);
     return res.status(200).json(result);
   } catch (error: any) {
     return res.status(400).json({ error: error.message });
@@ -14,7 +16,8 @@ export async function getLeads(req: AuthRequest, res: Response) {
 export async function getLeadById(req: AuthRequest, res: Response) {
   try {
     const leadId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const lead = await leadService.getLeadById(req.organizationId!, leadId);
+    const orgId = isSuperAdmin(req.userRole!) ? undefined : req.organizationId;
+    const lead = await leadService.getLeadById(orgId, leadId);
     return res.status(200).json(lead);
   } catch (error: any) {
     return res.status(404).json({ error: error.message });
@@ -83,7 +86,8 @@ export async function movePipeline(req: AuthRequest, res: Response) {
 
 export async function getDashboard(req: AuthRequest, res: Response) {
   try {
-    const metrics = await leadService.getDashboardMetrics(req.organizationId!);
+    const orgId = isSuperAdmin(req.userRole!) ? undefined : req.organizationId;
+    const metrics = await leadService.getDashboardMetrics(orgId);
     return res.status(200).json(metrics);
   } catch (error: any) {
     return res.status(400).json({ error: error.message });

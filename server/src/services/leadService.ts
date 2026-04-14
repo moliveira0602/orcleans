@@ -67,10 +67,14 @@ export async function createLeadsBulk(organizationId: string, leads: CreateLeadI
   });
 }
 
-export async function getLeads(organizationId: string, query: LeadsQuery) {
+export async function getLeads(organizationId: string | undefined, query: LeadsQuery) {
   const { page, limit, search, pipelineStage, scoreMin, scoreMax, segmento, sortBy, sortOrder } = query;
 
-  const where: Record<string, unknown> = { organizationId };
+  const where: Record<string, unknown> = {};
+
+  if (organizationId) {
+    where.organizationId = organizationId;
+  }
 
   if (search) {
     where.OR = [
@@ -117,10 +121,14 @@ export async function getLeads(organizationId: string, query: LeadsQuery) {
   };
 }
 
-export async function getLeadById(organizationId: string, leadId: string) {
-  const lead = await prisma.lead.findFirst({
-    where: { id: leadId, organizationId },
-  });
+export async function getLeadById(organizationId: string | undefined, leadId: string) {
+  const where: Record<string, unknown> = { id: leadId };
+  
+  if (organizationId) {
+    where.organizationId = organizationId;
+  }
+
+  const lead = await prisma.lead.findFirst({ where });
 
   if (!lead) {
     throw new Error('Lead não encontrado');
@@ -188,19 +196,21 @@ export async function moveLeadPipeline(organizationId: string, leadId: string, s
   });
 }
 
-export async function getDashboardMetrics(organizationId: string) {
+export async function getDashboardMetrics(organizationId: string | undefined) {
+  const where = organizationId ? { organizationId } : {};
+  
   const [total, byStage, hotLeads, warmLeads, coldLeads, recentActivities] = await Promise.all([
-    prisma.lead.count({ where: { organizationId } }),
+    prisma.lead.count({ where }),
     prisma.lead.groupBy({
       by: ['pipelineStage'],
-      where: { organizationId },
+      where,
       _count: true,
     }),
-    prisma.lead.count({ where: { organizationId, score: { gte: 7 } } }),
-    prisma.lead.count({ where: { organizationId, score: { gte: 4, lte: 6 } } }),
-    prisma.lead.count({ where: { organizationId, score: { lte: 3 } } }),
+    prisma.lead.count({ where: { ...where, score: { gte: 7 } } }),
+    prisma.lead.count({ where: { ...where, score: { gte: 4, lte: 6 } } }),
+    prisma.lead.count({ where: { ...where, score: { lte: 3 } } }),
     prisma.activity.findMany({
-      where: { organizationId },
+      where,
       orderBy: { createdAt: 'desc' },
       take: 10,
       include: {
