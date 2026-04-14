@@ -165,6 +165,7 @@ const TAB_CONFIG = [
 ] as const;
 
 export default function AdminPage() {
+    console.log('[AdminPage] Rendering...');
     const [activeTab, setActiveTab] = useState<Tab>('overview');
     const [stats, setStats] = useState<Stats | null>(null);
     const [health, setHealth] = useState<PlatformHealth | null>(null);
@@ -355,6 +356,7 @@ export default function AdminPage() {
     };
 
     useEffect(() => {
+        console.log('[AdminPage] useEffect triggered');
         fetchData();
     }, []);
 

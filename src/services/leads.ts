@@ -72,7 +72,6 @@ export async function fetchLeads(params?: {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }): Promise<LeadsResponse> {
-  console.log('[leads.ts] fetchLeads called with params:', params);
   const queryParams: Record<string, string> = {};
   if (params?.page) queryParams.page = String(params.page);
   if (params?.limit) queryParams.limit = String(params.limit);
@@ -83,7 +82,6 @@ export async function fetchLeads(params?: {
   if (params?.segmento) queryParams.segmento = params.segmento;
   if (params?.sortBy) queryParams.sortBy = params.sortBy;
   if (params?.sortOrder) queryParams.sortOrder = params.sortOrder;
-  console.log('[leads.ts] queryParams to send:', queryParams);
   return api.get<LeadsResponse>('/leads', { params: queryParams });
 }
 

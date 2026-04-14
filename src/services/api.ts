@@ -93,7 +93,6 @@ class ApiClient {
         if (value !== undefined) url.searchParams.append(key, value);
       });
     }
-    console.log('[API] request:', endpoint, 'url:', url.toString());
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',

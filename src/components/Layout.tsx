@@ -10,7 +10,7 @@ import Segments from '../pages/Segments';
 import SettingsPage from '../pages/Settings';
 import AdminPage from '../pages/Admin';
 import LeadDetail from './LeadDetail';
-import { useAppState } from '../store';
+import { useAppState, useApp } from '../store';
 import { EmptyState } from './ErrorBoundary';
 import { Onboarding, useOnboarding } from './Onboarding';
 import { FolderPlus, LayoutDashboard, Users, Columns3, Sparkles, Upload, Grid3X3, Settings, Crown } from 'lucide-react';
@@ -29,6 +29,7 @@ const MOBILE_NAV_ITEMS: { id: Page; icon: React.ReactNode; label: string }[] = [
 
 export default function Layout() {
     const { isLoading, leads } = useAppState();
+    const { refreshLeads } = useApp();
     const { isDone: onboardingDone } = useOnboarding();
     const [showOnboarding, setShowOnboarding] = useState(!onboardingDone);
     const [currentPage, setCurrentPage] = useState<Page>('dashboard');
@@ -38,6 +39,11 @@ export default function Layout() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+    // Refresh leads on mount (Layout only renders when user is authenticated)
+    useEffect(() => {
+        refreshLeads();
+    }, [refreshLeads]);
+
     useEffect(() => {
         if (!onboardingDone && leads.length > 0) {
             setShowOnboarding(false);
@@ -45,8 +51,12 @@ export default function Layout() {
         }
     }, [leads.length, onboardingDone]);
 
+    useEffect(() => {
+        console.log('[LAYOUT] currentPage changed to:', currentPage);
+    }, [currentPage]);
+
     const navigate = useCallback((page: Page) => {
-        console.log('[Layout] navigate called with:', page);
+        console.log('[LAYOUT] navigate called with:', page);
         setCurrentPage(page);
         setSearchQuery('');
         setSelectedLeadId(null);

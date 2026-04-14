@@ -103,12 +103,16 @@ export async function getLeads(organizationId: string | undefined, query: LeadsQ
   const pageNum = Number(page);
   const limitNum = Number(limit);
 
+  // Force convert to integers to prevent Prisma string errors
+  const skipNum = Math.floor(pageNum - 1) * Math.floor(limitNum);
+  const takeNum = Math.floor(limitNum);
+
   const [leads, total] = await Promise.all([
     prisma.lead.findMany({
       where,
       orderBy: { [sortBy]: sortOrder },
-      skip: (pageNum - 1) * limitNum,
-      take: limitNum,
+      skip: skipNum,
+      take: takeNum,
     }),
     prisma.lead.count({ where }),
   ]);
