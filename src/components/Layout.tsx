@@ -145,7 +145,7 @@ export default function Layout() {
                             {currentPage === 'import' && <ImportPage onNavigate={navigate} />}
                             {currentPage === 'segments' && <Segments onNavigate={navigate} />}
                             {currentPage === 'settings' && <SettingsPage />}
-                            {currentPage === 'admin' && <div style={{padding: 20, background: 'red', color: 'white'}}>ADMIN CLICKED - currentPage={currentPage}</div>}
+                            {currentPage === 'admin' && <div data-testid="admin-debug" style={{padding: 50, background: '#ff0000', color: 'white', fontSize: 24, position: 'fixed', top: 100, left: '50%', transform: 'translateX(-50%)', zIndex: 9999}}>ADMIN CLICKED - currentPage={currentPage}</div>}
                             {currentPage === 'admin' && <AdminPage />}
                         </>
                     )}
