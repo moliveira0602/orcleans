@@ -51,14 +51,8 @@ export default function Layout() {
         }
     }, [leads.length, onboardingDone]);
 
-    useEffect(() => {
-        console.log('[LAYOUT] currentPage changed to:', currentPage);
-    }, [currentPage]);
-
     const navigate = useCallback((page: Page) => {
-        console.log('[LAYOUT] navigate called with:', page, 'currentPage was:', currentPage);
         setCurrentPage(page);
-        console.log('[LAYOUT] setCurrentPage called, currentPage is now:', currentPage);
         setSearchQuery('');
         setSelectedLeadId(null);
         setMapLeadId(null);
@@ -90,7 +84,7 @@ export default function Layout() {
         localStorage.setItem('orca_onboarding_done', 'true');
     }, []);
 
-    const showEmptyState = !isLoading && leads.length === 0;
+    const showEmptyState = !isLoading && leads.length === 0 && currentPage !== 'admin';
 
     return (
         <div className="app">
@@ -145,7 +139,6 @@ export default function Layout() {
                             {currentPage === 'import' && <ImportPage onNavigate={navigate} />}
                             {currentPage === 'segments' && <Segments onNavigate={navigate} />}
                             {currentPage === 'settings' && <SettingsPage />}
-                            {currentPage === 'admin' && <div data-testid="admin-debug" style={{padding: 50, background: '#ff0000', color: 'white', fontSize: 24, position: 'fixed', top: 100, left: '50%', transform: 'translateX(-50%)', zIndex: 9999}}>ADMIN CLICKED - currentPage={currentPage}</div>}
                             {currentPage === 'admin' && <AdminPage />}
                         </>
                     )}

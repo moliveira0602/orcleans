@@ -84,7 +84,7 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, 
                             <div key={item.id}>
                                 <button
                                     className={`nav-item${currentPage === item.id ? ' active' : ''}`}
-                                    onClick={() => { console.log('[SIDEBAR] onNavigate:', item.id); onNavigate(item.id); }}
+                                    onClick={() => onNavigate(item.id)}
                                     title={collapsed ? item.label : undefined}
                                 >
                                     <span className="nav-icon">{item.icon}</span>
