@@ -1,5 +1,5 @@
 import { useRef, useState, useMemo, useEffect } from 'react';
-import * as XLSX from 'xlsx';
+import * as ExcelJS from 'exceljs';
 import { useAppState, useAppDispatch, leadFingerprint, useApp } from '../store';
 import { useToast } from '../components/Toast';
 import { computeScore } from '../utils/scoring';
@@ -77,33 +77,89 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
         return { newCount, dupeCount: dupes };
     }, [pending, existingLeads]);
 
-    const processFile = (file: File) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                let data: Record<string, unknown>[];
-                if (file.name.toLowerCase().endsWith('.csv')) {
-                    const wb = XLSX.read(e.target?.result, { type: 'binary' });
-                    data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
-                } else {
-                    const wb = XLSX.read(new Uint8Array(e.target?.result as ArrayBuffer), { type: 'array' });
-                    data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
-                }
-                if (!data || !data.length) {
+    const processFile = async (file: File) => {
+        try {
+            const workbook = new ExcelJS.Workbook();
+            let data: Record<string, unknown>[];
+            
+            if (file.name.toLowerCase().endsWith('.csv')) {
+                const text = await file.text();
+                const worksheet = workbook.addWorksheet('Sheet1');
+                
+                // Parse CSV manually for ExcelJS
+                const rows = text.split('\n').map(row => {
+                    const result: string[] = [];
+                    let current = '';
+                    let inQuotes = false;
+                    
+                    for (let i = 0; i < row.length; i++) {
+                        const char = row[i];
+                        if (char === '"') {
+                            inQuotes = !inQuotes;
+                        } else if (char === ',' && !inQuotes) {
+                            result.push(current.trim());
+                            current = '';
+                        } else {
+                            current += char;
+                        }
+                    }
+                    result.push(current.trim());
+                    return result;
+                }).filter(row => row.some(cell => cell));
+                
+                if (rows.length === 0) {
                     toast('Arquivo vazio ou sem dados tabulares.', 'error');
                     return;
                 }
-                const cols = Object.keys(data[0]);
-                const numericCols = cols.filter((c) =>
-                    data.slice(0, 20).filter((r) => !isNaN(parseFloat(String(r[c]))) && r[c] !== '').length > 3
-                );
-                setPending({ file: file.name, data, rows: data.length, cols, numericCols });
-            } catch (err) {
-                toast('Erro ao ler arquivo: ' + (err as Error).message, 'error');
+                
+                const headers = rows[0];
+                data = rows.slice(1).map(row => {
+                    const obj: Record<string, unknown> = {};
+                    headers.forEach((header, i) => {
+                        obj[header] = row[i] || '';
+                    });
+                    return obj;
+                });
+            } else {
+                const buffer = await file.arrayBuffer();
+                await workbook.xlsx.load(buffer);
+                const worksheet = workbook.getWorksheet(1);
+                
+                if (!worksheet) {
+                    toast('Arquivo vazio ou sem dados tabulares.', 'error');
+                    return;
+                }
+                
+                const headers: string[] = [];
+                worksheet.getRow(1).eachCell((cell, colNumber) => {
+                    headers[colNumber - 1] = String(cell.value || '');
+                });
+                
+                data = [];
+                worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+                    if (rowNumber === 1) return; // Skip header row
+                    
+                    const obj: Record<string, unknown> = {};
+                    row.eachCell((cell, colNumber) => {
+                        obj[headers[colNumber - 1]] = cell.value || '';
+                    });
+                    data.push(obj);
+                });
             }
-        };
-        if (file.name.toLowerCase().endsWith('.csv')) reader.readAsBinaryString(file);
-        else reader.readAsArrayBuffer(file);
+            
+            if (!data || !data.length) {
+                toast('Arquivo vazio ou sem dados tabulares.', 'error');
+                return;
+            }
+            
+            const cols = Object.keys(data[0]);
+            const numericCols = cols.filter((c) =>
+                data.slice(0, 20).filter((r) => !isNaN(parseFloat(String(r[c]))) && r[c] !== '').length > 3
+            );
+            setPending({ file: file.name, data, rows: data.length, cols, numericCols });
+        } catch (err) {
+            toast('Erro ao ler arquivo: ' + (err as Error).message, 'error');
+        }
     };
 
     const confirmImport = async () => {

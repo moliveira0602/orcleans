@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(vercel *)",
+      "Bash(npm audit)",
+      "Bash(npm uninstall *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)"
+    ]
+  },
+  "$version": 3
+}
