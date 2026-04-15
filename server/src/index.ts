@@ -12,40 +12,20 @@ import { errorHandler } from './middleware/error.js';
 
 const app = express();
 
-app.use(helmet());
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.status(204).send();
+  }
+  next();
+});
 
-const corsOptions: cors.CorsOptions = {
-  origin: function(origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'https://orca.etos.pt',
-      'https://www.orca.etos.pt',
-      'https://moliveira0602.vercel.app',
-    ];
-    
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) {
-      return callback(null, true);
-    }
-    
-    if (allowedOrigins.some(o => o === origin || origin.endsWith('.vercel.app') || origin.endsWith('.vercel.com'))) {
-      callback(null, true);
-    } else {
-      console.log('[CORS] Rejected origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
-
-app.use(cors(corsOptions));
-
-app.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+app.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 
 const limiter = rateLimit({
   windowMs: env.RATE_LIMIT_WINDOW_MS,
