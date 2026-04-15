@@ -10,6 +10,7 @@ import { runDemoScan } from './demoDataService';
 import { getCached, setCached, generateCacheKey } from '../services/placesCache';
 
 const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
+export { GOOGLE_KEY };
 const IS_PRODUCTION = import.meta.env.PROD || false;
 
 // Always use backend proxy to avoid CORS issues

@@ -7,7 +7,7 @@ import FunnelChart from '../components/FunnelChart';
 import DottedSurface from '../components/ui/DottedSurface';
 import SonarButton from '../components/SonarButton';
 import { formatTime } from '../utils/time';
-import { runScan, getScanStatus, SCAN_PRESETS, type ScanPresetKey } from '../utils/scanService';
+import { runScan, getScanStatus, SCAN_PRESETS, type ScanPresetKey, GOOGLE_KEY } from '../utils/scanService';
 import { useToast } from '../components/Toast';
 import type { Page } from '../components/Layout';
 import { PIPELINE_COLS } from '../types';
@@ -27,6 +27,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
     const [scanProgress, setScanProgress] = useState('');
     const [selectedPreset, setSelectedPreset] = useState<ScanPresetKey>('clinicasOlhao');
     const [apiKey, setApiKey] = useState(() => localStorage.getItem('orca_google_api_key') || 'demo');
+    const [customApiKey, setCustomApiKey] = useState('');
 
     // Update scan status when preset changes or modal opens
     const refreshScanStatus = () => {
@@ -51,7 +52,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 {
                     segment: preset.segment,
                     city: preset.city,
-                    apiKey,
+                    apiKey: apiKey === 'google' ? customApiKey || GOOGLE_KEY : apiKey,
                 },
                 leads,
                 (msg) => setScanProgress(msg)
@@ -497,7 +498,6 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                                 style={{ marginBottom: 4 }}
                             >
                                 <option value="demo">🧪 Demo (dados fictícios - grátis)</option>
-                                <option value="nominatim">🗺️ OpenStreetMap (dados reais - grátis)</option>
                                 <option value="google">🔍 Google Places API (dados reais - pago)</option>
                             </select>
                             {apiKey === 'google' && (
@@ -505,24 +505,19 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                                     <input
                                         type="password"
                                         className="input"
-                                        placeholder="AIzaSy..."
-                                        value={apiKey}
-                                        onChange={(e) => setApiKey(e.target.value)}
+                                        placeholder="Cole a tua Google API Key aqui"
+                                        value={customApiKey}
+                                        onChange={(e) => setCustomApiKey(e.target.value)}
                                         style={{ marginTop: 8 }}
                                     />
                                     <div style={{ fontSize: 11, color: 'var(--t2)', marginTop: 4 }}>
-                                        ~$35/1000 buscas. Necessário API Key com Places API.
+                                        ~$17/1000 buscas. Necessário API Key com Places API ativada.
                                     </div>
                                 </div>
                             )}
                             {apiKey === 'demo' && (
                                 <div style={{ fontSize: 11, color: 'var(--green)', marginTop: 4 }}>
                                     ✓ Modo demonstração - ideal para testes
-                                </div>
-                            )}
-                            {apiKey === 'nominatim' && (
-                                <div style={{ fontSize: 11, color: 'var(--green)', marginTop: 4 }}>
-                                    ✓ OpenStreetMap - dados reais gratuitos
                                 </div>
                             )}
                         </div>
