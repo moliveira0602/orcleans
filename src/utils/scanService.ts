@@ -334,10 +334,21 @@ export async function runScan(
         // If zero results, try nearbysearch instead
         if (searchData.status === 'ZERO_RESULTS' || !searchData.results?.length) {
             console.log('[GOOGLE DEBUG] Text search returned no results, trying nearby search...');
-            searchRes = await fetch(
-                `${API_BASES.google}/nearbysearch?location=${lat},${lon}&radius=5000&keyword=${encodeURIComponent(query)}&language=pt`
-            );
-            searchData = await searchRes.json();
+            try {
+                searchRes = await fetch(
+                    `${API_BASES.google}/nearby?location=${lat},${lon}&radius=5000&keyword=${encodeURIComponent(query)}&language=pt`
+                );
+                const text = await searchRes.text();
+                console.log('[GOOGLE DEBUG] Nearby response text:', text.substring(0, 200));
+                try {
+                    searchData = JSON.parse(text);
+                } catch {
+                    searchData = { status: 'ERROR', results: [], error_message: 'Invalid JSON response from API' };
+                }
+            } catch (err) {
+                console.error('[GOOGLE DEBUG] Nearby fetch error:', err);
+                searchData = { status: 'ERROR', results: [], error_message: String(err) };
+            }
         }
         
         console.log('[GOOGLE DEBUG] Search status:', searchData.status);
