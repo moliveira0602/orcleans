@@ -156,7 +156,9 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
     const [customApiKey, setCustomApiKey] = useState('');
     const [scanSource, setScanSource] = useState<'demo' | 'google'>(() => {
         const saved = localStorage.getItem('orca_scan_source');
-        return (saved as 'demo' | 'google') || 'demo';
+        // Auto-detect Google if env key exists
+        if (!saved && GOOGLE_KEY) return 'google';
+        return (saved as 'demo' | 'google') || 'google';
     });
     
     // Enhanced Scan Form State
@@ -1036,16 +1038,25 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                                 </div>
                                 {scanSource === 'google' && (
                                     <div style={{ marginTop: 12 }}>
-                                        <input
-                                            type="password"
-                                            className="input"
-                                            placeholder="Cole a tua Google API Key (ou usa a key do sistema)"
-                                            value={customApiKey}
-                                            onChange={(e) => setCustomApiKey(e.target.value)}
-                                        />
-                                        <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 4 }}>
-                                            💡 Se não forneceres uma key, será usada a key configurada no sistema (~$17/1000 pesquisas)
-                                        </div>
+                                        {!GOOGLE_KEY && (
+                                            <input
+                                                type="password"
+                                                className="input"
+                                                placeholder="Cole a tua Google API Key"
+                                                value={customApiKey}
+                                                onChange={(e) => setCustomApiKey(e.target.value)}
+                                            />
+                                        )}
+                                        {GOOGLE_KEY && (
+                                            <div style={{ fontSize: 11, color: 'var(--green)', marginTop: 4 }}>
+                                                ✓ A usar a API Key configurada no sistema
+                                            </div>
+                                        )}
+                                        {!GOOGLE_KEY && (
+                                            <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 4 }}>
+                                                💡 Necessário API Key do Google Places (~$17/1000 pesquisas)
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
