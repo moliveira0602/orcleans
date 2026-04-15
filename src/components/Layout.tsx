@@ -84,7 +84,7 @@ export default function Layout() {
         localStorage.setItem('orca_onboarding_done', 'true');
     }, []);
 
-    const showEmptyState = !isLoading && leads.length === 0 && currentPage !== 'admin';
+    const showEmptyState = !isLoading && leads.length === 0 && currentPage !== 'admin' && currentPage !== 'leads' && currentPage !== 'import' && currentPage !== 'segments' && currentPage !== 'settings';
 
     return (
         <div className="app">
