@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/database.js';
 import { authenticate, requireSuperAdmin, type AuthRequest } from '../middleware/auth.js';
 import { hashPassword } from '../utils/crypto.js';
@@ -17,8 +17,20 @@ function getQueryString(query: Record<string, string | string[] | undefined>, ke
 
 const router = Router();
 
+const corsMiddleware = (_req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  next();
+};
+
+router.use(corsMiddleware);
 router.use(authenticate);
 router.use(requireSuperAdmin);
+
+router.options('*', (_req: Request, res: Response) => res.status(204).end());
 
 async function logAudit(req: AuthRequest, action: string, entityType: string, entityId?: string, details?: Record<string, unknown>) {
   await createAuditLog({
