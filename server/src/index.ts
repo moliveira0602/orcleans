@@ -14,20 +14,34 @@ const app = express();
 
 app.use(helmet());
 
-const origins = env.CORS_ORIGIN.split(',').map((o) => o.trim());
-app.use(cors({
-  origin: (origin, callback) => {
-    const allowedOrigins = [...origins, 'https://orca.etos.pt', 'https://www.orca.etos.pt'];
-    if (!origin || allowedOrigins.some((o) => o === origin || o === '*' || origin.endsWith('.vercel.app') || origin.endsWith('.vercel.com'))) {
+const corsOptions: cors.CorsOptions = {
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://orca.etos.pt',
+      'https://www.orca.etos.pt',
+      'https://moliveira0602.vercel.app',
+    ];
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    if (allowedOrigins.some(o => o === origin || origin.endsWith('.vercel.app') || origin.endsWith('.vercel.com'))) {
       callback(null, true);
     } else {
+      console.log('[CORS] Rejected origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+};
+
+app.use(cors(corsOptions));
 
 app.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 app.use(express.json({ limit: '10mb' }));
