@@ -4,7 +4,7 @@ import { getLeadName, getLeadCategory, detectAddressCol, getLeadAddress, detectP
 import { scoreClass } from '../utils/scoring';
 import { geocodeAddress } from '../utils/geocoding';
 import { MapContainer, TileLayer, Circle, CircleMarker, Popup, useMap } from 'react-leaflet';
-import { runScan, getScanStatus, SCAN_PRESETS, clearScanCache, type ScanPresetKey } from '../utils/scanService';
+import { runScan, getScanStatus, SCAN_PRESETS, clearScanCache, type ScanPresetKey, GOOGLE_KEY } from '../utils/scanService';
 import { useToast } from '../components/Toast';
 import 'leaflet/dist/leaflet.css';
 
@@ -153,6 +153,11 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
     const [scanProgress, setScanProgress] = useState('');
     const [selectedPreset] = useState<ScanPresetKey>('clinicasOlhao');
     const [useDemoMode] = useState(() => localStorage.getItem('orca_scan_demo') === 'true');
+    const [customApiKey, setCustomApiKey] = useState('');
+    const [scanSource, setScanSource] = useState<'demo' | 'google'>(() => {
+        const saved = localStorage.getItem('orca_scan_source');
+        return (saved as 'demo' | 'google') || 'demo';
+    });
     
     // Enhanced Scan Form State
     const [scanConfig, setScanConfig] = useState({
@@ -457,6 +462,22 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
         setScanLoading(true);
         setScanProgress('');
 
+        // Determine effective API key
+        const getApiKey = () => {
+            if (scanSource === 'demo') return 'demo';
+            // Use custom key if provided, otherwise use env key
+            return customApiKey || GOOGLE_KEY || '';
+        };
+        
+        const effectiveApiKey = getApiKey();
+        
+        // Validar se tem key do Google quando selecionou google
+        if (scanSource === 'google' && !effectiveApiKey) {
+            toast('Configure uma Google API Key ou use o modo Demo.', 'error');
+            setScanLoading(false);
+            return;
+        }
+
         // Use actual form values instead of presets
         const location = scanConfig.location || (scanConfig.useCurrentLocation && userLocation)
             ? (scanConfig.useCurrentLocation && userLocation 
@@ -464,7 +485,7 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                 : scanConfig.location)
             : 'Portugal';
         
-        console.log('[GeoScout] Location:', location, 'Categories:', scanConfig.categories, 'UseCurrentLocation:', scanConfig.useCurrentLocation);
+        console.log('[GeoScout] scanSource:', scanSource, 'effectiveApiKey:', effectiveApiKey ? 'SET' : 'EMPTY');
         
         // Build segment from selected categories or use custom segment
         const segments = scanConfig.categories.length > 0
@@ -492,7 +513,7 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                     {
                         segment,
                         city: location,
-                        apiKey: useDemoMode ? 'demo' : 'nominatim',
+                        apiKey: effectiveApiKey,
                     },
                     leads,
                     (msg) => {
@@ -972,6 +993,63 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                         </div>
 
                         <div style={{ flex: 1, overflowY: 'auto', padding: '0 4px' }}>
+                            {/* Section 0: Data Source */}
+                            <div style={{ marginBottom: 20 }}>
+                                <label style={formLabelStyle}>📊 Fonte de Dados</label>
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <button
+                                        onClick={() => {
+                                            setScanSource('demo');
+                                            localStorage.setItem('orca_scan_source', 'demo');
+                                        }}
+                                        style={{
+                                            flex: 1,
+                                            padding: '12px 16px',
+                                            borderRadius: 8,
+                                            border: `1px solid ${scanSource === 'demo' ? 'var(--green)' : 'var(--border)'}`,
+                                            background: scanSource === 'demo' ? 'rgba(16,217,160,0.1)' : 'transparent',
+                                            cursor: 'pointer',
+                                            textAlign: 'left',
+                                        }}
+                                    >
+                                        <div style={{ fontSize: 13, fontWeight: 600, color: scanSource === 'demo' ? 'var(--green)' : 'var(--t1)' }}>🧪 Modo Demo</div>
+                                        <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>Dados fictícios para testes</div>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setScanSource('google');
+                                            localStorage.setItem('orca_scan_source', 'google');
+                                        }}
+                                        style={{
+                                            flex: 1,
+                                            padding: '12px 16px',
+                                            borderRadius: 8,
+                                            border: `1px solid ${scanSource === 'google' ? 'var(--blue)' : 'var(--border)'}`,
+                                            background: scanSource === 'google' ? 'rgba(0,194,255,0.1)' : 'transparent',
+                                            cursor: 'pointer',
+                                            textAlign: 'left',
+                                        }}
+                                    >
+                                        <div style={{ fontSize: 13, fontWeight: 600, color: scanSource === 'google' ? 'var(--blue)' : 'var(--t1)' }}>🔍 Google Places</div>
+                                        <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>Dados reais via API</div>
+                                    </button>
+                                </div>
+                                {scanSource === 'google' && (
+                                    <div style={{ marginTop: 12 }}>
+                                        <input
+                                            type="password"
+                                            className="input"
+                                            placeholder="Cole a tua Google API Key (ou usa a key do sistema)"
+                                            value={customApiKey}
+                                            onChange={(e) => setCustomApiKey(e.target.value)}
+                                        />
+                                        <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 4 }}>
+                                            💡 Se não forneceres uma key, será usada a key configurada no sistema (~$17/1000 pesquisas)
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
                             {/* Section 1: Scan Name */}
                             <div style={{ marginBottom: 20 }}>
                                 <label style={formLabelStyle}>Nome do Scan</label>
