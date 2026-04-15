@@ -17,7 +17,8 @@ app.use(helmet());
 const origins = env.CORS_ORIGIN.split(',').map((o) => o.trim());
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || origins.some((o) => o === origin || o === '*' || origin.endsWith('.vercel.app'))) {
+    const allowedOrigins = [...origins, 'https://orca.etos.pt', 'https://www.orca.etos.pt'];
+    if (!origin || allowedOrigins.some((o) => o === origin || o === '*' || origin.endsWith('.vercel.app') || origin.endsWith('.vercel.com'))) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));

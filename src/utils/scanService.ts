@@ -211,33 +211,44 @@ export async function runScan(
             return runDemoScan(segment, city, existingLeads, onProgress);
         }
 
-        // Geocode city to get coordinates
-        onProgress?.(`Geocodificando ${city}...`);
-        const geocodeRes = await fetch(
-            `${API_BASES.nominatim}/search?${new URLSearchParams({
-                q: city,
-                format: 'json',
-                limit: '1',
-            })}`,
-            { headers: { 'Accept': 'application/json', 'User-Agent': 'ORCALens/1.0' } }
-        );
-        const geocodeData = await geocodeRes.json();
+        // Check if city is already coordinates (lat,lng format)
+        let lat: number, lon: number;
+        const coordMatch = city.match(/^(-?\d+\.?\d*),(-?\d+\.?\d*)$/);
         
-        if (geocodeData.length === 0) {
-            return {
-                success: false,
-                totalFound: 0,
-                imported: 0,
-                duplicates: 0,
-                errors: 1,
-                leads: [],
-                cached: false,
-                message: `Não foi possível geocodificar: ${city}`,
-            };
-        }
+        if (coordMatch) {
+            // Already coordinates - use directly
+            lat = parseFloat(coordMatch[1]);
+            lon = parseFloat(coordMatch[2]);
+            onProgress?.(`Usando coordenadas: ${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+        } else {
+            // Geocode city to get coordinates
+            onProgress?.(`Geocodificando ${city}...`);
+            const geocodeRes = await fetch(
+                `${API_BASES.nominatim}/search?${new URLSearchParams({
+                    q: city,
+                    format: 'json',
+                    limit: '1',
+                })}`,
+                { headers: { 'Accept': 'application/json', 'User-Agent': 'ORCALens/1.0' } }
+            );
+            const geocodeData = await geocodeRes.json();
+            
+            if (geocodeData.length === 0) {
+                return {
+                    success: false,
+                    totalFound: 0,
+                    imported: 0,
+                    duplicates: 0,
+                    errors: 1,
+                    leads: [],
+                    cached: false,
+                    message: `Não foi possível geocodificar: ${city}`,
+                };
+            }
 
-        const lat = parseFloat(geocodeData[0].lat);
-        const lon = parseFloat(geocodeData[0].lon);
+            lat = parseFloat(geocodeData[0].lat);
+            lon = parseFloat(geocodeData[0].lon);
+        }
 
         onProgress?.(`Iniciando scan: ${segment} em ${city}...`);
         onProgress?.(`Fonte: Google Places API`);
