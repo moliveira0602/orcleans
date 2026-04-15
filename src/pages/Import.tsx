@@ -1,6 +1,6 @@
 import { useRef, useState, useMemo, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { useAppState, useAppDispatch, leadFingerprint } from '../store';
+import { useAppState, useAppDispatch, leadFingerprint, useApp } from '../store';
 import { useToast } from '../components/Toast';
 import { computeScore } from '../utils/scoring';
 import { detectSourceType, mapRowToLead } from '../utils/leadMapper';
@@ -18,6 +18,7 @@ interface ImportPageProps {
 export default function ImportPage({ onNavigate }: ImportPageProps) {
     const { imports, leads: existingLeads } = useAppState();
     const dispatch = useAppDispatch();
+    const { refreshLeads } = useApp();
     const toast = useToast();
     const fileInput = useRef<HTMLInputElement>(null);
     const [dragOver, setDragOver] = useState(false);
@@ -187,6 +188,7 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
         // Sync to backend API FIRST
         let serverLeads: any[] = [];
         try {
+            console.log('[Import] Sending leads to backend, count:', newLeads.length);
             const result = await createLeadsBulk(newLeads.map(l => ({
                 nome: l.nome,
                 segmento: l.segmento,
@@ -211,14 +213,16 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                 importDate: l._importDate,
                 importId: l._importId,
             })));
+            console.log('[Import] Backend result:', result);
             
             // Fetch the newly created leads to get server IDs
             const freshLeads = await leadApi.fetchLeads({ page: 1, limit: result.count || newLeads.length, sortBy: 'createdAt', sortOrder: 'desc' });
+            console.log('[Import] Fetched leads from backend:', freshLeads.leads.length);
             serverLeads = freshLeads.leads.slice(0, result.count || newLeads.length);
-            console.log('[Import] Leads synced to backend');
+            console.log('[Import] Leads synced to backend, count:', serverLeads.length);
         } catch (err) {
             console.error('[Import] Failed to sync leads to backend:', err);
-            toast('Erro ao sincronizar leads com o servidor.', 'error');
+            toast('Erro ao sincronizar leads: ' + (err as Error).message, 'error');
             return;
         }
 
@@ -256,6 +260,9 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
         setScoreCol('');
         setDupeMode('skip');
         if (fileInput.current) fileInput.current.value = '';
+        
+        // Refresh leads from backend to ensure consistency
+        await refreshLeads();
         
         // Navigate to Leads tab after import
         if (onNavigate) {
