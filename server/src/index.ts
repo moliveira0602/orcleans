@@ -13,22 +13,28 @@ console.log('[SERVER] Starting...');
 
 const app = express();
 
-// CORS - allow all origins for now
-app.use(cors({
-  origin: '*',
+const ALLOWED_ORIGINS = [
+  'https://orca.etos.pt',
+  'http://localhost:5173',
+  'http://localhost:3333',
+];
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+      callback(null, true);
+    } else if (ALLOWED_ORIGINS.some(o => origin.endsWith(o.replace('https://', '')))) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+};
 
-// Handle preflight requests explicitly
-app.options('*', (_req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin');
-  res.setHeader('Access-Control-Max-Age', '86400');
-  res.status(204).end();
-});
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));

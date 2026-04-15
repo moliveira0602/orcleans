@@ -17,8 +17,12 @@ function getQueryString(query: Record<string, string | string[] | undefined>, ke
 
 const router = Router();
 
-const corsMiddleware = (_req: Request, res: Response, next: NextFunction) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+const ALLOWED_ORIGINS = ['https://orca.etos.pt', 'http://localhost:5173'];
+
+const corsMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  const origin = req.headers.origin || '';
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
   res.setHeader('Access-Control-Max-Age', '86400');
@@ -30,7 +34,7 @@ router.use(corsMiddleware);
 router.use(authenticate);
 router.use(requireSuperAdmin);
 
-router.options('*', (_req: Request, res: Response) => res.status(204).end());
+router.options('*', (_req: Request, res: Response) => res.status(200).end());
 
 async function logAudit(req: AuthRequest, action: string, entityType: string, entityId?: string, details?: Record<string, unknown>) {
   await createAuditLog({
