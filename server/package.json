@@ -5,14 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "start": "node src/index.js",
-    "postinstall": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:generate": "prisma generate",
-    "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:reset": "prisma migrate reset",
-    "db:deploy": "prisma migrate deploy"
+    "build": "echo 'No build needed for Node.js'",
+    "start": "node --import tsx src/index.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
@@ -36,7 +30,6 @@
     "@types/node": "^22.13.10",
     "@types/uuid": "^10.0.0",
     "prisma": "^6.5.0",
-    "tsx": "^4.19.3",
-    "typescript": "^5.8.2"
+    "tsx": "^4.19.3"
   }
 }
