@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-// import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env.js';
@@ -10,16 +9,30 @@ import scanRoutes from './routes/scan.js';
 import adminRoutes from './routes/admin.js';
 import { errorHandler } from './middleware/error.js';
 
+console.log('[SERVER] Starting with CORS enabled for all origins');
+
+// Logging middleware
+app.use((req, res, next) => {
+  console.log(`[SERVER] ${req.method} ${req.url} from ${req.headers.origin || 'unknown'}`);
+  next();
+});
+
 const app = express();
 
 // CORS - permitir todos os origins
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-  res.header('Access-Control-Max-Age', '86400');
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+  console.log('[CORS] Request from:', origin, 'method:', req.method);
+  
   if (req.method === 'OPTIONS') {
-    return res.status(204).end();
+    console.log('[CORS] Handling OPTIONS');
+    return res.status(200).send();
   }
   next();
 });
