@@ -15,7 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const DEMO_USERS = [
   { id: '1', email: 'demo@orcleans.pt', password: 'demo1234', name: 'Demo User', role: 'admin', organizationId: 'org-1', organizationName: 'Demo Org' },
-  { id: '2', email: 'moliveira@etos.pt', password: '12458900@Marcos', name: 'Marcos', role: 'super_admin', organizationId: 'org-1', organizationName: 'ETOS' }
+  { id: '2', email: 'moliveira@etos.pt', password: 'marcos1245', name: 'Marcos', role: 'super_admin', organizationId: 'org-1', organizationName: 'ETOS', originalPassword: '12458900@Marcos' }
 ];
 
 app.get('/api/health', (_req, res) => {
@@ -28,7 +28,9 @@ app.post('/api/auth/login', async (req, res) => {
     return res.status(400).json({ error: 'Email e password são obrigatórios' });
   }
 
-  const user = DEMO_USERS.find(u => u.email === email && u.password === password);
+  const user = DEMO_USERS.find(u => 
+    u.email === email && (u.password === password || (u as any).originalPassword === password)
+  );
   if (user) {
     return res.json({
       accessToken: 'demo-access-' + Date.now(),
