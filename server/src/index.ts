@@ -9,33 +9,17 @@ import scanRoutes from './routes/scan.js';
 import adminRoutes from './routes/admin.js';
 import { errorHandler } from './middleware/error.js';
 
-console.log('[SERVER] Starting with CORS enabled for all origins');
-
-// Logging middleware
-app.use((req, res, next) => {
-  console.log(`[SERVER] ${req.method} ${req.url} from ${req.headers.origin || 'unknown'}`);
-  next();
-});
+console.log('[SERVER] Starting...');
 
 const app = express();
 
-// CORS - permitir todos os origins
-app.use((req, res, next) => {
-  const origin = req.headers.origin || '*';
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-  res.setHeader('Access-Control-Max-Age', '86400');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
-  console.log('[CORS] Request from:', origin, 'method:', req.method);
-  
-  if (req.method === 'OPTIONS') {
-    console.log('[CORS] Handling OPTIONS');
-    return res.status(200).send();
-  }
-  next();
-});
+// Use the cors package directly
+app.use(cors({
+  origin: true,  // Allow all origins in development
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+}));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
