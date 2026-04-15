@@ -1,7 +1,7 @@
 {
   "version": 2,
   "builds": [
-    { "src": "src/index.ts", "use": "@vercel/node", "config": { "installCommand": "cd ../server && npm install" } }
+    { "src": "src/index.ts", "use": "@vercel/node" }
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/src/index.ts" }
