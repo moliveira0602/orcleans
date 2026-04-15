@@ -14,6 +14,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const DEMO_USERS = [
+  // Updated: 2026-04-15 — redeploy trigger
   { id: '1', email: 'demo@orcleans.pt', password: 'demo1234', name: 'Demo User', role: 'admin', organizationId: 'org-1', organizationName: 'Demo Org' },
   { id: '2', email: 'moliveira@etos.pt', password: '12458900@Marcos', name: 'Marcos', role: 'super_admin', organizationId: 'org-1', organizationName: 'ETOS' }
 ];
