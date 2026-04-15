@@ -2,14 +2,26 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
-import { env } from './config/env.js';
+
+let env;
+try {
+  const { env: e } = await import('./config/env.js');
+  env = e;
+} catch (e) {
+  console.warn('[ENV] Using default env');
+  env = {
+    PORT: 3333,
+    RATE_LIMIT_WINDOW_MS: 900000,
+    RATE_LIMIT_MAX_REQUESTS: 100,
+    NODE_ENV: 'production'
+  };
+}
+
 import authRoutes from './routes/auth.js';
 import leadRoutes from './routes/leads.js';
 import scanRoutes from './routes/scan.js';
 import adminRoutes from './routes/admin.js';
 import { errorHandler } from './middleware/error.js';
-
-console.log('[SERVER] Starting...');
 
 const app = express();
 
@@ -26,8 +38,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('combined'));
 
 const limiter = rateLimit({
-  windowMs: env.RATE_LIMIT_WINDOW_MS,
-  max: env.RATE_LIMIT_MAX_REQUESTS,
+  windowMs: env.RATE_LIMIT_WINDOW_MS || 900000,
+  max: env.RATE_LIMIT_MAX_REQUESTS || 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Demasiados pedidos. Tente novamente mais tarde.' },
