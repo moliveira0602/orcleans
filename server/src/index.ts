@@ -13,33 +13,17 @@ console.log('[SERVER] Starting...');
 
 const app = express();
 
-const ALLOWED_ORIGINS = [
-  'https://orca.etos.pt',
-  'http://localhost:5173',
-  'http://localhost:3333',
-];
-
-const corsOptions: cors.CorsOptions = {
-  origin: (origin, callback) => {
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
-      callback(null, true);
-    } else if (ALLOWED_ORIGINS.some(o => origin.endsWith(o.replace('https://', '')))) {
-      callback(null, true);
-    } else {
-      callback(null, true);
-    }
-  },
+app.use(cors({
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-};
-
-app.use(cors(corsOptions));
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+}));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-app.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));
+app.use(morgan('combined'));
 
 const limiter = rateLimit({
   windowMs: env.RATE_LIMIT_WINDOW_MS,
