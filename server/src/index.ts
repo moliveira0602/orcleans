@@ -14,7 +14,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const DEMO_USERS = [
-  { id: '1', email: 'demo@orcleans.pt', password: 'demo1234', name: 'Demo User', role: 'admin', organizationId: 'org-1', organizationName: 'Demo Org' }
+  { id: '1', email: 'demo@orcleans.pt', password: 'demo1234', name: 'Demo User', role: 'admin', organizationId: 'org-1', organizationName: 'Demo Org' },
+  { id: '2', email: 'test@etos.pt', password: 'Orca1234!', name: 'Super Admin', role: 'super_admin', organizationId: 'org-1', organizationName: 'ETOS Admin' }
 ];
 
 app.get('/api/health', (_req, res) => {
