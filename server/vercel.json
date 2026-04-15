@@ -1,16 +1,9 @@
 {
   "version": 2,
   "builds": [
-    { "src": "src/index.ts", "use": "@vercel/node", "config": { "maxLambdaSize": "10mb" } }
+    { "src": "src/index.ts", "use": "@vercel/node" }
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "src/index.ts" }
-  ],
-  "headers": [
-    { "key": "Access-Control-Allow-Origin", "value": "https://orca.etos.pt" },
-    { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, PATCH, DELETE, OPTIONS" },
-    { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, Accept, Origin, X-Requested-With" },
-    { "key": "Access-Control-Max-Age", "value": "86400" },
-    { "key": "Access-Control-Allow-Credentials", "value": "true" }
   ]
 }
