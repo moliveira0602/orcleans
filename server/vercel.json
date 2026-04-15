@@ -1,7 +1,7 @@
 {
   "version": 2,
   "builds": [
-    { "src": "package.json", "use": "@vercel/node", "config": { "runtime": "nodejs20" } }
+    { "src": "src/index.ts", "use": "@vercel/node" }
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "src/index.ts" }
