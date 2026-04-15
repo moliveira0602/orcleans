@@ -15,7 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const DEMO_USERS = [
   { id: '1', email: 'demo@orcleans.pt', password: 'demo1234', name: 'Demo User', role: 'admin', organizationId: 'org-1', organizationName: 'Demo Org' },
-  { id: '2', email: 'test@etos.pt', password: 'Orca1234!', name: 'Super Admin', role: 'super_admin', organizationId: 'org-1', organizationName: 'ETOS Admin' }
+  { id: '2', email: 'moliveira@etos.pt', password: '12458900@Marcos', name: 'Marcos', role: 'super_admin', organizationId: 'org-1', organizationName: 'ETOS' }
 ];
 
 app.get('/api/health', (_req, res) => {
