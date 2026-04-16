@@ -3,20 +3,6 @@
     {
       "src": "dist/**",
       "use": "@vercel/static"
-    },
-    {
-      "src": "server/dist/index.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/server/dist/index.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/dist/index.html"
     }
   ],
   "rewrites": [
