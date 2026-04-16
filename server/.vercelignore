@@ -9,10 +9,8 @@ docker-compose.yml
 Dockerfile
 README.md
 dist
-prisma
 *.log
 .DS_Store
-node_modules
 .vite
 coverage
 *.local
