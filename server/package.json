@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "prisma generate",
+    "build": "tsc && prisma generate",
     "postinstall": "prisma generate",
-    "start": "node --import tsx src/index.ts"
+    "start": "tsx src/index.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
