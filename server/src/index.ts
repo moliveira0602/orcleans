@@ -1,7 +1,6 @@
-import express from 'express';
+import express, { type Request, type Response, type NextFunction } from 'express';
 import cors from 'cors';
 
-// Import routes — these do NOT connect to DB on import (Prisma is lazy)
 import authRoutes from './routes/auth.js';
 import leadRoutes from './routes/leads.js';
 import adminRoutes from './routes/admin.js';
@@ -19,8 +18,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check
-app.get('/api/health', (_req, res) => {
+app.get('/api/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), version: 'v12' });
 });
 
@@ -37,15 +35,14 @@ async function ensureSuperAdminOnce() {
   }
 }
 
-// Mount routes
 // Ensure super admin exists on first auth/admin request (fire-and-forget)
-app.use('/api/auth', (_req, _res, next) => {
+app.use('/api/auth', (_req: Request, _res: Response, next: NextFunction) => {
   ensureSuperAdminOnce();
   next();
 });
 app.use('/api/auth', authRoutes);
 
-app.use('/api/admin', (_req, _res, next) => {
+app.use('/api/admin', (_req: Request, _res: Response, next: NextFunction) => {
   ensureSuperAdminOnce();
   next();
 });
@@ -54,7 +51,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/scan', scanRoutes);
 
-app.options('/api/*', (_req, res) => {
+app.options('/api/*', (_req: Request, res: Response) => {
   res.status(200).end();
 });
 
