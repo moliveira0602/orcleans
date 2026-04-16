@@ -5,7 +5,15 @@
       "Bash(npm audit)",
       "Bash(npm uninstall *)",
       "Bash(npm install *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "WebFetch(server-sigma-eight-54.vercel.app)",
+      "Bash(sleep *)",
+      "Bash(which *)",
+      "Bash(cat *)",
+      "Bash(rm *)",
+      "Bash(true)",
+      "Bash(mkdir *)",
+      "Bash(echo *)"
     ]
   },
   "$version": 3

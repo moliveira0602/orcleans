@@ -1,7 +1,10 @@
 {
   "framework": "vite",
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build && cd server && npm run build",
   "outputDirectory": "dist",
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/server/$1.js" }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
