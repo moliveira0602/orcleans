@@ -14,7 +14,7 @@ export { GOOGLE_KEY };
 const IS_PRODUCTION = import.meta.env.PROD || false;
 
 // Always use backend proxy to avoid CORS issues
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3333/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 const API_BASES = {
     google: `${API_BASE}/scan`,
     nominatim: 'https://nominatim.openstreetmap.org',
