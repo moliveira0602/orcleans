@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "installCommand": "npm install --include=dev --ignore-scripts && npm run postinstall",
+  "installCommand": "npm ci --include=dev --ignore-scripts && npm run postinstall",
   "builds": [
     { "src": "src/index.ts", "use": "@vercel/node@2" }
   ],
