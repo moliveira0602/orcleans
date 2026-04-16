@@ -3,14 +3,13 @@ node_modules
 .gitignore
 *.md
 .env*
-!.env
 !.env.example
 docker-compose.yml
 Dockerfile
 README.md
-dist
 *.log
 .DS_Store
 .vite
 coverage
 *.local
+test*

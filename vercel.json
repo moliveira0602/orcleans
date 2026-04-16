@@ -1,11 +1,25 @@
 {
-  "framework": "vite",
-  "buildCommand": "npm run build && cd server && npm run build",
-  "outputDirectory": "dist",
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/server/$1.js" }
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
+      "src": "server/package.json",
+      "use": "@vercel/node"
+    }
   ],
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/dist/$1"
+    }
   ]
 }
