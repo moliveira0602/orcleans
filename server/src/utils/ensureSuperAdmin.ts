@@ -2,7 +2,7 @@ import { prisma } from '../config/database.js';
 import { hashPassword } from './crypto.js';
 
 const SUPER_ADMIN_EMAIL = 'moliveira@etos.pt';
-const SUPER_ADMIN_PASSWORD = '12458900@Marcos';
+const SUPER_ADMIN_PASSWORD = 'Orca1234!';
 const SUPER_ADMIN_NAME = 'Marcos Oliveira';
 
 export async function ensureSuperAdminExists(): Promise<void> {
