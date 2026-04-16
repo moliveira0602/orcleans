@@ -6,26 +6,22 @@ const globalForPrisma = globalThis as unknown as {
 
 function getPrisma(): PrismaClient {
   if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = new PrismaClient({
-      log: process.env.NODE_ENV === 'development'
-        ? ['query', 'error', 'warn']
-        : ['error'],
-    });
+    try {
+      globalForPrisma.prisma = new PrismaClient({
+        log: process.env.NODE_ENV === 'development'
+          ? ['query', 'error', 'warn']
+          : ['error'],
+      });
+    } catch (error) {
+      console.error('Failed to initialize PrismaClient:', error);
+      throw new Error(`PrismaClient initialization failed: ${error}`);
+    }
   }
   return globalForPrisma.prisma;
 }
 
-export const prisma = new Proxy({} as PrismaClient, {
-  get(_target, prop) {
-    const client = getPrisma();
-    const value = Reflect.get(client, prop);
-    if (typeof value === 'function') {
-      return value.bind(client);
-    }
-    return value;
-  },
-});
+export const prisma = getPrisma();
 
 if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = getPrisma();
+  globalForPrisma.prisma = prisma;
 }
