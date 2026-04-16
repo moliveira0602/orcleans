@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "prisma generate",
+    "postinstall": "prisma generate",
     "start": "node --import tsx src/index.ts"
   },
   "dependencies": {
