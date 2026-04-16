@@ -1,5 +1,10 @@
 import express from 'express';
 import cors from 'cors';
+import authRoutes from './routes/auth.js';
+import leadRoutes from './routes/leads.js';
+import adminRoutes from './routes/admin.js';
+import scanRoutes from './routes/scan.js';
+import { ensureSuperAdminExists } from './utils/ensureSuperAdmin.js';
 
 const app = express();
 
@@ -13,74 +18,21 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const DEMO_USERS = [
-  // Updated: 2026-04-15 — redeploy trigger
-  { id: '1', email: 'demo@orcleans.pt', password: 'demo1234', name: 'Demo User', role: 'admin', organizationId: 'org-1', organizationName: 'Demo Org' },
-  { id: '2', email: 'moliveira@etos.pt', password: '12458900@Marcos', name: 'Marcos', role: 'super_admin', organizationId: 'org-1', organizationName: 'ETOS' }
-];
+// Ensure super admin exists on startup
+ensureSuperAdminExists().catch((err) => console.error('Super admin setup error:', err));
 
+// Mount routes with /api prefix
+app.use('/api/auth', authRoutes);
+app.use('/api/leads', leadRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/scan', scanRoutes);
+
+// Health check
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString(), mode: 'demo' });
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), mode: 'production' });
 });
 
-app.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email e password são obrigatórios' });
-  }
-
-  const user = DEMO_USERS.find(u => u.email === email && u.password === password);
-  if (user) {
-    return res.json({
-      accessToken: 'demo-access-' + Date.now(),
-      refreshToken: 'demo-refresh-' + Date.now(),
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        organizationId: user.organizationId,
-        organizationName: user.organizationName
-      }
-    });
-  }
-  return res.status(401).json({ error: 'Email ou password incorretos' });
-});
-
-app.post('/api/auth/register', async (req, res) => {
-  const { email, password, name } = req.body;
-  if (!email || !password || !name) {
-    return res.status(400).json({ error: 'Email, password e name são obrigatórios' });
-  }
-  return res.status(201).json({
-    accessToken: 'demo-access-' + Date.now(),
-    refreshToken: 'demo-refresh-' + Date.now(),
-    user: {
-      id: 'new-' + Date.now(),
-      name,
-      email,
-      role: 'member',
-      organizationId: 'org-1',
-      organizationName: 'New Org'
-    }
-  });
-});
-
-app.get('/api/auth/me', (req, res) => {
-  const auth = req.headers.authorization;
-  if (auth?.startsWith('Bearer demo-')) {
-    return res.json({
-      id: '1',
-      name: 'Demo User',
-      email: 'demo@orcleans.pt',
-      role: 'admin',
-      organizationId: 'org-1',
-      organizationName: 'Demo Org'
-    });
-  }
-  res.status(401).json({ error: 'Unauthorized' });
-});
-
+// OPTIONS handler for all API routes
 app.options('/api/*', (_req, res) => {
   res.status(200).end();
 });

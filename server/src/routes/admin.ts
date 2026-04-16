@@ -17,10 +17,32 @@ function getQueryString(query: Record<string, string | string[] | undefined>, ke
 
 const router = Router();
 
+router.options('*', (_req: Request, res: Response) => res.status(200).end());
+
+// Heartbeat: available to ANY authenticated user
+router.post('/users/:id/heartbeat', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const id = getParamId(req.params as Record<string, string | string[]>);
+
+    if (!id) {
+      return res.status(400).json({ error: 'ID é obrigatório' });
+    }
+
+    await prisma.user.update({
+      where: { id },
+      data: { lastSeenAt: new Date() },
+    });
+
+    res.json({ status: 'ok' });
+  } catch (error) {
+    console.error('Heartbeat error:', error);
+    res.status(500).json({ error: 'Erro ao atualizar presença' });
+  }
+});
+
+// All routes below require super_admin
 router.use(authenticate);
 router.use(requireSuperAdmin);
-
-router.options('*', (_req: Request, res: Response) => res.status(200).end());
 
 async function logAudit(req: AuthRequest, action: string, entityType: string, entityId?: string, details?: Record<string, unknown>) {
   await createAuditLog({
@@ -825,26 +847,6 @@ router.get('/users/:id/pipeline', async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('View as user pipeline error:', error);
     res.status(500).json({ error: 'Erro ao obter pipeline do utilizador' });
-  }
-});
-
-router.post('/users/:id/heartbeat', async (req: AuthRequest, res: Response) => {
-  try {
-    const id = getParamId(req.params as Record<string, string | string[]>);
-
-    if (!id) {
-      return res.status(400).json({ error: 'ID é obrigatório' });
-    }
-
-    await prisma.user.update({
-      where: { id },
-      data: { lastSeenAt: new Date() },
-    });
-
-    res.json({ status: 'ok' });
-  } catch (error) {
-    console.error('Heartbeat error:', error);
-    res.status(500).json({ error: 'Erro ao atualizar presença' });
   }
 });
 

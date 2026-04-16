@@ -201,5 +201,15 @@ export async function getProfile(userId: string) {
     throw new Error('Utilizador não encontrado');
   }
 
-  return user;
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    avatarUrl: user.avatarUrl,
+    isActive: user.isActive,
+    lastLoginAt: user.lastLoginAt,
+    createdAt: user.createdAt,
+    organization: user.organization,
+  };
 }
