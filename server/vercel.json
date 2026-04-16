@@ -1,6 +1,6 @@
 {
   "version": 2,
   "builds": [
-    { "src": "src/index.ts", "use": "@vercel/node@2" }
+    { "src": "src/index.ts", "use": "@vercel/node@2", "config": { "runtime": "nodejs18.x" } }
   ]
 }
