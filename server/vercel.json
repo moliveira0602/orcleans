@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm ci --include=dev || npm install --include=dev && npx prisma generate",
+  "buildCommand": "npm ci --include=dev && npx prisma generate",
   "builds": [
     { "src": "src/index.ts", "use": "@vercel/node@4" }
   ],
