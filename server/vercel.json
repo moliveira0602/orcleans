@@ -1,10 +1,6 @@
 {
   "version": 2,
-  "installCommand": "npm ci --include=dev --ignore-scripts && node node_modules/prisma/build/index.js generate --schema=prisma/schema.prisma",
   "builds": [
     { "src": "src/index.ts", "use": "@vercel/node@2" }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "src/index.ts" }
   ]
 }
