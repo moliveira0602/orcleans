@@ -1,36 +1,39 @@
 import { PrismaClient } from '@prisma/client';
 
-console.log('[DB] Starting Prisma initialization');
-console.log('[DB] NODE_ENV:', process.env.NODE_ENV);
-console.log('[DB] Prisma client path:', require.resolve('@prisma/client'));
-
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
+  prismaInitPromise: Promise<PrismaClient> | undefined;
 };
 
-function getPrisma(): PrismaClient {
-  console.log('[DB] getPrisma called, globalForPrisma.prisma:', !!globalForPrisma.prisma);
-  
-  if (!globalForPrisma.prisma) {
-    try {
-      console.log('[DB] Creating new PrismaClient');
-      globalForPrisma.prisma = new PrismaClient({
-        log: process.env.NODE_ENV === 'development'
-          ? ['query', 'error', 'warn']
-          : ['error'],
-      });
-      console.log('[DB] PrismaClient created successfully');
-    } catch (error) {
-      console.error('[DB] Failed to initialize PrismaClient:', error);
-      throw new Error(`PrismaClient initialization failed: ${error}`);
-    }
+async function createPrismaClient(): Promise<PrismaClient> {
+  const client = new PrismaClient({
+    log: process.env.NODE_ENV === 'development'
+      ? ['query', 'error', 'warn']
+      : ['error'],
+  });
+  await client.$connect();
+  return client;
+}
+
+async function getPrisma(): Promise<PrismaClient> {
+  if (globalForPrisma.prisma) {
+    return globalForPrisma.prisma;
   }
-  return globalForPrisma.prisma;
+
+  if (!globalForPrisma.prismaInitPromise) {
+    globalForPrisma.prismaInitPromise = createPrismaClient().then(client => {
+      globalForPrisma.prisma = client;
+      return client;
+    });
+  }
+
+  return globalForPrisma.prismaInitPromise;
 }
 
-export const prisma = getPrisma();
-console.log('[DB] Prisma client exported');
+export const prisma: PrismaClient = {} as PrismaClient;
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
-}
+getPrisma().then(client => {
+  Object.assign(prisma, client);
+}).catch(err => {
+  console.error('Failed to initialize Prisma:', err);
+});
