@@ -1,10 +1,6 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import authRoutes from './routes/auth.js';
-import leadRoutes from './routes/leads.js';
-import adminRoutes from './routes/admin.js';
-import scanRoutes from './routes/scan.js';
-import { ensureSuperAdminExists } from './utils/ensureSuperAdmin.js';
+import type { Router as ExpressRouter } from 'express';
 
 const app = express();
 
@@ -18,22 +14,72 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Ensure super admin exists on startup
-ensureSuperAdminExists().catch((err) => console.error('Super admin setup error:', err));
-
-// Mount routes with /api prefix
-app.use('/api/auth', authRoutes);
-app.use('/api/leads', leadRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/scan', scanRoutes);
-
-// Health check
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString(), mode: 'production' });
+// Health check - always available
+app.get('/api/health', (_req: Request, res: Response) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// OPTIONS handler for all API routes
-app.options('/api/*', (_req, res) => {
+// Lazy route loaders — cache the router after first load
+let _authRouter: ExpressRouter | null = null;
+let _leadRouter: ExpressRouter | null = null;
+let _adminRouter: ExpressRouter | null = null;
+let _scanRouter: ExpressRouter | null = null;
+
+async function getAuthRouter(): Promise<ExpressRouter> {
+  if (!_authRouter) {
+    const m = await import('./routes/auth.js');
+    _authRouter = m.default;
+  }
+  return _authRouter;
+}
+
+async function getLeadRouter(): Promise<ExpressRouter> {
+  if (!_leadRouter) {
+    const m = await import('./routes/leads.js');
+    _leadRouter = m.default;
+  }
+  return _leadRouter;
+}
+
+async function getAdminRouter(): Promise<ExpressRouter> {
+  if (!_adminRouter) {
+    const m = await import('./routes/admin.js');
+    _adminRouter = m.default;
+  }
+  return _adminRouter;
+}
+
+async function getScanRouter(): Promise<ExpressRouter> {
+  if (!_scanRouter) {
+    const m = await import('./routes/scan.js');
+    _scanRouter = m.default;
+  }
+  return _scanRouter;
+}
+
+// Route handlers that lazy-load on first request
+app.use('/api/auth', async (req: Request, res: Response, next: NextFunction) => {
+  const router = await getAuthRouter();
+  router(req, res, next);
+});
+
+app.use('/api/leads', async (req: Request, res: Response, next: NextFunction) => {
+  const router = await getLeadRouter();
+  router(req, res, next);
+});
+
+app.use('/api/admin', async (req: Request, res: Response, next: NextFunction) => {
+  const router = await getAdminRouter();
+  router(req, res, next);
+});
+
+app.use('/api/scan', async (req: Request, res: Response, next: NextFunction) => {
+  const router = await getScanRouter();
+  router(req, res, next);
+});
+
+// OPTIONS handler
+app.options('/api/*', (_req: Request, res: Response) => {
   res.status(200).end();
 });
 
