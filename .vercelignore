@@ -5,7 +5,6 @@ node_modules
 .env*
 !.env.example
 server/node_modules
-dist
 *.log
 .DS_Store
 .vite
