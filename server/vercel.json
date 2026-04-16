@@ -1,7 +1,10 @@
 {
   "version": 2,
+  "framework": null,
+  "installCommand": "npm install --include=dev",
+  "buildCommand": "npm run postinstall",
   "builds": [
-    { "src": "src/index.ts", "use": "@vercel/node@2", "config": { "runtime": "nodejs20.x" } }
+    { "src": "src/index.ts", "use": "@vercel/node@2" }
   ],
   "env": {
     "NODE_ENV": "production"
