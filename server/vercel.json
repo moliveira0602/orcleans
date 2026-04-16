@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm run postinstall",
+  "buildCommand": "npm install --include=dev && npx prisma generate",
   "builds": [
     { "src": "src/index.ts", "use": "@vercel/node" }
   ],
