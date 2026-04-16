@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc && prisma generate",
     "postinstall": "prisma generate",
-    "start": "tsx src/index.ts"
+    "start": "npx prisma generate && tsx src/index.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
