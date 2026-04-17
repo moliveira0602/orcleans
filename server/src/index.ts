@@ -13,8 +13,9 @@ import scanRoutes from './routes/scan';
 
 const app = express();
 
+const corsOrigins = env.CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean);
 app.use(cors({
-  origin: env.CORS_ORIGIN,
+  origin: corsOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
@@ -73,4 +74,12 @@ app.options('/api/*', (_req: Request, res: Response) => {
   res.status(200).end();
 });
 
+const PORT = Number(process.env.PORT || env.PORT || 3333);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[ORCA API] Server running on http://0.0.0.0:${PORT}`);
+  console.log(`[ORCA API] NODE_ENV=${process.env.NODE_ENV}`);
+  console.log(`[ORCA API] DB configured: ${process.env.DATABASE_URL ? 'yes' : 'no'}`);
+});
+
+export { app, server };
 export default app;
