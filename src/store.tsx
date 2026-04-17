@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, typ
 import type { Lead, ImportRecord, PipelineMap, AppSettings, AppState, ActivityEntry, PipelineStage, NoteEntry } from './types';
 import { DEFAULT_SETTINGS } from './types';
 import * as leadApi from './services/leads';
+import { createLeadsBulk } from './services/leads';
 import { api } from './services/api';
 
 
@@ -203,11 +204,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 updateState({ isLoading: action.payload });
                 break;
             case 'IMPORT_LEADS': {
-                updateState({ imports: [...state.imports, { ...action.payload.record, rows: action.payload.leads.length }] });
+                // Add leads to state and sync to backend
+                const newLeads = action.payload.leads;
+                setState(prev => {
+                    // Merge new leads, avoiding duplicates
+                    const existingIds = new Set(prev.leads.map(l => l.id));
+                    const leadsToAdd = newLeads.filter(l => !existingIds.has(l.id));
+                    return {
+                        ...prev,
+                        leads: [...prev.leads, ...leadsToAdd],
+                        imports: [...prev.imports, { ...action.payload.record, rows: action.payload.leads.length }]
+                    };
+                });
+                // Sync to backend
+                createLeadsBulk(action.payload.leads).catch(err => console.error('[Store] Failed to sync leads to backend:', err));
                 break;
             }
             case 'UPSERT_LEADS': {
-                updateState({ imports: [...state.imports, { ...action.payload.record, rows: action.payload.leads.length }] });
+                // Add leads to state and sync to backend
+                const newLeads = action.payload.leads;
+                setState(prev => {
+                    const existingIds = new Set(prev.leads.map(l => l.id));
+                    const leadsToAdd = newLeads.filter(l => !existingIds.has(l.id));
+                    const leadsToUpdate = newLeads.filter(l => existingIds.has(l.id));
+                    return {
+                        ...prev,
+                        leads: [...prev.leads.filter(l => !leadsToUpdate.some(u => u.id === l.id)), ...leadsToUpdate, ...leadsToAdd],
+                        imports: [...prev.imports, { ...action.payload.record, rows: action.payload.leads.length }]
+                    };
+                });
+                createLeadsBulk(action.payload.leads).catch(err => console.error('[Store] Failed to sync leads to backend:', err));
                 break;
             }
             case 'DELETE_IMPORT': {

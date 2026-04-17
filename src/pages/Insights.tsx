@@ -6,6 +6,7 @@ import { geocodeAddress } from '../utils/geocoding';
 import { MapContainer, TileLayer, Circle, CircleMarker, Popup, useMap } from 'react-leaflet';
 import { runScan, getScanStatus, SCAN_PRESETS, clearScanCache, type ScanPresetKey, GOOGLE_KEY } from '../utils/scanService';
 import { useToast } from '../components/Toast';
+import { createLeadsBulk } from '../services/leads';
 import 'leaflet/dist/leaflet.css';
 
 /**
@@ -578,6 +579,13 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                         },
                     },
                 });
+
+                // Sync to backend
+                try {
+                    await createLeadsBulk(leadsWithCoords);
+                } catch (err) {
+                    console.error('[Insights] Failed to sync leads to backend:', err);
+                }
 
                 dispatch({
                     type: 'ADD_ACTIVITY',
