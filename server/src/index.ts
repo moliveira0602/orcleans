@@ -1,6 +1,9 @@
 import express, { type Request, type Response, type NextFunction } from 'express';
 import cors from 'cors';
 
+// Load environment variables
+import './config/env.js';
+
 import authRoutes from './routes/auth.js';
 import leadRoutes from './routes/leads.js';
 import adminRoutes from './routes/admin.js';
@@ -22,6 +25,12 @@ app.get('/api/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), version: 'v12' });
 });
 
+// Error handling middleware
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
 // Ensure super admin exists on first request (non-blocking, lazy)
 let _superAdminChecked = false;
 async function ensureSuperAdminOnce() {
@@ -30,8 +39,8 @@ async function ensureSuperAdminOnce() {
     const { ensureSuperAdminExists } = await import('./utils/ensureSuperAdmin.js');
     await ensureSuperAdminExists();
     _superAdminChecked = true;
-  } catch {
-    // ignore — will retry
+  } catch (err) {
+    console.error('Super admin check failed:', err);
   }
 }
 

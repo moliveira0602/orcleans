@@ -31,7 +31,7 @@ export async function createLead(organizationId: string, data: CreateLeadInput) 
       notes: sanitizeJson(data.notes),
       raw: sanitizeJson(data.raw),
       importDate: data.importDate ? new Date(data.importDate) : undefined,
-    },
+    } as any,
   });
 }
 
@@ -62,7 +62,7 @@ export async function createLeadsBulk(organizationId: string, leads: CreateLeadI
   }));
 
   return prisma.lead.createMany({
-    data,
+    data: data as any,
     skipDuplicates: false,
   });
 }
