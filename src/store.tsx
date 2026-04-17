@@ -204,36 +204,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 updateState({ isLoading: action.payload });
                 break;
             case 'IMPORT_LEADS': {
-                // Add leads to state and sync to backend
-                const newLeads = action.payload.leads;
-                setState(prev => {
-                    // Merge new leads, avoiding duplicates
-                    const existingIds = new Set(prev.leads.map(l => l.id));
-                    const leadsToAdd = newLeads.filter(l => !existingIds.has(l.id));
-                    return {
-                        ...prev,
-                        leads: [...prev.leads, ...leadsToAdd],
-                        imports: [...prev.imports, { ...action.payload.record, rows: action.payload.leads.length }]
-                    };
-                });
-                // Sync to backend
+                // Only sync to backend - local state will be refreshed from API
                 createLeadsBulk(action.payload.leads).catch(err => console.error('[Store] Failed to sync leads to backend:', err));
+                // Add import record to local state (UI only)
+                updateState({ imports: [...state.imports, { ...action.payload.record, rows: action.payload.leads.length }] });
                 break;
             }
             case 'UPSERT_LEADS': {
-                // Add leads to state and sync to backend
-                const newLeads = action.payload.leads;
-                setState(prev => {
-                    const existingIds = new Set(prev.leads.map(l => l.id));
-                    const leadsToAdd = newLeads.filter(l => !existingIds.has(l.id));
-                    const leadsToUpdate = newLeads.filter(l => existingIds.has(l.id));
-                    return {
-                        ...prev,
-                        leads: [...prev.leads.filter(l => !leadsToUpdate.some(u => u.id === l.id)), ...leadsToUpdate, ...leadsToAdd],
-                        imports: [...prev.imports, { ...action.payload.record, rows: action.payload.leads.length }]
-                    };
-                });
+                // Only sync to backend - local state will be refreshed from API
                 createLeadsBulk(action.payload.leads).catch(err => console.error('[Store] Failed to sync leads to backend:', err));
+                updateState({ imports: [...state.imports, { ...action.payload.record, rows: action.payload.leads.length }] });
                 break;
             }
             case 'DELETE_IMPORT': {

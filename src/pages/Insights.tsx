@@ -601,8 +601,6 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
 
                 toast(`✓ ${result.imported} leads importados do scan!`, 'success');
                 setScanModalOpen(false);
-            } else if (result.cached) {
-                toast('Scan recente já existe. Aguarde 7 dias ou limpe o cache.', 'info');
             } else if (result.success) {
                 toast('Nenhum lead novo encontrado.', 'info');
             } else {
