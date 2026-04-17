@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback, typ
 import type { Lead, ImportRecord, PipelineMap, AppSettings, AppState, ActivityEntry, PipelineStage, NoteEntry } from './types';
 import { DEFAULT_SETTINGS } from './types';
 import * as leadApi from './services/leads';
-import { createLeadsBulk } from './services/leads';
 import { api } from './services/api';
 
 
@@ -204,15 +203,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 updateState({ isLoading: action.payload });
                 break;
             case 'IMPORT_LEADS': {
-                // Only sync to backend - local state will be refreshed from API
-                createLeadsBulk(action.payload.leads).catch(err => console.error('[Store] Failed to sync leads to backend:', err));
-                // Add import record to local state (UI only)
+                // Add import record to local state only (backend sync handled by caller)
                 updateState({ imports: [...state.imports, { ...action.payload.record, rows: action.payload.leads.length }] });
                 break;
             }
             case 'UPSERT_LEADS': {
-                // Only sync to backend - local state will be refreshed from API
-                createLeadsBulk(action.payload.leads).catch(err => console.error('[Store] Failed to sync leads to backend:', err));
                 updateState({ imports: [...state.imports, { ...action.payload.record, rows: action.payload.leads.length }] });
                 break;
             }

@@ -94,7 +94,37 @@ export async function createLead(data: Partial<Lead>): Promise<Lead> {
 }
 
 export async function createLeadsBulk(leads: Partial<Lead>[]): Promise<{ count: number }> {
-  return api.post<{ count: number }>('/leads/bulk', { leads });
+  const mapped = leads.map(lead => ({
+    nome: lead.nome || '',
+    segmento: lead.segmento || '',
+    avaliacao: lead.avaliacao,
+    reviews: lead.reviews,
+    preco: lead.preco || '',
+    endereco: lead.endereco || '',
+    status: lead.status || '',
+    horario: lead.horario || '',
+    telefone: lead.telefone || '',
+    website: lead.website || '',
+    email: lead.email || '',
+    servicos: lead.servicos || [],
+    foto: lead.foto || '',
+    fotos: lead.fotos || [],
+    linkOrigem: lead.linkOrigem || '',
+    linkPedido: lead.linkPedido || '',
+    observacoes: lead.observacoes || '',
+    score: lead.score ?? lead._score ?? 0,
+    pipelineStage: lead.pipelineStage ?? lead._pipeline ?? 'novo',
+    lat: lead.lat ?? lead._lat ?? null,
+    lng: lead.lng ?? lead._lng ?? null,
+    geocodeStatus: lead.geocodeStatus ?? lead._geocodeStatus ?? 'pending',
+    insight: lead.insight ?? lead._insight ?? null,
+    notes: lead.notes ?? lead._notes,
+    raw: lead.raw ?? lead._raw,
+    importFile: lead.importFile ?? lead._importFile ?? null,
+    importDate: lead.importDate ?? lead._importDate ?? null,
+    importId: lead.importId ?? lead._importId ?? null,
+  }));
+  return api.post<{ count: number }>('/leads/bulk', { leads: mapped });
 }
 
 export async function updateLead(id: string, data: Partial<Lead>): Promise<Lead> {
