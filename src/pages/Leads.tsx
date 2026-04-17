@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { useAppState } from '../store';
+import { useAppState, useAppDispatch } from '../store';
 import { LEAD_COLUMNS } from '../utils/leadMapper';
 import ScoreRing from '../components/ScoreRing';
 import { exportLeadsCsv } from '../utils/export';
 import { useToast } from '../components/Toast';
+import { deleteLeadsBulk } from '../services/leads';
 import type { Lead } from '../types';
 
 interface LeadsProps {
@@ -15,6 +16,7 @@ interface LeadsProps {
 
 export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpenMap }: LeadsProps) {
     const { leads, settings, imports } = useAppState();
+    const dispatch = useAppDispatch();
     const toast = useToast();
     const tableRef = useRef<HTMLDivElement>(null);
     const [search, setSearch] = useState(searchQuery);
@@ -27,6 +29,8 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
     const [isDragging, setIsDragging] = useState(false);
     const [startX, setStartX] = useState(0);
     const [scrollLeft, setScrollLeft] = useState(0);
+    const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
+    const [isDeleting, setIsDeleting] = useState(false);
     const perPage = 25;
 
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -109,6 +113,41 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
         toast('CSV exportado com sucesso.', 'success');
     };
 
+    const handleToggleSelect = (id: string) => {
+        setSelectedLeads((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const handleSelectAll = () => {
+        if (selectedLeads.size === paged.length) {
+            setSelectedLeads(new Set());
+        } else {
+            setSelectedLeads(new Set(paged.map((l) => l.id)));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedLeads.size === 0) return;
+        if (!confirm(`Eliminar ${selectedLeads.size} lead(s)?`)) return;
+        setIsDeleting(true);
+        try {
+            await deleteLeadsBulk(Array.from(selectedLeads));
+            toast(`${selectedLeads.size} lead(s) eliminado(s).`, 'success');
+            setSelectedLeads(new Set());
+            // Update local state by removing deleted leads
+            const idsToDelete = new Set(selectedLeads);
+            dispatch({ type: 'SET_LEADS', payload: leads.filter(l => !idsToDelete.has(l.id)) });
+        } catch (err) {
+            toast('Erro ao eliminar leads.', 'error');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     const pipeBadge: Record<string, string> = { novo: 'badge-gray', qualificado: 'badge-blue', proposta: 'badge-amber', negociacao: 'badge-amber', ganho: 'badge-green', perdido: 'badge-red' };
     const pipeLabel: Record<string, string> = { novo: 'Novo', qualificado: 'Qualif.', proposta: 'Proposta', negociacao: 'Negoc.', ganho: 'Ganho', perdido: 'Perdido' };
 
@@ -166,6 +205,16 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                         {categories.map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
                     <button className="btn btn-ghost btn-sm" onClick={handleExport}>↓ Exportar CSV</button>
+                    {selectedLeads.size > 0 && (
+                        <button
+                            className="btn btn-sm"
+                            style={{ background: 'var(--red)', color: '#fff' }}
+                            onClick={handleBulkDelete}
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? 'A eliminar...' : `🗑 ${selectedLeads.size} eliminar`}
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -192,6 +241,13 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                 <table>
                     <thead>
                         <tr>
+                            <th style={{ width: 40 }}>
+                                <input
+                                    type="checkbox"
+                                    checked={paged.length > 0 && selectedLeads.size === paged.length}
+                                    onChange={handleSelectAll}
+                                />
+                            </th>
                             {displayCols.map((col) => (
                                 <th 
                                     key={col.key} 
@@ -209,6 +265,13 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                     <tbody>
                         {paged.map((l) => (
                             <tr key={l.id}>
+                                <td>
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedLeads.has(l.id)}
+                                        onChange={() => handleToggleSelect(l.id)}
+                                    />
+                                </td>
                                 {displayCols.map((col) => {
                                     const field = col.key as keyof Lead;
                                     const value = l[field];
