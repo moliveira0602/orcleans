@@ -1,7 +1,7 @@
 import { Response } from 'express';
-import * as leadService from '../services/leadService.js';
-import type { AuthRequest } from '../middleware/auth.js';
-import { isSuperAdmin } from '../types/auth.js';
+import * as leadService from '../services/leadService';
+import type { AuthRequest } from '../middleware/auth';
+import { isSuperAdmin } from '../types/auth';
 
 type SortBy = 'createdAt' | 'score' | 'nome' | 'updatedAt';
 type SortOrder = 'asc' | 'desc';

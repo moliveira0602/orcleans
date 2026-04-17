@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
-import * as leadController from '../controllers/leadController.js';
-import { validate } from '../middleware/validate.js';
-import { createLeadSchema, updateLeadSchema } from '../types/leads.js';
-import { authenticate } from '../middleware/auth.js';
+import * as leadController from '../controllers/leadController';
+import { validate } from '../middleware/validate';
+import { createLeadSchema, updateLeadSchema } from '../types/leads';
+import { authenticate } from '../middleware/auth';
 
 const router = Router();
 

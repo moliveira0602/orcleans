@@ -1,4 +1,4 @@
-import { env } from './env.js';
+import { env } from './env';
 
 export const jwtConfig = {
   accessSecret: env.JWT_SECRET,

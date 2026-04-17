@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import * as authService from '../services/authService.js';
-import type { AuthRequest } from '../middleware/auth.js';
+import * as authService from '../services/authService';
+import type { AuthRequest } from '../middleware/auth';
 
 export async function register(req: Request, res: Response) {
   try {

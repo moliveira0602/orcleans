@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { jwtConfig } from '../config/jwt.js';
-import { isSuperAdmin, type Role } from '../types/auth.js';
+import { jwtConfig } from '../config/jwt';
+import { isSuperAdmin, type Role } from '../types/auth';
 
 export interface AuthRequest extends Request {
   userId?: string;

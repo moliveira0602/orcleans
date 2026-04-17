@@ -1,5 +1,5 @@
 import jwt, { type SignOptions } from 'jsonwebtoken';
-import { jwtConfig } from '../config/jwt.js';
+import { jwtConfig } from '../config/jwt';
 
 interface TokenPayload {
   sub: string;

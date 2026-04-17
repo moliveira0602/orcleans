@@ -1,7 +1,7 @@
-import { prisma } from '../config/database.js';
-import { hashPassword, comparePassword } from '../utils/crypto.js';
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
-import type { RegisterInput, LoginInput } from '../types/auth.js';
+import { prisma } from '../config/database';
+import { hashPassword, comparePassword } from '../utils/crypto';
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
+import type { RegisterInput, LoginInput } from '../types/auth';
 
 export async function register(input: RegisterInput) {
   const existing = await prisma.user.findUnique({

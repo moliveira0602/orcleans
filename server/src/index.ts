@@ -2,12 +2,12 @@ import express, { type Request, type Response, type NextFunction } from 'express
 import cors from 'cors';
 
 // Load environment variables
-import './config/env.js';
+import './config/env';
 
-import authRoutes from './routes/auth.js';
-import leadRoutes from './routes/leads.js';
-import adminRoutes from './routes/admin.js';
-import scanRoutes from './routes/scan.js';
+import authRoutes from './routes/auth';
+import leadRoutes from './routes/leads';
+import adminRoutes from './routes/admin';
+import scanRoutes from './routes/scan';
 
 const app = express();
 
@@ -36,7 +36,7 @@ let _superAdminChecked = false;
 async function ensureSuperAdminOnce() {
   if (_superAdminChecked) return;
   try {
-    const { ensureSuperAdminExists } = await import('./utils/ensureSuperAdmin.js');
+    const { ensureSuperAdminExists } = await import('./utils/ensureSuperAdmin');
     await ensureSuperAdminExists();
     _superAdminChecked = true;
   } catch (err) {

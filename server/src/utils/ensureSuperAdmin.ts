@@ -1,5 +1,5 @@
-import { prisma } from '../config/database.js';
-import { hashPassword } from './crypto.js';
+import { prisma } from '../config/database';
+import { hashPassword } from './crypto';
 
 const SUPER_ADMIN_EMAIL = 'moliveira@etos.pt';
 const SUPER_ADMIN_PASSWORD = 'Orca1234!';

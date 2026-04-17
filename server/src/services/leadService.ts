@@ -1,5 +1,5 @@
-import { prisma } from '../config/database.js';
-import type { CreateLeadInput, UpdateLeadInput, LeadsQuery } from '../types/leads.js';
+import { prisma } from '../config/database';
+import type { CreateLeadInput, UpdateLeadInput, LeadsQuery } from '../types/leads';
 
 function sanitizeJson(value: unknown) {
   if (value === null || value === undefined) return undefined;

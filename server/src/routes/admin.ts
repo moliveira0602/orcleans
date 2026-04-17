@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { prisma } from '../config/database.js';
-import { authenticate, requireSuperAdmin, type AuthRequest } from '../middleware/auth.js';
-import { hashPassword } from '../utils/crypto.js';
-import { createAuditLog, getAuditLogs, AUDIT_ACTIONS } from '../services/auditService.js';
+import { prisma } from '../config/database';
+import { authenticate, requireSuperAdmin, type AuthRequest } from '../middleware/auth';
+import { hashPassword } from '../utils/crypto';
+import { createAuditLog, getAuditLogs, AUDIT_ACTIONS } from '../services/auditService';
 
 function getParamId(params: Record<string, string | string[]>): string | undefined {
   const id = params.id;
@@ -585,7 +585,7 @@ router.post('/tenants/:id/users', async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: `Limite de ${org.maxUsers} utilizadores atingido` });
     }
 
-    const { hashPassword } = await import('../utils/crypto.js');
+    const { hashPassword } = await import('../utils/crypto');
     const passwordHash = await hashPassword(password);
 
     const user = await prisma.user.create({
