@@ -4,6 +4,7 @@ import cors from 'cors';
 // Load environment variables
 import './config/env';
 import { env } from './config/env';
+import { prisma } from './config/database';
 
 import authRoutes from './routes/auth';
 import leadRoutes from './routes/leads';
@@ -22,8 +23,15 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/api/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString(), version: 'v12' });
+app.get('/api/health', async (_req: Request, res: Response) => {
+  try {
+    // Test database connection
+    await prisma.$connect();
+    res.json({ status: 'ok', timestamp: new Date().toISOString(), version: 'v12' });
+  } catch (err: any) {
+    console.error('Health check error:', err);
+    res.status(500).json({ error: err.message || 'Internal server error' });
+  }
 });
 
 // Error handling middleware

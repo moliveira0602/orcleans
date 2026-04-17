@@ -5,6 +5,11 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient(): PrismaClient {
+  // Only create client if DATABASE_URL is available
+  if (!process.env.DATABASE_URL) {
+    console.warn('[DB] DATABASE_URL not available at initialization');
+  }
+  
   return new PrismaClient({
     log: process.env.NODE_ENV === 'development'
       ? ['query', 'error', 'warn']
@@ -22,7 +27,3 @@ export const prisma: PrismaClient = globalForPrisma.prisma ?? createPrismaClient
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
-
-prisma.$connect()
-  .then(() => console.log('[DB] Connected successfully'))
-  .catch(err => console.error('[DB] Connection failed:', err));
