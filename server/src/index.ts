@@ -3,6 +3,7 @@ import cors from 'cors';
 
 // Load environment variables
 import './config/env';
+import { env } from './config/env';
 
 import authRoutes from './routes/auth';
 import leadRoutes from './routes/leads';
@@ -12,7 +13,7 @@ import scanRoutes from './routes/scan';
 const app = express();
 
 app.use(cors({
-  origin: '*',
+  origin: env.CORS_ORIGIN,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
