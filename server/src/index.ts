@@ -13,7 +13,11 @@ import scanRoutes from './routes/scan';
 
 const app = express();
 
-const corsOrigins = env.CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean);
+const corsOrigins = env.CORS_ORIGIN
+  .split(',')
+  .map(s => s.replaceAll('\\n', '').replaceAll('\n', '').trim())
+  .filter(Boolean);
+console.log('[ORCA API] CORS Origins:', corsOrigins);
 app.use(cors({
   origin: corsOrigins,
   credentials: true,
