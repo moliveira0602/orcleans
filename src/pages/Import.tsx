@@ -268,6 +268,7 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                 importFile: l._importFile,
                 importDate: l._importDate,
                 importId: l._importId,
+                raw: l._raw,
             })));
             console.log('[Import] Backend result:', result);
             
