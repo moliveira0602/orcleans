@@ -35,7 +35,7 @@ export const updateLeadSchema = createLeadSchema.partial();
 
 export const leadsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
+  limit: z.coerce.number().int().min(1).max(10000).default(100),
   search: z.string().optional(),
   pipelineStage: z.enum(['novo', 'qualificado', 'proposta', 'negociacao', 'ganho', 'perdido']).optional(),
   scoreMin: z.coerce.number().int().min(0).max(10).optional(),

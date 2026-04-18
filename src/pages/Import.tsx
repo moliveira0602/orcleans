@@ -263,7 +263,7 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                 linkOrigem: l.linkOrigem,
                 linkPedido: l.linkPedido,
                 observacoes: l.observacoes,
-                score: l._score,
+                score: Math.round(l._score),
                 pipelineStage: l._pipeline,
                 importFile: l._importFile,
                 importDate: l._importDate,
