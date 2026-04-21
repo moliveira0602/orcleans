@@ -93,6 +93,7 @@ model Lead {
   importFile    String?
   importDate    DateTime?
   importId      String?
+  lastContact   DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -114,6 +115,7 @@ model Activity {
   title          String
   sub            String   @default("")
   icon           String   @default("")
+  channel        String   @default("system")
   leadId         String?
   createdAt      DateTime @default(now())
 

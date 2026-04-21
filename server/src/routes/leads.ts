@@ -19,5 +19,7 @@ router.post('/', validate(createLeadSchema), leadController.createLead);
 router.patch('/:id', validate(updateLeadSchema), leadController.updateLead);
 router.delete('/:id', leadController.deleteLead);
 router.patch('/:id/pipeline', leadController.movePipeline);
+router.post('/:id/activity', leadController.logActivity);
+router.get('/:id/activities', leadController.getActivities);
 
 export default router;

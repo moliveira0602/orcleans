@@ -256,3 +256,90 @@ export async function getDashboardMetrics(organizationId: string | undefined) {
     })),
   };
 }
+
+export async function logLeadActivity(
+  organizationId: string,
+  userId: string,
+  leadId: string,
+  channel: string,
+) {
+  const lead = await prisma.lead.findFirst({
+    where: { id: leadId, organizationId },
+  });
+  if (!lead) throw new Error('Lead não encontrado');
+
+  const channelLabels: Record<string, string> = {
+    telefone: 'Contato telefônico',
+    email: 'Email enviado',
+    whatsapp: 'WhatsApp enviado',
+  };
+  const channelIcons: Record<string, string> = {
+    telefone: '📞',
+    email: '✉',
+    whatsapp: '💬',
+  };
+
+  await prisma.$transaction([
+    prisma.activity.create({
+      data: {
+        organizationId,
+        userId,
+        leadId,
+        title: channelLabels[channel] || channel,
+        sub: lead.nome,
+        icon: channelIcons[channel] || '📋',
+        channel,
+      },
+    }),
+    prisma.lead.update({
+      where: { id: leadId },
+      data: { lastContact: new Date() },
+    }),
+  ]);
+}
+
+export async function getLeadActivities(
+  leadId: string,
+  organizationId: string | undefined,
+  page: number,
+  limit: number,
+) {
+  const where: Record<string, unknown> = { leadId };
+  if (organizationId) {
+    where.organizationId = organizationId;
+  }
+
+  const skip = (page - 1) * limit;
+  const take = limit;
+
+  const [activities, total] = await Promise.all([
+    prisma.activity.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take,
+      include: {
+        user: { select: { name: true } },
+      },
+    }),
+    prisma.activity.count({ where }),
+  ]);
+
+  return {
+    activities: activities.map((a) => ({
+      id: a.id,
+      channel: a.channel,
+      title: a.title,
+      sub: a.sub,
+      icon: a.icon,
+      createdAt: a.createdAt.toISOString(),
+      userName: a.user.name,
+    })),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+}

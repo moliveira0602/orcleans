@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAppState, useAppDispatch } from '../store';
 import { useToast } from './Toast';
 import { useConfirm } from './ConfirmModal';
+import EmailTemplateModal from './EmailTemplateModal';
 import { detectNameCol, detectCatCol, getLeadName, getLeadCategory } from '../utils/detect';
 import { scoreClass, scoreLabel, scoreReason } from '../utils/scoring';
 import { PIPELINE_COLS } from '../types';
@@ -26,6 +27,9 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     const [editValue, setEditValue] = useState('');
     const [noteText, setNoteText] = useState('');
     const [activeTab, setActiveTab] = useState<'info' | 'intel' | 'notes'>('info');
+    const [emailModalOpen, setEmailModalOpen] = useState(false);
+    const [contactHistory, setContactHistory] = useState<Array<{ id: string; channel: string; title: string; sub: string; icon: string; createdAt: string; userName: string }>>([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
 
     const lead = leads.find((l) => l.id === leadId);
     if (!lead) {
@@ -148,17 +152,66 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
         setNoteText('');
     };
 
-    const handleAction = (type: string) => {
-        if (type === 'whatsapp') {
-            const phone = Object.values(lead).find((v) => String(v).match(/^\+?\d{8,}/));
-            if (phone) window.open('https://wa.me/' + String(phone).replace(/\D/g, ''), '_blank');
+    const handleContact = async (channel: 'telefone' | 'email' | 'whatsapp') => {
+        // Open the appropriate URL immediately
+        if (channel === 'telefone') {
+            window.open(`tel:${lead.telefone}`);
+        } else if (channel === 'whatsapp') {
+            const phone = lead.telefone.replace(/\D/g, '');
+            if (phone) window.open('https://wa.me/' + phone, '_blank');
             else toast('Telefone não encontrado neste lead.', 'info');
-        } else if (type === 'email') {
-            const email = Object.values(lead).find((v) => String(v).match(/@/));
-            if (email) window.open('mailto:' + email);
-            else toast('Email não encontrado neste lead.', 'info');
+        } else if (channel === 'email') {
+            setEmailModalOpen(true);
+            return; // Don't log yet — will log after template modal confirms
+        }
+
+        // Log the activity
+        try {
+            await leadApi.logLeadActivity(lead.id, channel);
+            dispatch({
+                type: 'UPDATE_LEAD',
+                payload: { id: lead.id, fields: { _lastContact: new Date().toISOString() } },
+            });
+            const labels = { telefone: 'Telefonei', email: 'Email enviado', whatsapp: 'WhatsApp enviado' };
+            toast(`${labels[channel]} · Registo guardado.`, 'success');
+            refreshContactHistory();
+        } catch (err) {
+            console.error('Failed to log contact:', err);
+            toast('Erro ao registar contato.', 'error');
         }
     };
+
+    const handleEmailSent = async () => {
+        // Called from EmailTemplateModal after user confirms
+        try {
+            await leadApi.logLeadActivity(lead.id, 'email');
+            dispatch({
+                type: 'UPDATE_LEAD',
+                payload: { id: lead.id, fields: { _lastContact: new Date().toISOString() } },
+            });
+            toast('Email registrado.', 'success');
+            refreshContactHistory();
+        } catch (err) {
+            console.error('Failed to log email:', err);
+        }
+    };
+
+    const refreshContactHistory = async () => {
+        try {
+            const result = await leadApi.fetchLeadActivities(lead.id, { limit: 10 });
+            setContactHistory(result.activities);
+        } catch (err) {
+            console.error('Failed to fetch activities:', err);
+        }
+    };
+
+    // Fetch contact history when lead changes
+    useEffect(() => {
+        if (leadId) {
+            setLoadingHistory(true);
+            refreshContactHistory().then(() => setLoadingHistory(false));
+        }
+    }, [leadId]);
 
     const handleDelete = async () => {
         const ok = await confirm({
@@ -271,6 +324,73 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                     );
                                 })}
                             </div>
+
+                            {/* Cadence indicator */}
+                            {(() => {
+                                const lc = lead._lastContact;
+                                if (!lc) {
+                                    const isHot = lead._score >= settings.hotThreshold;
+                                    return (
+                                        <div className="detail-section" style={{ marginTop: 12 }}>
+                                            <div style={{
+                                                background: isHot ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)',
+                                                border: `1px solid ${isHot ? 'rgba(239,68,68,0.25)' : 'rgba(245,158,11,0.25)'}`,
+                                                borderRadius: 8, padding: '10px 12px', fontSize: 12,
+                                                color: isHot ? 'var(--red)' : 'var(--amber)',
+                                            }}>
+                                                ⚠ {isHot ? 'Lead quente' : 'Lead'} nunca contactado — inicie o contato agora.
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                                const days = Math.floor((Date.now() - new Date(lc).getTime()) / (86400000));
+                                const isHot = lead._score >= settings.hotThreshold;
+                                if ((isHot && days > 3) || days > 7) {
+                                    return (
+                                        <div className="detail-section" style={{ marginTop: 12 }}>
+                                            <div style={{
+                                                background: 'rgba(245,158,11,0.1)',
+                                                border: '1px solid rgba(245,158,11,0.25)',
+                                                borderRadius: 8, padding: '10px 12px', fontSize: 12,
+                                                color: 'var(--amber)',
+                                            }}>
+                                                ⚠ Último contato há {days} dias — pode ser necessário follow-up.
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                                return (
+                                    <div className="detail-section" style={{ marginTop: 12 }}>
+                                        <div style={{ fontSize: 11, color: 'var(--green)' }}>
+                                            ✓ Último contato há {days} dia(s)
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
+                            {/* Contact History */}
+                            <div className="detail-section" style={{ marginTop: 12 }}>
+                                <div className="detail-section-title">Histórico de Contatos</div>
+                                {loadingHistory ? (
+                                    <div style={{ fontSize: 11, color: 'var(--t3)' }}>A carregar...</div>
+                                ) : contactHistory.length === 0 ? (
+                                    <div style={{ fontSize: 11, color: 'var(--t3)' }}>Nenhum contato registrado.</div>
+                                ) : (
+                                    contactHistory.map((a) => (
+                                        <div key={a.id} style={{
+                                            display: 'flex', gap: 8, padding: '8px 0',
+                                            borderBottom: '1px solid var(--border)',
+                                            fontSize: 12, alignItems: 'center',
+                                        }}>
+                                            <span style={{ fontSize: 14 }}>{a.icon}</span>
+                                            <span style={{ flex: 1, color: 'var(--t2)' }}>{a.title}</span>
+                                            <span style={{ fontSize: 10, color: 'var(--t3)' }}>
+                                                {new Date(a.createdAt).toLocaleDateString('pt-BR')}
+                                            </span>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
                         </>
                     )}
 
@@ -294,10 +414,20 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                 </div>
 
                 <div className="detail-footer" style={{ padding: 16, borderTop: '1px solid var(--border)', display: 'flex', gap: 8 }}>
-                    <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => handleAction('whatsapp')}>📱 WhatsApp</button>
-                    <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => handleAction('email')}>✉ Email</button>
+                    <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => handleContact('telefone')}>📞 Telefonei</button>
+                    <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => handleContact('email')}>✉ Email</button>
+                    <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => handleContact('whatsapp')}>💬 WhatsApp</button>
                     <button className="btn btn-danger btn-sm" onClick={handleDelete}>🗑</button>
                 </div>
+
+                {/* Email Template Modal */}
+                {emailModalOpen && (
+                    <EmailTemplateModal
+                        lead={lead}
+                        onClose={() => setEmailModalOpen(false)}
+                        onSend={handleEmailSent}
+                    />
+                )}
             </div>
         </>
     );

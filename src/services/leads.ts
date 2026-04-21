@@ -144,6 +144,30 @@ export async function moveLeadPipeline(id: string, stage: string): Promise<Lead>
   return api.patch<Lead>(`/leads/${id}/pipeline`, { stage });
 }
 
+export async function logLeadActivity(leadId: string, channel: string): Promise<void> {
+  return api.post<void>(`/leads/${leadId}/activity`, { channel });
+}
+
+export interface ActivityRecord {
+  id: string;
+  channel: string;
+  title: string;
+  sub: string;
+  icon: string;
+  createdAt: string;
+  userName: string;
+}
+
+export async function fetchLeadActivities(leadId: string, options?: {
+  page?: number;
+  limit?: number;
+}): Promise<{ activities: ActivityRecord[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> {
+  const params: Record<string, string> = {};
+  if (options?.page) params.page = String(options.page);
+  if (options?.limit) params.limit = String(options.limit);
+  return api.get(`/leads/${leadId}/activities`, { params });
+}
+
 export async function fetchDashboardMetrics(): Promise<DashboardMetrics> {
   return api.get<DashboardMetrics>('/leads/dashboard');
 }

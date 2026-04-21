@@ -42,6 +42,7 @@ export interface Lead {
     _importDate?: string;
     _importId?: string;
     _notes?: NoteEntry[];
+    _lastContact?: string;
     _lat?: number;
     _lng?: number;
     _geocodeStatus?: 'pending' | 'ok' | 'failed';
@@ -106,6 +107,19 @@ export interface ActivityEntry {
     sub: string;
     icon: string;
     time: string;
+    channel?: string;
+}
+
+export type ContactChannel = 'telefone' | 'email' | 'whatsapp';
+
+export interface ActivityResponse {
+    id: string;
+    channel: string;
+    title: string;
+    sub: string;
+    icon: string;
+    createdAt: string;
+    userName: string;
 }
 
 export interface AppState {

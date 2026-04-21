@@ -148,3 +148,30 @@ export async function getDashboard(req: AuthRequest, res: Response) {
     return res.status(400).json({ error: error.message });
   }
 }
+
+export async function logActivity(req: AuthRequest, res: Response) {
+  try {
+    const leadId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const { channel } = req.body;
+    if (!channel || !['telefone', 'email', 'whatsapp'].includes(channel)) {
+      return res.status(400).json({ error: 'Canal de contato inválido' });
+    }
+    await leadService.logLeadActivity(req.organizationId!, req.userId!, leadId, channel);
+    return res.status(200).json({ success: true });
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message });
+  }
+}
+
+export async function getActivities(req: AuthRequest, res: Response) {
+  try {
+    const leadId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const page = parseInt(String(req.query.page || '1'), 10);
+    const limit = parseInt(String(req.query.limit || '20'), 10);
+    const orgId = isSuperAdmin(req.userRole!) ? undefined : req.organizationId;
+    const result = await leadService.getLeadActivities(leadId, orgId, page, limit);
+    return res.status(200).json(result);
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message });
+  }
+}

@@ -42,6 +42,7 @@ function leadFromBackendFormat(lead: any): Lead {
         _importDate: lead.importDate,
         _importId: lead.importId,
         _notes: lead.notes,
+        _lastContact: lead.lastContact || undefined,
         _lat: lead.lat,
         _lng: lead.lng,
         _geocodeStatus: lead.geocodeStatus,
