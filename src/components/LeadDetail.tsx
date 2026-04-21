@@ -31,24 +31,36 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     const [contactHistory, setContactHistory] = useState<Array<{ id: string; channel: string; title: string; sub: string; icon: string; createdAt: string; userName: string }>>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
 
-    // Todos os hooks DEVEM ser chamados ANTES de qualquer early return
+    // Buscar lead - NÃO é um hook, pode ficar onde quiser
     const lead = leads.find((l) => l.id === leadId);
+
+    // Fetch contact history - DEVE estar antes do early return
+    useEffect(() => {
+        if (!leadId) {
+            setContactHistory([]);
+            return;
+        }
+        // Não dependemos de lead dentro do useEffect para evitar re-renders desnecessários
+        // O lead será pego dentro via leadId (assumimos que lead já está disponível)
+        const currentLead = leads.find(l => l.id === leadId);
+        if (!currentLead) {
+            setContactHistory([]);
+            return;
+        }
+        setLoadingHistory(true);
+        leadApi.fetchLeadActivities(currentLead.id, { limit: 10 })
+            .then((result) => setContactHistory(result.activities || []))
+            .catch((err) => {
+                console.error('Failed to fetch activities:', err);
+                setContactHistory([]);
+            })
+            .finally(() => setLoadingHistory(false));
+    }, [leadId, leads]); // Dependemos apenas de leadId e leads
 
     // Early return DEPOIS de todos os hooks
     if (!lead) {
         return <div className={`detail-panel${leadId ? ' open' : ''}`} />;
     }
-
-    // Fetch contact history when lead changes
-    useEffect(() => {
-        if (leadId && lead) {
-            setLoadingHistory(true);
-            leadApi.fetchLeadActivities(lead.id, { limit: 10 })
-                .then((result) => setContactHistory(result.activities))
-                .catch((err) => console.error('Failed to fetch activities:', err))
-                .finally(() => setLoadingHistory(false));
-        }
-    }, [leadId, lead?.id]);
 
     const nameCol = detectNameCol(leads);
     const catCol = detectCatCol(leads);
@@ -219,7 +231,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
             });
             const labels = { telefone: 'Telefonei', email: 'Email enviado', whatsapp: 'WhatsApp enviado' };
             toast(`${labels[channel]} · Registo guardado.`, 'success');
-            refreshContactHistory();
+            // O useEffect já atualiza o histórico automaticamente
         } catch (err) {
             console.error('Failed to log contact:', err);
             toast('Erro ao registar contato.', 'error');
@@ -235,18 +247,9 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                 payload: { id: lead.id, fields: { _lastContact: new Date().toISOString() } },
             });
             toast('Email registrado.', 'success');
-            refreshContactHistory();
+            // O useEffect já atualiza o histórico automaticamente
         } catch (err) {
             console.error('Failed to log email:', err);
-        }
-    };
-
-    const refreshContactHistory = async () => {
-        try {
-            const result = await leadApi.fetchLeadActivities(lead.id, { limit: 10 });
-            setContactHistory(result.activities);
-        } catch (err) {
-            console.error('Failed to fetch activities:', err);
         }
     };
 
