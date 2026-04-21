@@ -18,12 +18,23 @@ const corsOrigins = env.CORS_ORIGIN
   .map(s => s.replaceAll('\\n', '').replaceAll('\n', '').trim())
   .filter(Boolean);
 console.log('[ORCA API] CORS Origins:', corsOrigins);
-app.use(cors({
-  origin: corsOrigins,
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g. server-to-server, curl)
+    if (!origin) return callback(null, true);
+    if (corsOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS: origin '${origin}' not allowed`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-}));
+  optionsSuccessStatus: 200,
+};
+
+// Handle preflight requests BEFORE all other middleware
+app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -73,10 +84,6 @@ app.use('/api/admin', adminRoutes);
 
 app.use('/api/leads', leadRoutes);
 app.use('/api/scan', scanRoutes);
-
-app.options('/api/*', (_req: Request, res: Response) => {
-  res.status(200).end();
-});
 
 const PORT = Number(process.env.PORT || env.PORT || 3333);
 
