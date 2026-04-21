@@ -168,96 +168,98 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
         const numCol = scoreCol || null;
         const importId = 'imp_' + Date.now();
 
-        // Debug: log column info
-        console.log('[Import] Excel columns:', cols);
-        console.log('[Import] Column mappings:', columnMappings);
-
-        // Build user-defined column mapping: original column name -> standard field key
-        const userMapping: Record<string, string> = {};
+        // Build mapping: original column name -> standard field key
+        const mapping: Record<string, string> = {};
         for (const m of columnMappings) {
             if (m.standardKey) {
-                userMapping[m.originalName] = m.standardKey;
+                mapping[m.originalName] = m.standardKey;
             }
         }
-        console.log('[Import] User mappings (auto-detected):', userMapping);
 
-        // Detect source type
-        const sourceType = detectSourceType(cols);
-        console.log('[Import] Detected source type:', sourceType);
+        console.log('[Import] Excel columns:', cols);
+        console.log('[Import] Active mappings:', mapping);
 
         // Use sanitized data if available, otherwise fall back to original
         const importData = sanitizedData.length > 0 ? sanitizedData : data;
 
         const newLeads: Lead[] = importData.map((row, i) => {
-            // Map row to canonical Lead fields
-            const mapped = mapRowToLead(row as Record<string, any>, sourceType, cols) as Lead;
+            // Build lead from explicit column mappings (user-selected or auto-detected)
+            // Don't rely on mapRowToLead — it uses fuzzy matching that often fails
+            const lead: Lead = {
+                id: 'lead_' + Date.now() + '_' + i,
+                nome: '', segmento: '', avaliacao: null, reviews: null,
+                preco: '', endereco: '', cidade: '', status: '', horario: '',
+                telefone: '', website: '', email: '', servicos: [],
+                foto: '', fotos: [], linkOrigem: '', linkPedido: '', observacoes: '',
+                _score: 0, _pipeline: 'novo', _importedAt: Date.now(),
+                _importFile: file, _importDate: new Date().toISOString(),
+                _importId: importId, _raw: {},
+            };
 
-            // Override with user-defined column mappings when available
-            if (Object.keys(userMapping).length > 0) {
-                for (const [originalCol, standardKey] of Object.entries(userMapping)) {
-                    const value = row[originalCol];
-                    if (value !== undefined && value !== null && value !== '') {
-                        (mapped as any)[standardKey] = typeof value === 'string' ? value.trim() : value;
+            // Apply each mapped column
+            for (const [originalCol, standardKey] of Object.entries(mapping)) {
+                const value = row[originalCol];
+                if (value !== undefined && value !== null && String(value).trim() !== '') {
+                    if (['avaliacao', 'reviews'].includes(standardKey)) {
+                        const num = parseFloat(String(value).replace(',', '.'));
+                        if (standardKey === 'avaliacao') lead.avaliacao = isNaN(num) ? null : num;
+                        if (standardKey === 'reviews') lead.reviews = isNaN(num) ? null : Math.round(num);
+                    } else if (standardKey === 'servicos') {
+                        lead.servicos = Array.isArray(value) ? value : String(value).split(';').map((s: string) => s.trim()).filter(Boolean);
+                    } else if (standardKey === 'fotos') {
+                        lead.fotos = Array.isArray(value) ? value : String(value).split(';').map((s: string) => s.trim()).filter(Boolean);
+                    } else {
+                        (lead as any)[standardKey] = String(value).trim();
                     }
                 }
             }
 
-            // Debug: first row
-            if (i === 0) {
-                console.log('[Import] First raw row:', row);
-                console.log('[Import] User mapping applied values:', Object.fromEntries(Object.entries(userMapping).map(([k, v]) => [v, row[k]])));
-                console.log('[Import] Lead result:', { nome, segmento, telefone, email, endereco });
+            // If no mappings exist, fall back to auto-detector
+            if (Object.keys(mapping).length === 0) {
+                const sourceType = detectSourceType(cols);
+                const mapped = mapRowToLead(row as Record<string, any>, sourceType, cols);
+                for (const key of Object.keys(mapped)) {
+                    if (mapped[key as keyof typeof mapped] !== null && mapped[key as keyof typeof mapped] !== undefined && mapped[key as keyof typeof mapped] !== '') {
+                        (lead as any)[key] = mapped[key as keyof typeof mapped];
+                    }
+                }
+                if (typeof mapped.avaliacao === 'number') lead.avaliacao = mapped.avaliacao;
+                if (typeof mapped.reviews === 'number') lead.reviews = mapped.reviews;
+                if (Array.isArray(mapped.servicos) && mapped.servicos.length > 0) lead.servicos = mapped.servicos;
+                if (Array.isArray(mapped.fotos) && mapped.fotos.length > 0) lead.fotos = mapped.fotos;
             }
-            const nome: string = mapped.nome || '';
-            const segmento: string = mapped.segmento || '';
-            const avaliacao: number | null = mapped.avaliacao ?? null;
-            const reviews: number | null = mapped.reviews ?? null;
-            const preco: string = mapped.preco || '';
-            const endereco: string = mapped.endereco || '';
-            const status: string = mapped.status || '';
-            const horario: string = mapped.horario || '';
-            const telefone: string = mapped.telefone || '';
-            const website: string = mapped.website || '';
-            const email: string = mapped.email || '';
-            const servicos: string[] = Array.isArray(mapped.servicos) ? mapped.servicos : [];
-            const foto: string = mapped.foto || '';
-            const fotos: string[] = Array.isArray(mapped.fotos) ? mapped.fotos : [];
-            const linkOrigem: string = mapped.linkOrigem || '';
-            const linkPedido: string = mapped.linkPedido || '';
-            const observacoes: string = mapped.observacoes || '';
-            const _raw: Record<string, any> = mapped._raw || {};
-            
-            // Calculate score using canonical fields
+
+            // Debug first row
+            if (i === 0) {
+                console.log('[Import] First row:', {
+                    nome: lead.nome, segmento: lead.segmento,
+                    telefone: lead.telefone, email: lead.email,
+                    endereco: lead.endereco, cidade: lead.cidade,
+                });
+            }
+
+            // Calculate score
             const leadData = {
-                nome, segmento, avaliacao: avaliacao ?? 0, reviews: reviews ?? 0,
-                preco, endereco, status, horario, telefone, website, email, servicos,
-                foto, fotos, linkOrigem, linkPedido, observacoes, _raw,
+                nome: lead.nome, segmento: lead.segmento,
+                avaliacao: lead.avaliacao ?? 0, reviews: lead.reviews ?? 0,
+                preco: lead.preco, endereco: lead.endereco, status: lead.status,
+                horario: lead.horario, telefone: lead.telefone, website: lead.website,
+                email: lead.email, servicos: lead.servicos, foto: lead.foto,
+                fotos: lead.fotos, linkOrigem: lead.linkOrigem, leadPedido: lead.linkPedido,
+                observacoes: lead.observacoes, _raw: lead._raw,
             };
             let score = computeScore(leadData, numCol, data as Record<string, unknown>[]);
-            
-            // Apply score boosts based on canonical fields
-            const hasRating = avaliacao !== null && avaliacao > 0;
-            const hasReviews = reviews !== null && reviews > 0;
-            
-            if (hasRating && avaliacao >= 4.5 && hasReviews && reviews >= 100) score += 2;
-            if (hasRating && avaliacao >= 4.0) score += 1;
-            if (preco.includes('15') || preco.includes('20')) score += 1;
-            if (servicos.some(s => s.toLowerCase().includes('delivery'))) score += 0.5;
-            if (status === 'Aberto' || status === 'Ativo') score += 0.5;
-            if (website) score += 0.5;
-            if (email) score += 0.5;
 
-            return {
-                id: 'lead_' + Date.now() + '_' + i,
-                _score: score,
-                _pipeline: 'novo' as const,
-                _importedAt: Date.now(),
-                _importFile: file,
-                _importDate: new Date().toISOString(),
-                _importId: importId,
-                nome, segmento, avaliacao, reviews, preco, endereco, status, horario,
-                telefone, website, email, servicos, foto, fotos, linkOrigem, linkPedido, observacoes, _raw,
-            };
+            // Score boosts
+            if (lead.avaliacao !== null && lead.avaliacao >= 4 && lead.reviews !== null && lead.reviews > 0) score += 1;
+            if (lead.preco.includes('15') || lead.preco.includes('20')) score += 1;
+            if (lead.servicos.some(s => s.toLowerCase().includes('delivery'))) score += 0.5;
+            if (lead.status === 'Aberto' || lead.status === 'Ativo') score += 0.5;
+            if (lead.website) score += 0.5;
+            if (lead.email) score += 0.5;
+
+            lead._score = score;
+            return lead;
         });
 
         const importRecord = {
