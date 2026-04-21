@@ -42,16 +42,21 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     const cat = getLeadCategory(lead, catCol);
     const cls = scoreClass(lead._score, settings.hotThreshold, settings.warmThreshold);
 
-    const fields = Object.entries(lead).filter(([k, v]) => {
-        if (['id', '_score', '_pipeline', '_importFile', '_importDate', '_notes', '_raw',
-             '_geocodeStatus', '_lat', '_lng', '_distance', '_importId',
-             'servicos', 'fotos'].includes(k)) return false;
-        if (k.startsWith('_')) return false;
-        if (v === null || v === undefined || v === '') return false;
-        if (Array.isArray(v)) return false;
-        if (typeof v === 'object') return false;
-        return true;
-    });
+    const fields = [
+        ['nome', String(lead.nome || '')],
+        ['segmento', String(lead.segmento || '')],
+        ['avaliacao', lead.avaliacao != null ? String(lead.avaliacao) : ''],
+        ['reviews', lead.reviews != null ? String(lead.reviews) : ''],
+        ['preco', String(lead.preco || '')],
+        ['endereco', String(lead.endereco || '')],
+        ['cidade', String(lead.cidade || '')],
+        ['status', String(lead.status || '')],
+        ['horario', String(lead.horario || '')],
+        ['telefone', String(lead.telefone || '')],
+        ['website', String(lead.website || '')],
+        ['email', String(lead.email || '')],
+        ['observacoes', String(lead.observacoes || '')],
+    ].filter(([_, v]) => v !== '');
     const fieldLabel = (k: string) => {
         const map: Record<string, string> = {
             id: 'ID',
