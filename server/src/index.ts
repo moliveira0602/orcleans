@@ -79,11 +79,15 @@ app.options('/api/*', (_req: Request, res: Response) => {
 });
 
 const PORT = Number(process.env.PORT || env.PORT || 3333);
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[ORCA API] Server running on http://0.0.0.0:${PORT}`);
-  console.log(`[ORCA API] NODE_ENV=${process.env.NODE_ENV}`);
-  console.log(`[ORCA API] DB configured: ${process.env.DATABASE_URL ? 'yes' : 'no'}`);
-});
+
+// Only start listening when not running in Vercel serverless mode
+const server = process.env.VERCEL
+  ? undefined
+  : app.listen(PORT, '0.0.0.0', () => {
+      console.log(`[ORCA API] Server running on http://0.0.0.0:${PORT}`);
+      console.log(`[ORCA API] NODE_ENV=${process.env.NODE_ENV}`);
+      console.log(`[ORCA API] DB configured: ${process.env.DATABASE_URL ? 'yes' : 'no'}`);
+    });
 
 export { app, server };
 export default app;
