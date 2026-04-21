@@ -55,7 +55,12 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                 setContactHistory([]);
             })
             .finally(() => setLoadingHistory(false));
-    }, [leadId, leads]); // Dependemos apenas de leadId e leads
+    }, [leadId, leads]);
+
+    // Reset activeTab para 'info' quando o leadId muda
+    useEffect(() => {
+        setActiveTab('info');
+    }, [leadId]); // Dependemos apenas de leadId e leads
 
     // Early return DEPOIS de todos os hooks
     if (!lead) {
