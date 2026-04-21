@@ -217,6 +217,13 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                 }
             }
 
+            // Debug first row - show raw keys and values
+            if (i === 0) {
+                console.log('[Import] RAW first row keys:', Object.keys(row));
+                console.log('[Import] RAW first row data:', JSON.stringify(row));
+                console.log('[Import] Mapped fields:', Object.entries(mapping).map(([k, v]) => k + ': ' + JSON.stringify(row[k]) + ' -> ' + v));
+            }
+
             // If no mappings exist, fall back to auto-detector
             if (Object.keys(mapping).length === 0) {
                 const mapped = mapRowToLead(row as Record<string, any>, sourceType, cols);
