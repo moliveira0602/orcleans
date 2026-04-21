@@ -1001,71 +1001,21 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                         </div>
 
                         <div style={{ flex: 1, overflowY: 'auto', padding: '0 4px' }}>
-                            {/* Section 0: Data Source */}
-                            <div style={{ marginBottom: 20 }}>
-                                <label style={formLabelStyle}>📊 Fonte de Dados</label>
-                                <div style={{ display: 'flex', gap: 8 }}>
-                                    <button
-                                        onClick={() => {
-                                            setScanSource('demo');
-                                            localStorage.setItem('orca_scan_source', 'demo');
-                                        }}
-                                        style={{
-                                            flex: 1,
-                                            padding: '12px 16px',
-                                            borderRadius: 8,
-                                            border: `1px solid ${scanSource === 'demo' ? 'var(--green)' : 'var(--border)'}`,
-                                            background: scanSource === 'demo' ? 'rgba(16,217,160,0.1)' : 'transparent',
-                                            cursor: 'pointer',
-                                            textAlign: 'left',
-                                        }}
-                                    >
-                                        <div style={{ fontSize: 13, fontWeight: 600, color: scanSource === 'demo' ? 'var(--green)' : 'var(--t1)' }}>🧪 Modo Demo</div>
-                                        <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>Dados fictícios para testes</div>
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setScanSource('google');
-                                            localStorage.setItem('orca_scan_source', 'google');
-                                        }}
-                                        style={{
-                                            flex: 1,
-                                            padding: '12px 16px',
-                                            borderRadius: 8,
-                                            border: `1px solid ${scanSource === 'google' ? 'var(--blue)' : 'var(--border)'}`,
-                                            background: scanSource === 'google' ? 'rgba(0,194,255,0.1)' : 'transparent',
-                                            cursor: 'pointer',
-                                            textAlign: 'left',
-                                        }}
-                                    >
-                                        <div style={{ fontSize: 13, fontWeight: 600, color: scanSource === 'google' ? 'var(--blue)' : 'var(--t1)' }}>🔍 Google Places</div>
-                                        <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>Dados reais via API</div>
-                                    </button>
+                            {/* Google API Key status - always Google Places */}
+                            {!GOOGLE_KEY && (
+                                <input
+                                    className="input mb-20"
+                                    type="password"
+                                    placeholder="Google API Key para o Sonar"
+                                    value={customApiKey}
+                                    onChange={(e) => setCustomApiKey(e.target.value)}
+                                />
+                            )}
+                            {GOOGLE_KEY && (
+                                <div style={{ fontSize: 11, color: 'var(--green)', marginBottom: 16 }}>
+                                    ✓ Google Places API configurada
                                 </div>
-                                {scanSource === 'google' && (
-                                    <div style={{ marginTop: 12 }}>
-                                        {!GOOGLE_KEY && (
-                                            <input
-                                                type="password"
-                                                className="input"
-                                                placeholder="Cole a tua Google API Key"
-                                                value={customApiKey}
-                                                onChange={(e) => setCustomApiKey(e.target.value)}
-                                            />
-                                        )}
-                                        {GOOGLE_KEY && (
-                                            <div style={{ fontSize: 11, color: 'var(--green)', marginTop: 4 }}>
-                                                ✓ A usar a API Key configurada no sistema
-                                            </div>
-                                        )}
-                                        {!GOOGLE_KEY && (
-                                            <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 4 }}>
-                                                💡 Necessário API Key do Google Places (~$17/1000 pesquisas)
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                            )}
 
                             {/* Section 1: Scan Name */}
                             <div style={{ marginBottom: 20 }}>
@@ -1276,19 +1226,6 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                                         </div>
                                     ))}
                                 </div>
-                            </div>
-
-                            {/* Data Source Info */}
-                            <div style={{
-                                background: 'var(--card2)', border: '1px solid var(--border)',
-                                borderRadius: 8, padding: 12, fontSize: 11, color: 'var(--t3)',
-                                display: 'flex', gap: 8, alignItems: 'flex-start'
-                            }}>
-                                <span>🗺️</span>
-                                <span>
-                                    <strong>OpenStreetMap (Nominatim)</strong> — Dados reais, 100% gratuito.
-                                    {scanConfig.categories.length > 0 && ` Scan incluirá: ${scanConfig.categories.map(c => categoryOptions.find(o => o.id === c)?.label).join(', ')}`}
-                                </span>
                             </div>
 
                             {/* Cache Warning */}
