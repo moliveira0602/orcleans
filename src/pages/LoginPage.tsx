@@ -15,6 +15,7 @@ export default function LoginPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log('[LOGIN] handleSubmit called, email:', email, 'isRegister:', isRegister, 'loading:', loading);
         setError('');
         setLoading(true);
 
