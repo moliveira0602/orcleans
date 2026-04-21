@@ -1,4 +1,5 @@
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
+console.log('[API] Base URL:', API_BASE);
 
 interface ApiOptions extends RequestInit {
   params?: Record<string, string>;
@@ -32,6 +33,7 @@ class ApiClient {
   }
 
   private saveTokens(accessToken: string, refreshToken: string) {
+    console.log('[API] saveTokens - token saved:', !!accessToken);
     this.token = accessToken;
     this.refreshToken = refreshToken;
     localStorage.setItem('orca_session', JSON.stringify({ accessToken, refreshToken }));

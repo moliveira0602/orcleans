@@ -7,7 +7,7 @@ headers = []
 [functions."*"]
 
 [build]
-publish = "/Users/certideal/Projetos/ORCA/orcleans/dist"
+publish = "/Users/certideal/Projetos/ORCA/orcleans/orcleans/dist"
 publishOrigin = "ui"
 commandOrigin = "ui"
 command = "npm run build"
