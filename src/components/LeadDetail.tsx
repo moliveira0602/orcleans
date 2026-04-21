@@ -42,8 +42,16 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     const cat = getLeadCategory(lead, catCol);
     const cls = scoreClass(lead._score, settings.hotThreshold, settings.warmThreshold);
 
-    const skipCols = ['id', '_score', '_pipeline', '_importFile', '_importDate', '_notes', '_raw', '_geocodeStatus', '_lat', '_lng', '_distance', '_importId'];
-    const fields = Object.entries(lead).filter(([k, v]) => !skipCols.includes(k) && !k.startsWith('_') && (v !== null && v !== undefined && v !== '' && typeof v !== 'object'));
+    const fields = Object.entries(lead).filter(([k, v]) => {
+        if (['id', '_score', '_pipeline', '_importFile', '_importDate', '_notes', '_raw',
+             '_geocodeStatus', '_lat', '_lng', '_distance', '_importId',
+             'servicos', 'fotos'].includes(k)) return false;
+        if (k.startsWith('_')) return false;
+        if (v === null || v === undefined || v === '') return false;
+        if (Array.isArray(v)) return false;
+        if (typeof v === 'object') return false;
+        return true;
+    });
     const fieldLabel = (k: string) => {
         const map: Record<string, string> = {
             id: 'ID',
