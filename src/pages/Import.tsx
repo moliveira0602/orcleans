@@ -168,6 +168,10 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
         const numCol = scoreCol || null;
         const importId = 'imp_' + Date.now();
 
+        // Debug: log column info
+        console.log('[Import] Excel columns:', cols);
+        console.log('[Import] Column mappings:', columnMappings);
+
         // Build user-defined column mapping: original column name -> standard field key
         const userMapping: Record<string, string> = {};
         for (const m of columnMappings) {
@@ -175,9 +179,11 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                 userMapping[m.originalName] = m.standardKey;
             }
         }
+        console.log('[Import] User mappings (auto-detected):', userMapping);
 
         // Detect source type
         const sourceType = detectSourceType(cols);
+        console.log('[Import] Detected source type:', sourceType);
 
         // Use sanitized data if available, otherwise fall back to original
         const importData = sanitizedData.length > 0 ? sanitizedData : data;
@@ -196,7 +202,12 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                 }
             }
 
-            // Extract fields with proper typing
+            // Debug: first row
+            if (i === 0) {
+                console.log('[Import] First raw row:', row);
+                console.log('[Import] User mapping applied values:', Object.fromEntries(Object.entries(userMapping).map(([k, v]) => [v, row[k]])));
+                console.log('[Import] Lead result:', { nome, segmento, telefone, email, endereco });
+            }
             const nome: string = mapped.nome || '';
             const segmento: string = mapped.segmento || '';
             const avaliacao: number | null = mapped.avaliacao ?? null;
