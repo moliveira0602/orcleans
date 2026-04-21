@@ -182,8 +182,9 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
         // Detect source type for toast and fallback
         const sourceType = detectSourceType(cols);
 
-        // Use sanitized data if available, otherwise fall back to original
-        const importData = sanitizedData.length > 0 ? sanitizedData : data;
+        // Always use raw data - column mappings handle the transformation.
+        // sanitizedData loses original column names which breaks the mapping.
+        const importData = data;
 
         const newLeads: Lead[] = importData.map((row, i) => {
             // Build lead from explicit column mappings (user-selected or auto-detected)
