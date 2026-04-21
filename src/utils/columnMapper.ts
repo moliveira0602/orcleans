@@ -27,14 +27,15 @@ export const STANDARD_COLUMNS = {
 export type StandardColumnKey = keyof typeof STANDARD_COLUMNS;
 
 // Column name variations that map to each standard column
+// Ordering matters: more specific mappings must come before broader ones
 const COLUMN_MAPPINGS: Record<StandardColumnKey, string[]> = {
-    nome: ['nome', 'name', 'empresa', 'company', 'business', 'razao social', 'razão social', 'fantasia', 'trade name', 'titulo', 'title', 'estabelecimento'],
+    nome: ['nome', 'name', 'empresa', 'company', 'business', 'razao social', 'razão social', 'fantasia', 'trade name', 'titulo', 'title', 'estabelecimento', 'entidade', 'cliente', 'negocio', 'negócio'],
     segmento: ['segmento', 'segment', 'categoria', 'category', 'tipo', 'type', 'nicho', 'niche', 'area', 'ramo', 'atividade', 'industry'],
     avaliacao: ['avaliacao', 'avaliação', 'rating', 'stars', 'estrelas', 'nota', 'score', 'grade', 'classificacao', 'classificação'],
     reviews: ['reviews', 'avaliacoes', 'avaliações', 'comentarios', 'comments', 'feedback', 'opiniao', 'opinião', 'num_reviews', 'total_reviews', 'qtd_reviews'],
     preco: ['preco', 'preço', 'price', 'valor', 'cost', 'ticket', 'faixa_preco', 'faixa de preco', 'faixa de preço', 'price_range'],
-    endereco: ['endereco', 'endereço', 'address', 'localizacao', 'localização', 'local', 'location', 'morada', 'bairro', 'neighborhood'],
-    cidade: ['cidade', 'city', 'vil', 'town', 'localidade', 'municipio', 'município', 'concelho'],
+    cidade: ['localidade', 'cidade', 'city', 'vil', 'town', 'municipio', 'município', 'concelho'],
+    endereco: ['endereco', 'endereço', 'address', 'localizacao', 'localização', 'morada', 'bairro', 'neighborhood'],
     status: ['status', 'situacao', 'situação', 'state', 'aberto', 'open', 'fechado', 'closed', 'ativo', 'active', 'condicao', 'condição'],
     horario: ['horario', 'horário', 'hours', 'opening_hours', 'funcionamento', 'abertura', 'fechamento', 'schedule', 'expediente'],
     telefone: ['telefone', 'phone', 'tel', 'contato', 'contact', 'whatsapp', 'zap', 'celular', 'mobile', 'fone', 'number', 'numero'],
@@ -45,7 +46,7 @@ const COLUMN_MAPPINGS: Record<StandardColumnKey, string[]> = {
     fotos: ['fotos', 'photos', 'images', 'imagens', 'pictures', 'galeria', 'gallery', 'album'],
     linkOrigem: ['link_origem', 'linkorigem', 'source_url', 'source', 'origem', 'origin', 'url_origem', 'url origem', 'pagina_origem', 'pagina origem'],
     linkPedido: ['link_pedido', 'linkpedido', 'order_url', 'order', 'pedido', 'delivery_link', 'delivery', 'iFood', 'ifood', 'uber_eats', 'ubereats'],
-    observacoes: ['observacoes', 'observações', 'notes', 'notas', 'obs', 'descricao', 'descrição', 'description', 'detalhes', 'details', 'comentarios', 'comments'],
+    observacoes: ['observacoes', 'observações', 'notes', 'notas', 'obs', 'descricao', 'descrição', 'description', 'detalhes', 'details', 'comentarios', 'comments', 'contribuinte', 'nif', 'nuit', 'cnpj'],
 };
 
 /**
