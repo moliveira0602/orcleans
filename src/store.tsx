@@ -203,12 +203,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 updateState({ isLoading: action.payload });
                 break;
             case 'IMPORT_LEADS': {
-                // Add import record to local state only (backend sync handled by caller)
-                updateState({ imports: [...state.imports, { ...action.payload.record, rows: action.payload.leads.length }] });
+                updateState({
+                    leads: [...state.leads, ...action.payload.leads],
+                    imports: [...state.imports, { ...action.payload.record, rows: action.payload.leads.length }],
+                });
                 break;
             }
             case 'UPSERT_LEADS': {
-                updateState({ imports: [...state.imports, { ...action.payload.record, rows: action.payload.leads.length }] });
+                // Update or insert leads based on mode
+                const upserted = [...state.leads];
+                for (const newLead of action.payload.leads) {
+                    const existingIndex = upserted.findIndex(l =>
+                        l.nome === newLead.nome && (
+                            (l.telefone && newLead.telefone && l.telefone === newLead.telefone) ||
+                            (l.email && newLead.email && l.email === newLead.email)
+                        )
+                    );
+                    if (action.payload.mode === 'update' && existingIndex !== -1) {
+                        upserted[existingIndex] = { ...upserted[existingIndex], ...newLead };
+                    } else if (existingIndex === -1) {
+                        upserted.push(newLead);
+                    }
+                }
+                // Rebuild pipeline
+                const newPipeline: PipelineMap = { novo: [], qualificado: [], proposta: [], negociacao: [], ganho: [], perdido: [] };
+                for (const lead of upserted) {
+                    const stage = lead._pipeline as PipelineStage;
+                    if (stage && newPipeline[stage] !== undefined) {
+                        newPipeline[stage].push(lead.id);
+                    } else {
+                        newPipeline.novo.push(lead.id);
+                    }
+                }
+                updateState({
+                    leads: upserted,
+                    pipeline: newPipeline,
+                    imports: [...state.imports, { ...action.payload.record, rows: action.payload.leads.length }],
+                });
                 break;
             }
             case 'DELETE_IMPORT': {

@@ -4,7 +4,7 @@ import { useAppState, useAppDispatch, leadFingerprint, useApp } from '../store';
 import { useToast } from '../components/Toast';
 import { computeScore } from '../utils/scoring';
 import { detectSourceType, mapRowToLead } from '../utils/leadMapper';
-import { analyzeColumns, getColumnAnalysisSummary, type ColumnMapping, type StandardColumnKey } from '../utils/columnMapper';
+import { analyzeColumns, getColumnAnalysisSummary, STANDARD_COLUMNS, type ColumnMapping, type StandardColumnKey } from '../utils/columnMapper';
 import { sanitizeImportedData, getSanitizationSummary, type SanitizationSummary, type SanitizedLeadData } from '../utils/dataSanitizer';
 import type { Lead } from '../types';
 import type { Page } from '../components/Layout';
@@ -473,52 +473,124 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                         {/* Column Mapping Preview */}
                         {columnMappings.length > 0 && (
                             <div style={{ marginBottom: 16 }}>
-                                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
+                                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>
                                     Mapeamento de Colunas
                                 </div>
+
+                                {/* Available platform columns reference */}
+                                <div style={{ marginBottom: 10, padding: 10, background: 'var(--bg3)', borderRadius: 8 }}>
+                                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>
+                                        Colunas disponíveis na plataforma
+                                    </div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                        {Object.entries(STANDARD_COLUMNS).map(([key, label]) => {
+                                            const isUsed = columnMappings.some(m => m.standardKey === key);
+                                            return (
+                                                <span
+                                                    key={key}
+                                                    style={{
+                                                        fontSize: 10, padding: '2px 8px', borderRadius: 4,
+                                                        background: isUsed ? 'rgba(16,185,129,0.15)' : 'var(--card)',
+                                                        border: `1px solid ${isUsed ? 'rgba(16,185,129,0.3)' : 'var(--border)'}`,
+                                                        color: isUsed ? 'var(--green)' : 'var(--t3)',
+                                                        textDecoration: isUsed ? 'underline' : 'none',
+                                                    }}
+                                                    title={isUsed ? 'Já mapeada' : 'Não mapeada'}
+                                                >
+                                                    {label}
+                                                    {isUsed && ' ✓'}
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
                                 <div style={{
-                                    display: 'flex', flexWrap: 'wrap', gap: 6, padding: 12,
-                                    background: 'var(--card)', borderRadius: 8, border: '1px solid var(--border)',
+                                    display: 'flex', flexDirection: 'column', gap: 4,
                                 }}>
-                                    {columnMappings.map((mapping) => (
+                                    {columnMappings.map((mapping, idx) => (
                                         <div
                                             key={mapping.originalName}
                                             style={{
-                                                display: 'flex', alignItems: 'center', gap: 6,
-                                                padding: '6px 10px', borderRadius: 6,
-                                                background: mapping.isStandard ? 'var(--green-dim)' : 'var(--amber-dim)',
-                                                border: `1px solid ${mapping.isStandard ? 'rgba(16,185,129,.3)' : 'rgba(245,158,11,.3)'}`,
-                                                cursor: 'pointer',
+                                                display: 'flex', alignItems: 'center', gap: 8,
+                                                padding: '8px 12px', borderRadius: 8,
+                                                background: mapping.isStandard ? 'rgba(16,185,129,0.06)' : 'rgba(245,158,11,0.06)',
+                                                border: `1px solid ${mapping.isStandard ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.2)'}`,
                                                 transition: 'all var(--transition)',
                                             }}
-                                            onClick={() => handleColumnEdit(mapping.originalName)}
-                                            title="Clique para editar"
                                         >
-                                            <span style={{ fontSize: 11, color: 'var(--t3)' }}>{mapping.originalName}</span>
+                                            {/* Column index + original name */}
+                                            <span style={{ fontSize: 9, color: 'var(--t4)', minWidth: 16 }}>#{idx + 1}</span>
+                                            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)', minWidth: 100, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {mapping.originalName}
+                                            </span>
+
                                             <span style={{ fontSize: 10, color: 'var(--t3)' }}>→</span>
+
                                             {editingColumn === mapping.originalName ? (
-                                                <input
+                                                <select
                                                     autoFocus
-                                                    value={editValue}
-                                                    onChange={(e) => setEditValue(e.target.value)}
+                                                    value={mapping.standardKey || '__custom__'}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (val === '__custom__') {
+                                                            setColumnMappings(prev => prev.map(m =>
+                                                                m.originalName === mapping.originalName
+                                                                    ? { ...m, standardKey: null, suggestedName: mapping.originalName, isStandard: false }
+                                                                    : m
+                                                            ));
+                                                        } else {
+                                                            const key = val as StandardColumnKey;
+                                                            setColumnMappings(prev => prev.map(m =>
+                                                                m.originalName === mapping.originalName
+                                                                    ? { ...m, standardKey: key, suggestedName: STANDARD_COLUMNS[key], isStandard: true }
+                                                                    : m
+                                                            ));
+                                                        }
+                                                    }}
+                                                    onBlur={() => handleColumnCancel()}
                                                     onKeyDown={(e) => {
-                                                        if (e.key === 'Enter') handleColumnSave(mapping.originalName);
-                                                        if (e.key === 'Escape') handleColumnCancel();
+                                                        if (e.key === 'Enter' || e.key === 'Escape') handleColumnCancel();
                                                     }}
-                                                    onBlur={() => handleColumnSave(mapping.originalName)}
                                                     style={{
-                                                        width: 80, fontSize: 11, padding: '2px 4px',
+                                                        flex: 1, maxWidth: 220, fontSize: 11, padding: '4px 8px',
                                                         background: 'var(--bg4)', border: '1px solid var(--blue)',
-                                                        color: 'var(--t1)', borderRadius: 4,
+                                                        color: 'var(--t1)', borderRadius: 6, cursor: 'pointer',
                                                     }}
-                                                />
+                                                >
+                                                    {Object.entries(STANDARD_COLUMNS).map(([key, label]) => (
+                                                        <option key={key} value={key}>{label}</option>
+                                                    ))}
+                                                    <option value="__custom__">Manter original</option>
+                                                </select>
                                             ) : (
-                                                <span style={{ fontSize: 11, fontWeight: 600, color: mapping.isStandard ? 'var(--green)' : 'var(--amber)' }}>
-                                                    {mapping.suggestedName}
-                                                </span>
+                                                <div
+                                                    onClick={() => handleColumnEdit(mapping.originalName)}
+                                                    style={{
+                                                        cursor: 'pointer',
+                                                        display: 'flex', alignItems: 'center', gap: 4,
+                                                    }}
+                                                >
+                                                    <span style={{
+                                                        fontSize: 11, fontWeight: 600,
+                                                        color: mapping.isStandard ? 'var(--green)' : 'var(--amber)',
+                                                    }}>
+                                                        {mapping.suggestedName}
+                                                    </span>
+                                                    {mapping.isStandard ? (
+                                                        <span style={{ fontSize: 11, color: 'var(--green)' }}>✓</span>
+                                                    ) : null}
+                                                </div>
                                             )}
-                                            {mapping.isStandard && (
-                                                <span style={{ fontSize: 9, color: 'var(--green)' }}>✓</span>
+
+                                            {/* Auto-match indicator */}
+                                            {!mapping.isStandard && (
+                                                <span style={{
+                                                    fontSize: 9, color: 'var(--amber)', padding: '1px 5px',
+                                                    borderRadius: 3, background: 'rgba(245,158,11,0.12)',
+                                                }}>
+                                                    pendente
+                                                </span>
                                             )}
                                         </div>
                                     ))}
