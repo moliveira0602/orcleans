@@ -46,6 +46,7 @@ interface Stats {
         name: string;
         plan: string;
         maxLeads: number;
+        maxImportBatch: number;
         maxUsers: number;
         _count: { users: number; leads: number };
         createdAt: string;
@@ -78,6 +79,7 @@ interface Tenant {
     name: string;
     plan: string;
     maxLeads: number;
+    maxImportBatch: number;
     maxUsers: number;
     createdAt: string;
     lastLoginAt: string | null;
@@ -205,6 +207,7 @@ export default function AdminPage() {
     const [newTenantName, setNewTenantName] = useState('');
     const [newTenantPlan, setNewTenantPlan] = useState('starter');
     const [newTenantMaxLeads, setNewTenantMaxLeads] = useState(500);
+    const [newTenantMaxImportBatch, setNewTenantMaxImportBatch] = useState(50);
     const [newTenantMaxUsers, setNewTenantMaxUsers] = useState(1);
 
     const fetchOverview = async () => {
@@ -490,6 +493,7 @@ export default function AdminPage() {
                 name: newTenantName,
                 plan: newTenantPlan,
                 maxLeads: newTenantMaxLeads,
+                maxImportBatch: newTenantMaxImportBatch,
                 maxUsers: newTenantMaxUsers,
             });
             toast('Tenant criado com sucesso!', 'success');
@@ -497,6 +501,7 @@ export default function AdminPage() {
             setNewTenantName('');
             setNewTenantPlan('starter');
             setNewTenantMaxLeads(500);
+            setNewTenantMaxImportBatch(50);
             setNewTenantMaxUsers(1);
             fetchTenants();
             fetchOverview();
@@ -512,6 +517,7 @@ export default function AdminPage() {
         setNewTenantName(tenant.name);
         setNewTenantPlan(tenant.plan);
         setNewTenantMaxLeads(tenant.maxLeads);
+        setNewTenantMaxImportBatch(tenant.maxImportBatch ?? 50);
         setNewTenantMaxUsers(tenant.maxUsers);
         setShowEditTenantModal(true);
     };
@@ -524,6 +530,7 @@ export default function AdminPage() {
                 name: newTenantName,
                 plan: newTenantPlan,
                 maxLeads: newTenantMaxLeads,
+                maxImportBatch: newTenantMaxImportBatch,
                 maxUsers: newTenantMaxUsers,
             });
             toast('Tenant atualizado.', 'success');
@@ -1401,9 +1408,13 @@ export default function AdminPage() {
                                     <input className="input" type="number" value={newTenantMaxLeads} onChange={(e) => setNewTenantMaxLeads(parseInt(e.target.value) || 500)} />
                                 </div>
                                 <div>
-                                    <label className="input-label">Max Users</label>
-                                    <input className="input" type="number" value={newTenantMaxUsers} onChange={(e) => setNewTenantMaxUsers(parseInt(e.target.value) || 1)} />
+                                    <label className="input-label">Max Import Batch</label>
+                                    <input className="input" type="number" value={newTenantMaxImportBatch} onChange={(e) => setNewTenantMaxImportBatch(parseInt(e.target.value) || 50)} />
                                 </div>
+                            </div>
+                            <div>
+                                <label className="input-label">Max Users</label>
+                                <input className="input" type="number" value={newTenantMaxUsers} onChange={(e) => setNewTenantMaxUsers(parseInt(e.target.value) || 1)} />
                             </div>
                         </div>
                         <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>
@@ -1442,9 +1453,13 @@ export default function AdminPage() {
                                     <input className="input" type="number" value={newTenantMaxLeads} onChange={(e) => setNewTenantMaxLeads(parseInt(e.target.value) || 500)} />
                                 </div>
                                 <div>
-                                    <label className="input-label">Max Users</label>
-                                    <input className="input" type="number" value={newTenantMaxUsers} onChange={(e) => setNewTenantMaxUsers(parseInt(e.target.value) || 1)} />
+                                    <label className="input-label">Max Import Batch</label>
+                                    <input className="input" type="number" value={newTenantMaxImportBatch} onChange={(e) => setNewTenantMaxImportBatch(parseInt(e.target.value) || 50)} />
                                 </div>
+                            </div>
+                            <div>
+                                <label className="input-label">Max Users</label>
+                                <input className="input" type="number" value={newTenantMaxUsers} onChange={(e) => setNewTenantMaxUsers(parseInt(e.target.value) || 1)} />
                             </div>
                         </div>
                         <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>

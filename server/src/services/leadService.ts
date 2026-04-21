@@ -44,6 +44,12 @@ export async function createLeadsBulk(organizationId: string, leads: CreateLeadI
     throw new Error('Organização não encontrada');
   }
 
+  // Check import batch limit (separate from total leads limit)
+  const maxBatch = org.maxImportBatch ?? 50;
+  if (leads.length > maxBatch) {
+    throw new Error(`Importação excede o limite de ${maxBatch} leads por vez. Divida o arquivo em partes menores.`);
+  }
+
   const leadCount = await prisma.lead.count({
     where: { organizationId },
   });

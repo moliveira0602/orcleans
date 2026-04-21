@@ -84,6 +84,7 @@ router.get('/stats', async (_req: AuthRequest, res: Response) => {
         name: true,
         plan: true,
         maxLeads: true,
+        maxImportBatch: true,
         _count: {
           select: { users: true, leads: true },
         },
@@ -382,6 +383,7 @@ router.get('/organizations', async (_req: Request, res: Response) => {
         name: true,
         plan: true,
         maxLeads: true,
+        maxImportBatch: true,
         maxUsers: true,
         _count: {
           select: { users: true, leads: true },
@@ -446,7 +448,7 @@ router.get('/tenants', async (_req: AuthRequest, res: Response) => {
 
 router.post('/tenants', async (req: AuthRequest, res: Response) => {
   try {
-    const { name, plan, maxLeads, maxUsers } = req.body;
+    const { name, plan, maxLeads, maxUsers, maxImportBatch } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: 'Nome é obrigatório' });
@@ -457,6 +459,7 @@ router.post('/tenants', async (req: AuthRequest, res: Response) => {
         name,
         plan: plan || 'starter',
         maxLeads: maxLeads || 500,
+        maxImportBatch: maxImportBatch || 50,
         maxUsers: maxUsers || 1,
       },
     });
@@ -473,7 +476,7 @@ router.post('/tenants', async (req: AuthRequest, res: Response) => {
 router.patch('/tenants/:id', async (req: AuthRequest, res: Response) => {
   try {
     const id = getParamId(req.params as Record<string, string | string[]>);
-    const { name, plan, maxLeads, maxUsers } = req.body;
+    const { name, plan, maxLeads, maxUsers, maxImportBatch } = req.body;
 
     if (!id) {
       return res.status(400).json({ error: 'ID é obrigatório' });
@@ -487,8 +490,9 @@ router.patch('/tenants/:id', async (req: AuthRequest, res: Response) => {
     const updateData: Record<string, unknown> = {};
     if (name) updateData.name = name;
     if (plan) updateData.plan = plan;
-    if (maxLeads) updateData.maxLeads = maxLeads;
-    if (maxUsers) updateData.maxUsers = maxUsers;
+    if (maxLeads !== undefined) updateData.maxLeads = maxLeads;
+    if (maxUsers !== undefined) updateData.maxUsers = maxUsers;
+    if (maxImportBatch !== undefined) updateData.maxImportBatch = maxImportBatch;
 
     const updated = await prisma.organization.update({
       where: { id },
@@ -617,7 +621,7 @@ router.post('/tenants/:id/users', async (req: AuthRequest, res: Response) => {
 
 router.post('/organizations', async (req: AuthRequest, res: Response) => {
   try {
-    const { name, plan, maxLeads, maxUsers } = req.body;
+    const { name, plan, maxLeads, maxUsers, maxImportBatch } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: 'Nome é obrigatório' });
@@ -628,6 +632,7 @@ router.post('/organizations', async (req: AuthRequest, res: Response) => {
         name,
         plan: plan || 'starter',
         maxLeads: maxLeads || 500,
+        maxImportBatch: maxImportBatch || 50,
         maxUsers: maxUsers || 1,
       },
     });
