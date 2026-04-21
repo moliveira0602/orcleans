@@ -8,6 +8,7 @@ export interface Lead {
   reviews: number | null;
   preco: string;
   endereco: string;
+  cidade: string;
   status: string;
   horario: string;
   telefone: string;

@@ -61,6 +61,8 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
             Phone: 'Telefone',
             telefone: 'Telefone',
             email: 'Email',
+            cidade: 'Cidade',
+            Cidade: 'Cidade',
             Email: 'Email',
             website: 'Website',
             Website: 'Website',

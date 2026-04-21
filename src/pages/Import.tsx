@@ -176,9 +176,6 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
             }
         }
 
-        console.log('[Import] Excel columns:', cols);
-        console.log('[Import] Active mappings:', mapping);
-
         // Detect source type for toast and fallback
         const sourceType = detectSourceType(cols);
 
@@ -216,13 +213,6 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                         (lead as any)[standardKey] = String(value).trim();
                     }
                 }
-            }
-
-            // Debug first row - show raw keys and values
-            if (i === 0) {
-                console.log('[Import] RAW first row keys:', Object.keys(row));
-                console.log('[Import] RAW first row data:', JSON.stringify(row));
-                console.log('[Import] Mapped fields:', Object.entries(mapping).map(([k, v]) => k + ': ' + JSON.stringify(row[k]) + ' -> ' + v));
             }
 
             // If no mappings exist, fall back to auto-detector
