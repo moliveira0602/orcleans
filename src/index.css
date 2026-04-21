@@ -2867,6 +2867,10 @@ select.input {
   justify-content: space-around;
 }
 
+.mobile-menu-btn {
+  display: none;
+}
+
 .mobile-nav-item {
   display: flex;
   flex-direction: column;
