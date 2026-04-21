@@ -179,6 +179,9 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
         console.log('[Import] Excel columns:', cols);
         console.log('[Import] Active mappings:', mapping);
 
+        // Detect source type for toast and fallback
+        const sourceType = detectSourceType(cols);
+
         // Use sanitized data if available, otherwise fall back to original
         const importData = sanitizedData.length > 0 ? sanitizedData : data;
 
@@ -216,7 +219,6 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
 
             // If no mappings exist, fall back to auto-detector
             if (Object.keys(mapping).length === 0) {
-                const sourceType = detectSourceType(cols);
                 const mapped = mapRowToLead(row as Record<string, any>, sourceType, cols);
                 for (const key of Object.keys(mapped)) {
                     if (mapped[key as keyof typeof mapped] !== null && mapped[key as keyof typeof mapped] !== undefined && mapped[key as keyof typeof mapped] !== '') {
@@ -349,13 +351,10 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
         setScoreCol('');
         setDupeMode('skip');
         if (fileInput.current) fileInput.current.value = '';
-        
-        // Refresh leads from backend to ensure consistency
-        await refreshLeads();
-        
-        // Navigate to Leads tab after import
+
+        // Navigate to dashboard so user sees updated KPIs and fresh lead count
         if (onNavigate) {
-            onNavigate('leads');
+            onNavigate('dashboard');
         }
     };
 
