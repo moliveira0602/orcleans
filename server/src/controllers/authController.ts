@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as authService from '../services/authService';
+import { verifyRefreshToken } from '../utils/jwt';
 import type { AuthRequest } from '../middleware/auth';
 
 export async function register(req: Request, res: Response) {
@@ -22,9 +23,13 @@ export async function login(req: Request, res: Response) {
 
 export async function refreshToken(req: Request, res: Response) {
   try {
-    const authReq = req as AuthRequest;
     const { refreshToken } = req.body;
-    const result = await authService.refreshTokens(authReq.userId!, refreshToken);
+    // Extract userId directly from the refresh token payload (no authenticate middleware on this route)
+    const decoded = verifyRefreshToken(refreshToken);
+    if (!decoded?.sub) {
+      return res.status(401).json({ error: 'Refresh token inválido' });
+    }
+    const result = await authService.refreshTokens(decoded.sub, refreshToken);
     return res.status(200).json(result);
   } catch (error: any) {
     return res.status(401).json({ error: error.message });
