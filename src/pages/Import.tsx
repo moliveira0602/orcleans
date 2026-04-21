@@ -167,17 +167,35 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
         const { data, file, cols } = pending;
         const numCol = scoreCol || null;
         const importId = 'imp_' + Date.now();
-        
+
+        // Build user-defined column mapping: original column name -> standard field key
+        const userMapping: Record<string, string> = {};
+        for (const m of columnMappings) {
+            if (m.standardKey) {
+                userMapping[m.originalName] = m.standardKey;
+            }
+        }
+
         // Detect source type
         const sourceType = detectSourceType(cols);
-        
+
         // Use sanitized data if available, otherwise fall back to original
         const importData = sanitizedData.length > 0 ? sanitizedData : data;
-        
+
         const newLeads: Lead[] = importData.map((row, i) => {
             // Map row to canonical Lead fields
             const mapped = mapRowToLead(row as Record<string, any>, sourceType, cols) as Lead;
-            
+
+            // Override with user-defined column mappings when available
+            if (Object.keys(userMapping).length > 0) {
+                for (const [originalCol, standardKey] of Object.entries(userMapping)) {
+                    const value = row[originalCol];
+                    if (value !== undefined && value !== null && value !== '') {
+                        (mapped as any)[standardKey] = typeof value === 'string' ? value.trim() : value;
+                    }
+                }
+            }
+
             // Extract fields with proper typing
             const nome: string = mapped.nome || '';
             const segmento: string = mapped.segmento || '';
