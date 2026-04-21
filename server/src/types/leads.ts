@@ -7,6 +7,7 @@ export const createLeadSchema = z.object({
   reviews: z.number().nullable().optional(),
   preco: z.string().default(''),
   endereco: z.string().default(''),
+  cidade: z.string().default(''),
   status: z.string().default(''),
   horario: z.string().default(''),
   telefone: z.string().default(''),

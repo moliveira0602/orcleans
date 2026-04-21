@@ -281,6 +281,7 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                 reviews: l.reviews,
                 preco: l.preco,
                 endereco: l.endereco,
+                cidade: l.cidade,
                 status: l.status,
                 horario: l.horario,
                 telefone: l.telefone,

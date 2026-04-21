@@ -54,6 +54,7 @@ export interface Lead {
     reviews: number | null;        // Number of reviews/interactions
     preco: string;          // Price range or deal value (ex: "15-20€" or "R$500")
     endereco: string;       // Full address
+    cidade: string;         // City
     status: string;         // "Aberto" / "Fechado" / "Ativo" / "Inativo"
     horario: string;        // Opening hours or closing time
     telefone: string;       // Phone number

@@ -72,7 +72,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
             if (catFilter && l.segmento && l.segmento !== catFilter) return false;
             if (importFilter && l._importId !== importFilter) return false;
             if (search) {
-                const str = `${l.nome} ${l.segmento} ${l.endereco} ${l.telefone} ${l.email}`.toLowerCase();
+                const str = `${l.nome} ${l.segmento} ${l.endereco} ${l.cidade || ''} ${l.telefone} ${l.email}`.toLowerCase();
                 if (!str.includes(search.toLowerCase())) return false;
             }
             return true;

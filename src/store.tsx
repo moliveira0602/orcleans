@@ -23,6 +23,7 @@ function leadFromBackendFormat(lead: any): Lead {
         reviews: lead.reviews,
         preco: lead.preco,
         endereco: lead.endereco,
+        cidade: lead.cidade,
         status: lead.status,
         horario: lead.horario,
         telefone: lead.telefone,

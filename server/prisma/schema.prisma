@@ -69,6 +69,7 @@ model Lead {
   reviews       Int?
   preco         String   @default("")
   endereco      String   @default("")
+  cidade        String   @default("")
   status        String   @default("")
   horario       String   @default("")
   telefone      String   @default("")

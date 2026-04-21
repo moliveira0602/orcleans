@@ -83,6 +83,7 @@ export async function getLeads(organizationId: string | undefined, query: LeadsQ
       { email: { contains: search, mode: 'insensitive' } },
       { telefone: { contains: search, mode: 'insensitive' } },
       { endereco: { contains: search, mode: 'insensitive' } },
+      { cidade: { contains: search, mode: 'insensitive' } },
     ];
   }
 
