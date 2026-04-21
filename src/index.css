@@ -1667,6 +1667,10 @@ select.input {
     grid-template-columns: repeat(3, 1fr);
   }
   
+  .kpi-grid:nth-of-type(2) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
   .grid-2 {
     grid-template-columns: 1fr;
   }
@@ -1841,11 +1845,52 @@ select.input {
   }
 
   .kpi {
-    padding: 16px 18px;
+    padding: 14px 16px;
   }
 
   .kpi-val {
-    font-size: 24px;
+    font-size: 22px;
+  }
+
+  .kpi-label {
+    font-size: 10px;
+    margin-bottom: 6px;
+  }
+
+  .kpi-sub {
+    font-size: 10px;
+  }
+
+  /* Dashboard grid-2 cards stacked */
+  .grid-2 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .grid-2 .card {
+    padding: 16px;
+  }
+
+  .grid-2 .card .sec-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .grid-2 .card .sec-title {
+    font-size: 9px;
+  }
+
+  .grid-2 .card .sec-sub {
+    font-size: 11px;
+  }
+
+  /* Dashboard charts mobile - hide or simplify */
+  .grid-2 .card canvas,
+  .grid-2 .card svg {
+    max-width: 100%;
+    height: auto !important;
   }
 
   .grid-3 {
@@ -1987,13 +2032,92 @@ select.input {
   }
 
   .card {
-    padding: 18px;
+    padding: 16px;
   }
 
   .sec-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  /* Lead priority list mobile */
+  .grid-2 .card > div:nth-child(2) {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .grid-2 .card > div:nth-child(2) > div {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .grid-2 .card > div:nth-child(2) > div:last-child {
+    border-bottom: none;
+  }
+
+  /* Health score distribution mobile */
+  .grid-2 .card > div:nth-child(2) > div {
+    padding: 8px 0;
+  }
+
+  .grid-2 .card > div:nth-child(2) > div > div:first-child {
+    font-size: 12px;
+  }
+
+  .grid-2 .card > div:nth-child(2) > div > div:nth-child(2) > div:first-child {
+    font-size: 12px;
+  }
+
+  .grid-2 .card > div:nth-child(2) > div > div:nth-child(2) > div:nth-child(2) {
+    font-size: 10px;
+  }
+
+  /* Activity mobile */
+  .activity-list .activity-item {
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 0;
+  }
+
+  .activity-list .activity-title {
+    font-size: 12px;
+  }
+
+  .activity-list .activity-sub {
+    font-size: 10px;
+  }
+
+  /* Pipeline mobile */
+  .pipeline-col {
+    min-width: 100%;
+  }
+
+  .pipeline-col-header {
+    padding: 10px 12px;
+  }
+
+  .pipeline-col-title {
+    font-size: 12px;
+  }
+
+  .pipeline-col-count {
+    font-size: 10px;
+  }
+
+  .pipeline-card {
+    padding: 10px;
+  }
+
+  .pipeline-card-name {
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+
+  .pipeline-card-cat {
+    font-size: 10px;
+    margin-bottom: 6px;
   }
 
   .tabs {
@@ -2511,6 +2635,62 @@ select.input {
   width: 100%;
 }
 
+/* Dashboard KPI grid mobile improvements */
+.kpi-grid + .kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+@media(max-width:1200px) {
+  .kpi-grid + .kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media(max-width:900px) {
+  .kpi-grid + .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media(max-width:600px) {
+  .kpi-grid + .kpi-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .kpi-grid + .kpi-grid .kpi {
+    padding: 12px;
+  }
+  
+  .kpi-grid + .kpi-grid .kpi-val {
+    font-size: 20px;
+  }
+  
+  .kpi-grid + .kpi-grid .kpi-label {
+    font-size: 9px;
+  }
+  
+  .kpi-grid + .kpi-grid .kpi-sub {
+    font-size: 9px;
+  }
+}
+
+@media(max-width:480px) {
+  .kpi-grid + .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .kpi-grid + .kpi-grid .kpi {
+    padding: 10px;
+    border-radius: 8px;
+  }
+  
+  .kpi-grid + .kpi-grid .kpi-val {
+    font-size: 18px;
+  }
+}
+
 /* ── LEADS PAGE RESPONSIVE ── */
 .leads-toolbar {
   display: flex;
@@ -2923,5 +3103,110 @@ select.input {
 
   .activity-sub {
     font-size: 10px;
+  }
+
+  /* Dashboard second KPI row mobile - key fix */
+  .kpi-grid + .kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .kpi-grid + .kpi-grid .kpi {
+    padding: 10px;
+  }
+
+  .kpi-grid + .kpi-grid .kpi-val {
+    font-size: 18px;
+  }
+
+  .kpi-grid + .kpi-grid .kpi-label {
+    font-size: 8px;
+    letter-spacing: 0.02em;
+  }
+
+  .kpi-grid + .kpi-grid .kpi-sub {
+    font-size: 8px;
+  }
+
+  /* Dashboard priority leads mobile */
+  .grid-2 .card > div:nth-child(2) {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .grid-2 .card > div:nth-child(2) > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .grid-2 .card > div:nth-child(2) > div:last-child {
+    border-bottom: none;
+  }
+
+  /* Health score distribution mobile */
+  .grid-2 .card > div[style*="flex-direction: column"] {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .grid-2 .card > div[style*="flex-direction: column"] > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+  }
+
+  .grid-2 .card > div[style*="flex-direction: column"] > div > div:first-child {
+    width: 6px;
+    height: 6px;
+  }
+
+  .grid-2 .card > div[style*="flex-direction: column"] > div > div:nth-child(2) {
+    flex: 1;
+  }
+
+  /* Pipeline by stage mobile */
+  .grid-2 .card .activity-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 0;
+  }
+
+  .grid-2 .card .activity-item > div:nth-child(3) {
+    width: 100%;
+    height: 3px;
+  }
+
+  /* Activity velocity card mobile */
+  .grid-2 .card > div[style*="flex-direction: column"] > div:first-child {
+    padding: 12px !important;
+  }
+
+  .grid-2 .card > div[style*="flex-direction: column"] > div:first-child > div:first-child {
+    font-size: 22px !important;
+  }
+
+  /* Scan modal mobile full width */
+  .modal-overlay .modal {
+    width: calc(100% - 20px);
+    max-width: none;
+    padding: 16px;
+  }
+
+  .modal-overlay .modal .modal-title {
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+
+  .modal-overlay .modal select.input,
+  .modal-overlay .modal input.input {
+    font-size: 12px;
+    padding: 8px 10px;
   }
 }
