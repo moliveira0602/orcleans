@@ -31,10 +31,24 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     const [contactHistory, setContactHistory] = useState<Array<{ id: string; channel: string; title: string; sub: string; icon: string; createdAt: string; userName: string }>>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
 
+    // Todos os hooks DEVEM ser chamados ANTES de qualquer early return
     const lead = leads.find((l) => l.id === leadId);
+
+    // Early return DEPOIS de todos os hooks
     if (!lead) {
         return <div className={`detail-panel${leadId ? ' open' : ''}`} />;
     }
+
+    // Fetch contact history when lead changes
+    useEffect(() => {
+        if (leadId && lead) {
+            setLoadingHistory(true);
+            leadApi.fetchLeadActivities(lead.id, { limit: 10 })
+                .then((result) => setContactHistory(result.activities))
+                .catch((err) => console.error('Failed to fetch activities:', err))
+                .finally(() => setLoadingHistory(false));
+        }
+    }, [leadId, lead?.id]);
 
     const nameCol = detectNameCol(leads);
     const catCol = detectCatCol(leads);
@@ -166,14 +180,32 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     };
 
     const handleContact = async (channel: 'telefone' | 'email' | 'whatsapp') => {
+        // Validate lead has required contact info
+        if (!lead) {
+            toast('Lead não encontrado.', 'error');
+            return;
+        }
+
+        const phone = lead.telefone?.replace(/\D/g, '') || '';
+        
         // Open the appropriate URL immediately
         if (channel === 'telefone') {
+            if (!phone) {
+                toast('Telefone não disponível para este lead.', 'info');
+                return;
+            }
             window.open(`tel:${lead.telefone}`);
         } else if (channel === 'whatsapp') {
-            const phone = lead.telefone.replace(/\D/g, '');
-            if (phone) window.open('https://wa.me/' + phone, '_blank');
-            else toast('Telefone não encontrado neste lead.', 'info');
+            if (!phone) {
+                toast('Telefone não disponível para este lead.', 'info');
+                return;
+            }
+            window.open('https://wa.me/' + phone, '_blank');
         } else if (channel === 'email') {
+            if (!lead.email) {
+                toast('Email não disponível para este lead.', 'info');
+                return;
+            }
             setEmailModalOpen(true);
             return; // Don't log yet — will log after template modal confirms
         }
@@ -217,14 +249,6 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
             console.error('Failed to fetch activities:', err);
         }
     };
-
-    // Fetch contact history when lead changes
-    useEffect(() => {
-        if (leadId) {
-            setLoadingHistory(true);
-            refreshContactHistory().then(() => setLoadingHistory(false));
-        }
-    }, [leadId]);
 
     const handleDelete = async () => {
         const ok = await confirm({
