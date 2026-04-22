@@ -137,7 +137,8 @@ export async function deleteLead(id: string): Promise<void> {
 }
 
 export async function deleteLeadsBulk(leadIds: string[]): Promise<{ count: number }> {
-  return api.delete<{ count: number }>('/leads/bulk', { leadIds });
+  // POST é mais confiável que DELETE com body no serverless/Vercel
+  return api.post<{ count: number }>('/leads/bulk-delete', { leadIds });
 }
 
 export async function moveLeadPipeline(id: string, stage: string): Promise<Lead> {

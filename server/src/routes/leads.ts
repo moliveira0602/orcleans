@@ -13,7 +13,7 @@ router.options('*', (_req: Request, res: Response) => res.status(200).end());
 router.get('/dashboard', leadController.getDashboard);
 router.get('/', leadController.getLeads);
 router.post('/bulk', leadController.createLeadsBulk);
-router.delete('/bulk', leadController.deleteLeadsBulk);
+router.post('/bulk-delete', leadController.deleteLeadsBulk);
 router.get('/:id', leadController.getLeadById);
 router.post('/', validate(createLeadSchema), leadController.createLead);
 router.patch('/:id', validate(updateLeadSchema), leadController.updateLead);
