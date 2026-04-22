@@ -4,6 +4,7 @@ import { useConfirm } from '../components/ConfirmModal';
 import { exportLeadsCsv } from '../utils/export';
 import { api } from '../services/api';
 import { useState } from 'react';
+import { useAuth } from '../services/auth';
 
 export default function SettingsPage() {
     const { settings, leads, imports } = useAppState();
@@ -11,6 +12,7 @@ export default function SettingsPage() {
     const toast = useToast();
     const confirm = useConfirm();
     const [savingProfile, setSavingProfile] = useState(false);
+    const { refreshProfile } = useAuth();
 
     const updateSetting = (key: string, value: string | number) => {
         dispatch({ type: 'UPDATE_SETTINGS', payload: { [key]: value } });
@@ -25,6 +27,7 @@ export default function SettingsPage() {
                 company: settings.company,
             });
             dispatch({ type: 'UPDATE_SETTINGS', payload: { name: result.name, email: result.email, company: result.company } });
+            await refreshProfile();
             toast('Perfil atualizado com sucesso.', 'success');
         } catch (err: any) {
             toast(err.response?.data?.error || 'Erro ao atualizar perfil', 'error');

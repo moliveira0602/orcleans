@@ -197,13 +197,17 @@ export async function deleteLead(organizationId: string, userId: string, leadId:
   });
 }
 
-export async function deleteLeadsBulk(organizationId: string, userId: string, leadIds: string[]) {
-  // Apenas excluir leads que pertencem ao usuário atual
+export async function deleteLeadsBulk(organizationId: string, _userId: string, leadIds: string[]) {
+  if (!Array.isArray(leadIds) || leadIds.length === 0) {
+    throw new Error('Lista de leads inválida');
+  }
+
+  // Exclusão em nível de organização (não restrita ao criador),
+  // para evitar "retorno" após refresh quando leads pertencem a outro usuário da mesma org.
   return prisma.lead.deleteMany({
     where: {
       id: { in: leadIds },
       organizationId,
-      userId, // Apenas leads do usuário atual
     },
   });
 }

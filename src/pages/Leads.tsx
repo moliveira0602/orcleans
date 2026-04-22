@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { useAppState, useAppDispatch } from '../store';
+import { useAppState, useAppDispatch, useApp } from '../store';
 import { LEAD_COLUMNS } from '../utils/leadMapper';
 import ScoreRing from '../components/ScoreRing';
 import { exportLeadsCsv } from '../utils/export';
@@ -17,6 +17,7 @@ interface LeadsProps {
 export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpenMap }: LeadsProps) {
     const { leads, settings, imports } = useAppState();
     const dispatch = useAppDispatch();
+    const { refreshLeads } = useApp();
     const toast = useToast();
     const tableRef = useRef<HTMLDivElement>(null);
     const [search, setSearch] = useState(searchQuery);
@@ -138,12 +139,22 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
         if (!confirm(`Eliminar ${selectedLeads.size} lead(s)?`)) return;
         setIsDeleting(true);
         try {
-            await deleteLeadsBulk(Array.from(selectedLeads));
-            toast(`${selectedLeads.size} lead(s) eliminado(s).`, 'success');
+            const ids = Array.from(selectedLeads);
+            const result = await deleteLeadsBulk(ids);
+
+            if (!result?.count || result.count <= 0) {
+                throw new Error('Nenhum lead foi eliminado no servidor.');
+            }
+
+            toast(`${result.count} lead(s) eliminado(s).`, 'success');
             setSelectedLeads(new Set());
-            // Update local state by removing deleted leads
-            const idsToDelete = new Set(selectedLeads);
-            dispatch({ type: 'SET_LEADS', payload: leads.filter(l => !idsToDelete.has(l.id)) });
+
+            // Atualiza localmente para resposta imediata...
+            const idsToDelete = new Set(ids);
+            dispatch({ type: 'SET_LEADS', payload: leads.filter((l) => !idsToDelete.has(l.id)) });
+
+            // ...e sincroniza com o backend para garantir persistência após refresh
+            await refreshLeads();
         } catch (err) {
             toast('Erro ao eliminar leads.', 'error');
         } finally {
