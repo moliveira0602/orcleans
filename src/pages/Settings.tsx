@@ -2,15 +2,34 @@ import { useAppState, useAppDispatch } from '../store';
 import { useToast } from '../components/Toast';
 import { useConfirm } from '../components/ConfirmModal';
 import { exportLeadsCsv } from '../utils/export';
+import { api } from '../services/api';
+import { useState } from 'react';
 
 export default function SettingsPage() {
     const { settings, leads, imports } = useAppState();
     const dispatch = useAppDispatch();
     const toast = useToast();
     const confirm = useConfirm();
+    const [savingProfile, setSavingProfile] = useState(false);
 
     const updateSetting = (key: string, value: string | number) => {
         dispatch({ type: 'UPDATE_SETTINGS', payload: { [key]: value } });
+    };
+
+    const handleSaveProfile = async () => {
+        setSavingProfile(true);
+        try {
+            const result = await api.patch<{ name: string; email: string }>('/auth/me', {
+                name: settings.name,
+                email: settings.email,
+            });
+            dispatch({ type: 'UPDATE_SETTINGS', payload: { name: result.name, email: result.email } });
+            toast('Perfil atualizado com sucesso.', 'success');
+        } catch (err: any) {
+            toast(err.response?.data?.error || 'Erro ao atualizar perfil', 'error');
+        } finally {
+            setSavingProfile(false);
+        }
     };
 
     const clearAll = async () => {
@@ -49,6 +68,9 @@ export default function SettingsPage() {
                             <label className="form-label">Empresa</label>
                             <input className="input" type="text" placeholder="Nome da empresa" value={settings.company} onChange={(e) => updateSetting('company', e.target.value)} />
                         </div>
+                        <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={handleSaveProfile} disabled={savingProfile}>
+                            {savingProfile ? 'A guardar...' : 'Guardar alterações'}
+                        </button>
                     </div>
 
                     <div className="card settings-section" style={{ marginTop: 16 }}>

@@ -107,6 +107,184 @@ router.get('/stats', async (_req: AuthRequest, res: Response) => {
   }
 });
 
+// Debug endpoint: Get current user's organization settings
+router.get('/debug/org-settings', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.organizationId) {
+      return res.status(400).json({ error: 'Organização não encontrada' });
+    }
+
+    const org = await prisma.organization.findUnique({
+      where: { id: req.organizationId },
+      select: {
+        id: true,
+        name: true,
+        plan: true,
+        maxLeads: true,
+        maxImportBatch: true,
+        maxUsers: true,
+      },
+    });
+
+    res.json(org);
+  } catch (error) {
+    console.error('Debug org settings error:', error);
+    res.status(500).json({ error: 'Erro ao obter settings' });
+  }
+});
+
+// Advanced stats for Super Admin - métricas detalhadas de uso
+router.get('/stats/advanced', async (_req: AuthRequest, res: Response) => {
+  try {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Leads stats
+    const [
+      totalLeads,
+      leadsToday,
+      leadsThisWeek,
+      leadsThisMonth,
+      leadsByUser,
+      leadsByOrganization,
+    ] = await Promise.all([
+      prisma.lead.count(),
+      prisma.lead.count({ where: { createdAt: { gte: todayStart } } }),
+      prisma.lead.count({ where: { createdAt: { gte: weekStart } } }),
+      prisma.lead.count({ where: { createdAt: { gte: monthStart } } }),
+      // Leads por usuário (com userId)
+      prisma.lead.groupBy({
+        by: ['userId'],
+        _count: true,
+        where: { userId: { not: null } },
+      }),
+      // Leads por organização
+      prisma.lead.groupBy({
+        by: ['organizationId'],
+        _count: true,
+      }),
+    ]);
+
+    // Users stats
+    const [
+      totalUsers,
+      usersActive,
+      usersToday,
+      usersThisWeek,
+    ] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({ where: { isActive: true } }),
+      prisma.user.count({ where: { lastLoginAt: { gte: todayStart } } }),
+      prisma.user.count({ where: { lastLoginAt: { gte: weekStart } } }),
+    ]);
+
+    // Activities this week
+    const activitiesThisWeek = await prisma.activity.count({
+      where: { createdAt: { gte: weekStart } },
+    });
+
+    // Top users by leads created
+    const userLeads = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        organization: { select: { name: true } },
+        _count: { select: { activities: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+
+    const usersWithLeadCount = await Promise.all(
+      userLeads.map(async (user) => {
+        const leadCount = await prisma.lead.count({
+          where: { userId: user.id },
+        });
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          organizationName: user.organization.name,
+          leadsCreated: leadCount,
+          activitiesCount: user._count.activities,
+        };
+      })
+    );
+
+    // Top organizations by leads
+    const orgsWithLeads = await prisma.organization.findMany({
+      select: {
+        id: true,
+        name: true,
+        plan: true,
+        _count: { select: { leads: true, users: true } },
+      },
+      orderBy: { leads: { _count: 'desc' } },
+      take: 10,
+    });
+
+    // Pipeline distribution
+    const pipelineDistribution = await prisma.lead.groupBy({
+      by: ['pipelineStage'],
+      _count: true,
+    });
+
+    // Score distribution
+    const scoreRanges = await Promise.all([
+      prisma.lead.count({ where: { score: { gte: 9 } } }),
+      prisma.lead.count({ where: { score: { gte: 7, lt: 9 } } }),
+      prisma.lead.count({ where: { score: { gte: 5, lt: 7 } } }),
+      prisma.lead.count({ where: { score: { lt: 5 } } }),
+    ]);
+
+    res.json({
+      leads: {
+        total: totalLeads,
+        today: leadsToday,
+        thisWeek: leadsThisWeek,
+        thisMonth: leadsThisMonth,
+        byUser: leadsByUser.map((u) => ({ userId: u.userId, count: u._count })),
+        byOrganization: leadsByOrganization.map((o) => ({ organizationId: o.organizationId, count: o._count })),
+      },
+      users: {
+        total: totalUsers,
+        active: usersActive,
+        loginToday: usersToday,
+        loginThisWeek: usersThisWeek,
+      },
+      activities: {
+        thisWeek: activitiesThisWeek,
+      },
+      topUsers: usersWithLeadCount
+        .sort((a, b) => b.leadsCreated - a.leadsCreated)
+        .slice(0, 10),
+      topOrganizations: orgsWithLeads.map((o) => ({
+        id: o.id,
+        name: o.name,
+        plan: o.plan,
+        leads: o._count.leads,
+        users: o._count.users,
+      })),
+      pipeline: pipelineDistribution.reduce((acc, p) => {
+        acc[p.pipelineStage] = p._count;
+        return acc;
+      }, {} as Record<string, number>),
+      scoreDistribution: {
+        excellent: scoreRanges[0], // 9-10
+        good: scoreRanges[1],      // 7-8
+        fair: scoreRanges[2],      // 5-6
+        poor: scoreRanges[3],      // <5
+      },
+    });
+  } catch (error) {
+    console.error('Admin advanced stats error:', error);
+    res.status(500).json({ error: 'Erro ao obter estatísticas avançadas' });
+  }
+});
+
 router.get('/health', async (_req: Request, res: Response) => {
   try {
     const start = Date.now();
@@ -697,6 +875,7 @@ router.get('/support/diagnostics', async (_req: Request, res: Response) => {
 router.get('/users/:id/leads', async (req: AuthRequest, res: Response) => {
   try {
     const userId = getParamId(req.params as Record<string, string | string[]>);
+    const filterByUserId = req.query.filterByUserId === 'true';
     
     if (!userId) {
       return res.status(400).json({ error: 'ID é obrigatório' });
@@ -711,8 +890,14 @@ router.get('/users/:id/leads', async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Utilizador não encontrado' });
     }
 
+    // Se filterByUserId=true, mostra apenas leads criados por este usuário
+    // Se false (default), mostra todos os leads da organização
+    const whereClause = filterByUserId
+      ? { organizationId: targetUser.organizationId, userId: userId }
+      : { organizationId: targetUser.organizationId };
+
     const leads = await prisma.lead.findMany({
-      where: { organizationId: targetUser.organizationId },
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
       take: 1000,
     });
@@ -726,6 +911,7 @@ router.get('/users/:id/leads', async (req: AuthRequest, res: Response) => {
       },
       leads,
       totalLeads: leads.length,
+      filterApplied: filterByUserId ? 'userId' : 'organization',
     });
   } catch (error) {
     console.error('View as user leads error:', error);

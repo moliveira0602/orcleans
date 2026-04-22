@@ -56,3 +56,14 @@ export async function getProfile(req: Request, res: Response) {
     return res.status(404).json({ error: error.message });
   }
 }
+
+export async function updateProfile(req: Request, res: Response) {
+  try {
+    const authReq = req as AuthRequest;
+    const { name, email } = req.body;
+    const profile = await authService.updateProfile(authReq.userId!, { name, email });
+    return res.status(200).json(profile);
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message });
+  }
+}

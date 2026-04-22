@@ -65,6 +65,7 @@ type Action =
     | { type: 'UPDATE_LEAD'; payload: { id: string; fields: Record<string, unknown> } }
     | { type: 'DELETE_LEAD'; payload: string }
     | { type: 'MOVE_PIPELINE'; payload: { leadId: string; stage: PipelineStage } }
+    | { type: 'MOVE_BULK_PIPELINE'; payload: { leadIds: string[]; stage: PipelineStage } }
     | { type: 'UPDATE_SETTINGS'; payload: Partial<AppSettings> }
     | { type: 'CLEAR_ALL' }
     | { type: 'ADD_ACTIVITY'; payload: ActivityEntry }
@@ -180,6 +181,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
                     newPipeline[stage].push(leadId);
                     const newLeads = prev.leads.map((l) =>
                         l.id === leadId ? { ...l, _pipeline: stage } : l
+                    );
+                    return { ...prev, leads: newLeads, pipeline: newPipeline };
+                });
+                break;
+            }
+            case 'MOVE_BULK_PIPELINE': {
+                const { leadIds, stage } = action.payload;
+                setState(prev => {
+                    const newPipeline: PipelineMap = { novo: [], qualificado: [], proposta: [], negociacao: [], ganho: [], perdido: [] };
+                    const idsToMove = new Set(leadIds);
+                    
+                    // First, copy all leads except the ones being moved
+                    (Object.keys(prev.pipeline) as PipelineStage[]).forEach((k) => {
+                        newPipeline[k] = prev.pipeline[k].filter((lid) => !idsToMove.has(lid));
+                    });
+                    
+                    // Then add the moved leads to the target stage
+                    newPipeline[stage] = [...newPipeline[stage], ...leadIds];
+                    
+                    // Update all leads being moved
+                    const newLeads = prev.leads.map((l) =>
+                        idsToMove.has(l.id) ? { ...l, _pipeline: stage } : l
                     );
                     return { ...prev, leads: newLeads, pipeline: newPipeline };
                 });

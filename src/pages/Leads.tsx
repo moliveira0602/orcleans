@@ -23,6 +23,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
     const [importFilter, setImportFilter] = useState('');
     const [scoreFilter, setScoreFilter] = useState('');
     const [catFilter, setCatFilter] = useState('');
+    const [pipelineFilter, setPipelineFilter] = useState('');
     const [sortCol, setSortCol] = useState<string | null>(null);
     const [sortDir, setSortDir] = useState(1);
     const [page, setPage] = useState(0);
@@ -31,6 +32,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
     const [scrollLeft, setScrollLeft] = useState(0);
     const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
     const [isDeleting, setIsDeleting] = useState(false);
+    const [bulkPipelineStage, setBulkPipelineStage] = useState('');
     const perPage = 25;
 
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -66,6 +68,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
         const hot = settings.hotThreshold;
         const warm = settings.warmThreshold;
         let result = leads.filter((l) => {
+            if (pipelineFilter && l._pipeline !== pipelineFilter) return false;
             if (scoreFilter === 'hot' && l._score < hot) return false;
             if (scoreFilter === 'warm' && (l._score < warm || l._score >= hot)) return false;
             if (scoreFilter === 'cold' && l._score >= warm) return false;
@@ -92,7 +95,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
         }
 
         return result;
-    }, [leads, search, scoreFilter, catFilter, sortCol, sortDir, settings]);
+    }, [leads, search, scoreFilter, catFilter, importFilter, pipelineFilter, sortCol, sortDir, settings]);
 
     const total = filtered.length;
     const paged = filtered.slice(page * perPage, (page + 1) * perPage);
@@ -146,6 +149,17 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
         } finally {
             setIsDeleting(false);
         }
+    };
+
+    const handleBulkMovePipeline = async () => {
+        if (selectedLeads.size === 0 || !bulkPipelineStage) return;
+        if (!confirm(`Mover ${selectedLeads.size} lead(s) para "${pipeLabel[bulkPipelineStage]}"?`)) return;
+        
+        const idsToMove = Array.from(selectedLeads);
+        dispatch({ type: 'MOVE_BULK_PIPELINE', payload: { leadIds: idsToMove, stage: bulkPipelineStage } });
+        toast(`${idsToMove.length} lead(s) movido(s) para ${pipeLabel[bulkPipelineStage]}.`, 'success');
+        setSelectedLeads(new Set());
+        setBulkPipelineStage('');
     };
 
     const pipeBadge: Record<string, string> = { novo: 'badge-gray', qualificado: 'badge-blue', proposta: 'badge-amber', negociacao: 'badge-amber', ganho: 'badge-green', perdido: 'badge-red' };
@@ -204,16 +218,50 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                         <option value="">Todas categorias</option>
                         {categories.map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
+                    <select className="input" style={{ width: 130 }} value={pipelineFilter} onChange={(e) => { setPipelineFilter(e.target.value); setPage(0); }}>
+                        <option value="">Todos estágios</option>
+                        <option value="novo">Novo</option>
+                        <option value="qualificado">Qualificado</option>
+                        <option value="proposta">Proposta</option>
+                        <option value="negociacao">Negociação</option>
+                        <option value="ganho">Ganho</option>
+                        <option value="perdido">Perdido</option>
+                    </select>
                     <button className="btn btn-ghost btn-sm" onClick={handleExport}>↓ Exportar CSV</button>
                     {selectedLeads.size > 0 && (
-                        <button
-                            className="btn btn-sm"
-                            style={{ background: 'var(--red)', color: '#fff' }}
-                            onClick={handleBulkDelete}
-                            disabled={isDeleting}
-                        >
-                            {isDeleting ? 'A eliminar...' : `🗑 ${selectedLeads.size} eliminar`}
-                        </button>
+                        <>
+                            <select 
+                                className="input" 
+                                style={{ width: 140 }} 
+                                value={bulkPipelineStage} 
+                                onChange={(e) => setBulkPipelineStage(e.target.value)}
+                            >
+                                <option value="">Mover para...</option>
+                                <option value="novo">Novo</option>
+                                <option value="qualificado">Qualificado</option>
+                                <option value="proposta">Proposta</option>
+                                <option value="negociacao">Negociação</option>
+                                <option value="ganho">Ganho</option>
+                                <option value="perdido">Perdido</option>
+                            </select>
+                            {bulkPipelineStage && (
+                                <button
+                                    className="btn btn-sm"
+                                    style={{ background: 'var(--blue)', color: '#fff' }}
+                                    onClick={handleBulkMovePipeline}
+                                >
+                                    ↪ Mover {selectedLeads.size}
+                                </button>
+                            )}
+                            <button
+                                className="btn btn-sm"
+                                style={{ background: 'var(--red)', color: '#fff' }}
+                                onClick={handleBulkDelete}
+                                disabled={isDeleting}
+                            >
+                                {isDeleting ? 'A eliminar...' : `🗑 ${selectedLeads.size} eliminar`}
+                            </button>
+                        </>
                     )}
                 </div>
             </div>

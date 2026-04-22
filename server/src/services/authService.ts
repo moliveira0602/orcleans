@@ -213,3 +213,46 @@ export async function getProfile(userId: string) {
     organization: user.organization,
   };
 }
+
+export async function updateProfile(userId: string, data: { name?: string; email?: string }) {
+  const updateData: Record<string, unknown> = {};
+  
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.email !== undefined) updateData.email = data.email.toLowerCase();
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: updateData,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      avatarUrl: true,
+      isActive: true,
+      lastLoginAt: true,
+      createdAt: true,
+      organization: {
+        select: {
+          id: true,
+          name: true,
+          plan: true,
+          maxLeads: true,
+          maxUsers: true,
+        },
+      },
+    },
+  });
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    avatarUrl: user.avatarUrl,
+    isActive: user.isActive,
+    lastLoginAt: user.lastLoginAt,
+    createdAt: user.createdAt,
+    organization: user.organization,
+  };
+}

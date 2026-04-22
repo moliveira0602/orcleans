@@ -12,6 +12,7 @@ import { useToast } from '../components/Toast';
 import type { Page } from '../components/Layout';
 import { PIPELINE_COLS } from '../types';
 import { createLeadsBulk } from '../services/leads';
+import { useAuth } from '../services/auth';
 
 interface DashboardProps {
     onNavigate: (page: Page) => void;
@@ -22,6 +23,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
     const { leads, settings, activities } = useAppState();
     const dispatch = useAppDispatch();
     const toast = useToast();
+    const { user } = useAuth();
     const [scanModalOpen, setScanModalOpen] = useState(false);
     const [scanLoading, setScanLoading] = useState(false);
     const [scanProgress, setScanProgress] = useState('');
@@ -271,7 +273,59 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 </div>
             </div>
 
-            <div className="grid-2 mb-24">
+            {/* ===== ROW 5: Produtividade do Usuário Logado ===== */}
+            {user && (
+                <div className="card mb-24">
+                    <div className="sec-header">
+                        <div>
+                            <div className="sec-title">📊 Sua Produtividade</div>
+                            <div className="sec-sub">Leads que você criou esta semana</div>
+                        </div>
+                    </div>
+                    <div className="kpi-grid">
+                        {(() => {
+                            const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+                            const myLeadsThisWeek = leads.filter(l => 
+                                l._importedAt && l._importedAt >= weekAgo
+                            );
+                            const myContacts = activities.filter(a => 
+                                a.icon === '✉' || a.icon === '📞' || a.icon === '💬'
+                            ).filter(a => {
+                                const days = (Date.now() - new Date(a.time).getTime()) / (1000 * 60 * 60 * 24);
+                                return days <= 7;
+                            }).length;
+                            
+                            return (
+                                <>
+                                    <div className="kpi">
+                                        <div className="kpi-label">Leads Criados</div>
+                                        <div className="kpi-val" style={{ fontSize: 28, color: 'var(--orca-accent)' }}>{myLeadsThisWeek.length}</div>
+                                        <div className="kpi-sub">últimos 7 dias</div>
+                                    </div>
+                                    <div className="kpi">
+                                        <div className="kpi-label">Contatos Realizados</div>
+                                        <div className="kpi-val" style={{ fontSize: 28, color: 'var(--green)' }}>{myContacts}</div>
+                                        <div className="kpi-sub">esta semana</div>
+                                    </div>
+                                    <div className="kpi">
+                                        <div className="kpi-label">Leads em Negociação</div>
+                                        <div className="kpi-val" style={{ fontSize: 28, color: 'var(--amber)' }}>{leads.filter(l => l._pipeline === 'negociacao' || l._pipeline === 'proposta').length}</div>
+                                        <div className="kpi-sub">requerem atenção</div>
+                                    </div>
+                                    <div className="kpi">
+                                        <div className="kpi-label">Leads Ganhos</div>
+                                        <div className="kpi-val" style={{ fontSize: 28, color: 'var(--green)' }}>{won}</div>
+                                        <div className="kpi-sub">total convertido</div>
+                                    </div>
+                                </>
+                            );
+                        })()}
+                    </div>
+                </div>
+            )}
+
+            {/* ===== ROW 5 (Original): Pipeline por Etapa + Atividade Recente ===== */}
+            <div className="grid-2">
                 <div className="card">
                     <div className="sec-header">
                         <div>
