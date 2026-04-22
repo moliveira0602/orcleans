@@ -61,9 +61,13 @@ export async function updateProfile(req: Request, res: Response) {
   try {
     const authReq = req as AuthRequest;
     const { name, email, company } = req.body;
+    console.log('[updateProfile] userId:', authReq.userId);
+    console.log('[updateProfile] body:', JSON.stringify(req.body));
     const profile = await authService.updateProfile(authReq.userId!, { name, email, company });
+    console.log('[updateProfile] saved:', JSON.stringify(profile));
     return res.status(200).json(profile);
   } catch (error: any) {
+    console.error('[updateProfile] error:', error.message);
     return res.status(400).json({ error: error.message });
   }
 }
