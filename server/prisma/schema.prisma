@@ -43,6 +43,7 @@ model User {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   refreshTokens  RefreshToken[]
   activities     Activity[]
+  leads          Lead[]
 
   @@index([organizationId])
   @@map("users")
@@ -64,6 +65,7 @@ model RefreshToken {
 model Lead {
   id            String   @id @default(uuid())
   organizationId String
+  userId        String?  // Usuário que criou/importou o lead
   nome          String
   segmento      String   @default("")
   avaliacao     Float?
@@ -98,9 +100,11 @@ model Lead {
   updatedAt     DateTime @updatedAt
 
   organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
   activities    Activity[]
 
   @@index([organizationId])
+  @@index([userId])
   @@index([pipelineStage])
   @@index([score])
   @@index([createdAt])

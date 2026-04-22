@@ -6,7 +6,7 @@ function sanitizeJson(value: unknown) {
   return value as any;
 }
 
-export async function createLead(organizationId: string, data: CreateLeadInput) {
+export async function createLead(organizationId: string, userId: string, data: CreateLeadInput) {
   const org = await prisma.organization.findUnique({
     where: { id: organizationId },
   });
@@ -26,6 +26,7 @@ export async function createLead(organizationId: string, data: CreateLeadInput) 
   return prisma.lead.create({
     data: {
       organizationId,
+      userId,
       ...data,
       insight: sanitizeJson(data.insight),
       notes: sanitizeJson(data.notes),
@@ -35,7 +36,7 @@ export async function createLead(organizationId: string, data: CreateLeadInput) 
   });
 }
 
-export async function createLeadsBulk(organizationId: string, leads: CreateLeadInput[]) {
+export async function createLeadsBulk(organizationId: string, userId: string, leads: CreateLeadInput[]) {
   const org = await prisma.organization.findUnique({
     where: { id: organizationId },
   });
@@ -60,6 +61,7 @@ export async function createLeadsBulk(organizationId: string, leads: CreateLeadI
 
   const data = leads.map((lead) => ({
     organizationId,
+    userId,
     ...lead,
     insight: sanitizeJson(lead.insight),
     notes: sanitizeJson(lead.notes),
@@ -172,12 +174,21 @@ export async function updateLead(organizationId: string, leadId: string, data: U
   });
 }
 
-export async function deleteLead(organizationId: string, leadId: string) {
+export async function deleteLead(organizationId: string, userId: string, leadId: string) {
+  // Usuário só pode excluir seus próprios leads (userId deve corresponder)
+  // Isso garante isolamento: um usuário não pode excluir leads de outro
   const existing = await prisma.lead.findFirst({
-    where: { id: leadId, organizationId },
+    where: { id: leadId, organizationId, userId },
   });
 
   if (!existing) {
+    // Verificar se o lead existe mas é de outro usuário (para dar mensagem mais específica)
+    const anyLead = await prisma.lead.findFirst({
+      where: { id: leadId, organizationId },
+    });
+    if (anyLead) {
+      throw new Error('Não tem permissão para eliminar este lead');
+    }
     throw new Error('Lead não encontrado');
   }
 
@@ -186,11 +197,13 @@ export async function deleteLead(organizationId: string, leadId: string) {
   });
 }
 
-export async function deleteLeadsBulk(organizationId: string, leadIds: string[]) {
+export async function deleteLeadsBulk(organizationId: string, userId: string, leadIds: string[]) {
+  // Apenas excluir leads que pertencem ao usuário atual
   return prisma.lead.deleteMany({
     where: {
       id: { in: leadIds },
       organizationId,
+      userId, // Apenas leads do usuário atual
     },
   });
 }
