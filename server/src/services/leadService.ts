@@ -205,6 +205,19 @@ export async function deleteLeadsBulk(organizationId: string, _userId: string, l
   console.log('[leadService] deleteLeadsBulk - organizationId:', organizationId);
   console.log('[leadService] deleteLeadsBulk - leadIds to delete:', leadIds);
 
+  // Primeiro: verificar quais leads existem com esses IDs
+  const leadsToDelete = await prisma.lead.findMany({
+    where: { id: { in: leadIds } },
+    select: { id: true, organizationId: true, nome: true }
+  });
+  
+  console.log('[leadService] leads found in DB:', leadsToDelete.map(l => ({ id: l.id, orgId: l.organizationId, nome: l.nome })));
+  console.log('[leadService] user organizationId:', organizationId);
+  
+  // Verificar se os leads pertencem à organização do usuário
+  const leadsInOrg = leadsToDelete.filter(l => l.organizationId === organizationId);
+  console.log('[leadService] leads belonging to user org:', leadsInOrg.length);
+
   // Exclusão em nível de organização (não restrita ao criador),
   // para evitar "retorno" após refresh quando leads pertencem a outro usuário da mesma org.
   const result = await prisma.lead.deleteMany({
