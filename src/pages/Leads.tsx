@@ -140,23 +140,36 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
         setIsDeleting(true);
         try {
             const ids = Array.from(selectedLeads);
-            const result = await deleteLeadsBulk(ids);
-
-            if (!result?.count || result.count <= 0) {
-                throw new Error('Nenhum lead foi eliminado no servidor.');
+            
+            // Primeiro: deletar no servidor e AGUARDAR resposta
+            let result;
+            try {
+                result = await deleteLeadsBulk(ids);
+            } catch (apiError) {
+                // Se falhar a chamada API, mostra erro e NÃO atualiza localmente
+                console.error('[Leads] Delete API failed:', apiError);
+                throw new Error('Falha ao conectar com o servidor para eliminar.');
             }
-
-            toast(`${result.count} lead(s) eliminado(s).`, 'success');
-            setSelectedLeads(new Set());
-
-            // Atualiza localmente para resposta imediata...
+            
+            // Verifica se o servidor confirmou a exclusão
+            if (!result?.count || result.count <= 0) {
+                console.warn('[Leads] Delete returned 0 count, re-fetching from server...');
+                // Recarrega do servidor para verificar estado real
+                await refreshLeads();
+                throw new Error('Nenhum lead foi eliminado no servidor. Lista recarregada.');
+            }
+            
+            console.log(`[Leads] Successfully deleted ${result.count} leads on server. Updating local state...`);
+            
+            // Apenas se o servidor confirmar, atualiza localmente
             const idsToDelete = new Set(ids);
             dispatch({ type: 'SET_LEADS', payload: leads.filter((l) => !idsToDelete.has(l.id)) });
-
-            // ...e sincroniza com o backend para garantir persistência após refresh
-            await refreshLeads();
+            
+            toast(`${result.count} lead(s) eliminado(s).`, 'success');
+            setSelectedLeads(new Set());
         } catch (err) {
-            toast('Erro ao eliminar leads.', 'error');
+            const message = err instanceof Error ? err.message : 'Erro ao eliminar leads.';
+            toast(message, 'error');
         } finally {
             setIsDeleting(false);
         }

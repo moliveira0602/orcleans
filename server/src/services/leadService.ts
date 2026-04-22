@@ -202,14 +202,20 @@ export async function deleteLeadsBulk(organizationId: string, _userId: string, l
     throw new Error('Lista de leads inválida');
   }
 
+  console.log('[leadService] deleteLeadsBulk - organizationId:', organizationId);
+  console.log('[leadService] deleteLeadsBulk - leadIds to delete:', leadIds);
+
   // Exclusão em nível de organização (não restrita ao criador),
   // para evitar "retorno" após refresh quando leads pertencem a outro usuário da mesma org.
-  return prisma.lead.deleteMany({
+  const result = await prisma.lead.deleteMany({
     where: {
       id: { in: leadIds },
       organizationId,
     },
   });
+
+  console.log('[leadService] deleteLeadsBulk - deleted count:', result.count);
+  return result;
 }
 
 export async function moveLeadPipeline(organizationId: string, leadId: string, stage: string) {
