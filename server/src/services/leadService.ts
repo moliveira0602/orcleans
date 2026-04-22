@@ -175,20 +175,13 @@ export async function updateLead(organizationId: string, leadId: string, data: U
 }
 
 export async function deleteLead(organizationId: string, userId: string, leadId: string) {
-  // Usuário só pode excluir seus próprios leads (userId deve corresponder)
-  // Isso garante isolamento: um usuário não pode excluir leads de outro
+  // Exclusão em nível de organização (não restrita ao criador),
+  // para que qualquer membro da org possa eliminar leads importados por outros.
   const existing = await prisma.lead.findFirst({
-    where: { id: leadId, organizationId, userId },
+    where: { id: leadId, organizationId },
   });
 
   if (!existing) {
-    // Verificar se o lead existe mas é de outro usuário (para dar mensagem mais específica)
-    const anyLead = await prisma.lead.findFirst({
-      where: { id: leadId, organizationId },
-    });
-    if (anyLead) {
-      throw new Error('Não tem permissão para eliminar este lead');
-    }
     throw new Error('Lead não encontrado');
   }
 

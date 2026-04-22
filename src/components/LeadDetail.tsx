@@ -268,12 +268,13 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
         if (!ok) return;
         try {
             await leadApi.deleteLead(lead.id);
+            dispatch({ type: 'DELETE_LEAD', payload: lead.id });
+            toast('Lead removido.', 'info');
+            onClose();
         } catch (err) {
             console.error('Failed to delete lead on server:', err);
+            toast('Falha ao eliminar lead. Tente novamente.', 'error');
         }
-        dispatch({ type: 'DELETE_LEAD', payload: lead.id });
-        toast('Lead removido.', 'info');
-        onClose();
     };
 
     const notes = lead._notes || [];
