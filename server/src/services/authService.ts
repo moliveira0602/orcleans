@@ -182,6 +182,7 @@ export async function getProfile(userId: string) {
       email: true,
       role: true,
       avatarUrl: true,
+      company: true,
       isActive: true,
       lastLoginAt: true,
       createdAt: true,
@@ -207,6 +208,7 @@ export async function getProfile(userId: string) {
     email: user.email,
     role: user.role,
     avatarUrl: user.avatarUrl,
+    company: user.company,
     isActive: user.isActive,
     lastLoginAt: user.lastLoginAt,
     createdAt: user.createdAt,
@@ -214,11 +216,12 @@ export async function getProfile(userId: string) {
   };
 }
 
-export async function updateProfile(userId: string, data: { name?: string; email?: string }) {
+export async function updateProfile(userId: string, data: { name?: string; email?: string; company?: string }) {
   const updateData: Record<string, unknown> = {};
   
   if (data.name !== undefined) updateData.name = data.name;
   if (data.email !== undefined) updateData.email = data.email.toLowerCase();
+  if (data.company !== undefined) updateData.company = data.company;
 
   const user = await prisma.user.update({
     where: { id: userId },
@@ -229,6 +232,7 @@ export async function updateProfile(userId: string, data: { name?: string; email
       email: true,
       role: true,
       avatarUrl: true,
+      company: true,
       isActive: true,
       lastLoginAt: true,
       createdAt: true,
@@ -250,6 +254,7 @@ export async function updateProfile(userId: string, data: { name?: string; email
     email: user.email,
     role: user.role,
     avatarUrl: user.avatarUrl,
+    company: user.company,
     isActive: user.isActive,
     lastLoginAt: user.lastLoginAt,
     createdAt: user.createdAt,

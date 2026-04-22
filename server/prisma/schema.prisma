@@ -34,6 +34,7 @@ model User {
   passwordHash   String
   role           String   @default("member")
   avatarUrl      String?
+  company        String?
   isActive       Boolean  @default(true)
   lastLoginAt    DateTime?
   lastSeenAt     DateTime?

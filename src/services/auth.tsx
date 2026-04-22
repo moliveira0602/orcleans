@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(userData);
           saveSession(userData);
           // Sync profile to app settings
-          dispatch({ type: 'UPDATE_SETTINGS', payload: { name: profile.name, email: profile.email } });
+          dispatch({ type: 'UPDATE_SETTINGS', payload: { name: profile.name, email: profile.email, company: profile.company || '' } });
         })
         .catch(() => {
           api.logout();
@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData);
     saveSession(userData);
     // Sync profile to app settings
-    dispatch({ type: 'UPDATE_SETTINGS', payload: { name: result.user.name, email: result.user.email } });
+    dispatch({ type: 'UPDATE_SETTINGS', payload: { name: result.user.name, email: result.user.email, company: result.user.company || '' } });
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string, organizationName: string) => {
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData);
     saveSession(userData);
     // Sync profile to app settings
-    dispatch({ type: 'UPDATE_SETTINGS', payload: { name: result.user.name, email: result.user.email } });
+    dispatch({ type: 'UPDATE_SETTINGS', payload: { name: result.user.name, email: result.user.email, company: result.user.company || '' } });
   }, []);
 
   const logout = useCallback(() => {
@@ -154,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData);
       saveSession(userData);
       // Sync profile to app settings
-      dispatch({ type: 'UPDATE_SETTINGS', payload: { name: profile.name, email: profile.email } });
+      dispatch({ type: 'UPDATE_SETTINGS', payload: { name: profile.name, email: profile.email, company: profile.company || '' } });
     } catch {
       // ignore
     }

@@ -19,11 +19,12 @@ export default function SettingsPage() {
     const handleSaveProfile = async () => {
         setSavingProfile(true);
         try {
-            const result = await api.patch<{ name: string; email: string }>('/auth/me', {
+            const result = await api.patch<{ name: string; email: string; company: string }>('/auth/me', {
                 name: settings.name,
                 email: settings.email,
+                company: settings.company,
             });
-            dispatch({ type: 'UPDATE_SETTINGS', payload: { name: result.name, email: result.email } });
+            dispatch({ type: 'UPDATE_SETTINGS', payload: { name: result.name, email: result.email, company: result.company } });
             toast('Perfil atualizado com sucesso.', 'success');
         } catch (err: any) {
             toast(err.response?.data?.error || 'Erro ao atualizar perfil', 'error');
