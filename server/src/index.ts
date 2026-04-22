@@ -36,7 +36,7 @@ const corsOptions: cors.CorsOptions = {
 app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
 
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 app.get('/api/health', async (_req: Request, res: Response) => {

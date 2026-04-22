@@ -195,24 +195,23 @@ export async function deleteLeadsBulk(organizationId: string, _userId: string, l
     throw new Error('Lista de leads inválida');
   }
 
-  console.log('[leadService] deleteLeadsBulk - organizationId:', organizationId);
-  console.log('[leadService] deleteLeadsBulk - leadIds to delete:', leadIds);
+  console.log('[deleteLeadsBulk] organizationId:', JSON.stringify(organizationId));
+  console.log('[deleteLeadsBulk] leadIds:', JSON.stringify(leadIds));
 
-  // Primeiro: verificar quais leads existem com esses IDs
-  const leadsToDelete = await prisma.lead.findMany({
+  // Verificar quais leads existem com esses IDs (sem filtro de org)
+  const leadsFound = await prisma.lead.findMany({
     where: { id: { in: leadIds } },
-    select: { id: true, organizationId: true, nome: true }
+    select: { id: true, organizationId: true },
   });
-  
-  console.log('[leadService] leads found in DB:', leadsToDelete.map(l => ({ id: l.id, orgId: l.organizationId, nome: l.nome })));
-  console.log('[leadService] user organizationId:', organizationId);
-  
-  // Verificar se os leads pertencem à organização do usuário
-  const leadsInOrg = leadsToDelete.filter(l => l.organizationId === organizationId);
-  console.log('[leadService] leads belonging to user org:', leadsInOrg.length);
 
-  // Exclusão em nível de organização (não restrita ao criador),
-  // para evitar "retorno" após refresh quando leads pertencem a outro usuário da mesma org.
+  console.log('[deleteLeadsBulk] leadsFound count:', leadsFound.length);
+  if (leadsFound.length > 0) {
+    console.log('[deleteLeadsBulk] sample lead orgId:', JSON.stringify(leadsFound[0].organizationId));
+    console.log('[deleteLeadsBulk] orgId match:', leadsFound[0].organizationId === organizationId);
+    console.log('[deleteLeadsBulk] orgId lengths:', leadsFound[0].organizationId.length, 'vs', organizationId.length);
+  }
+
+  // Excluir apenas leads que pertencem à organização do utilizador
   const result = await prisma.lead.deleteMany({
     where: {
       id: { in: leadIds },
@@ -220,7 +219,15 @@ export async function deleteLeadsBulk(organizationId: string, _userId: string, l
     },
   });
 
-  console.log('[leadService] deleteLeadsBulk - deleted count:', result.count);
+  console.log('[deleteLeadsBulk] deleted:', result.count);
+
+  // Se não eliminou nenhum mas os leads existem, reportar no erro
+  if (result.count === 0 && leadsFound.length > 0) {
+    const orgs = [...new Set(leadsFound.map(l => l.organizationId))];
+    console.error('[deleteLeadsBulk] MISMATCH! Lead orgs:', orgs, 'User org:', organizationId);
+    throw new Error(`Organization mismatch: leads belong to ${orgs.join(',')} but user is in ${organizationId}`);
+  }
+
   return result;
 }
 
