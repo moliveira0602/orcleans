@@ -56,8 +56,8 @@ export default function App() {
     return (
         <ErrorBoundary>
             <BrowserRouter>
-                <AuthProvider>
-                    <AppProvider>
+                <AppProvider>
+                    <AuthProvider>
                         <ToastProvider>
                             <ConfirmProvider>
                                 <Routes>
@@ -84,8 +84,8 @@ export default function App() {
                                 </Routes>
                             </ConfirmProvider>
                         </ToastProvider>
-                    </AppProvider>
-                </AuthProvider>
+                    </AuthProvider>
+                </AppProvider>
             </BrowserRouter>
         </ErrorBoundary>
     );
