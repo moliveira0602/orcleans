@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { api } from '../services/api';
+import { useAppDispatch } from '../store';
 
 type Role = 'super_admin' | 'admin' | 'member';
 
@@ -61,6 +62,7 @@ function clearSession() {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(loadSession);
   const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     if (api.isAuthenticated() && !user) {
@@ -76,6 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           };
           setUser(userData);
           saveSession(userData);
+          // Sync profile to app settings
+          dispatch({ type: 'UPDATE_SETTINGS', payload: { name: profile.name, email: profile.email } });
         })
         .catch(() => {
           api.logout();
@@ -114,6 +118,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const userData: User = result.user;
     setUser(userData);
     saveSession(userData);
+    // Sync profile to app settings
+    dispatch({ type: 'UPDATE_SETTINGS', payload: { name: result.user.name, email: result.user.email } });
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string, organizationName: string) => {
@@ -122,12 +128,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const userData: User = result.user;
     setUser(userData);
     saveSession(userData);
+    // Sync profile to app settings
+    dispatch({ type: 'UPDATE_SETTINGS', payload: { name: result.user.name, email: result.user.email } });
   }, []);
 
   const logout = useCallback(() => {
     api.logout();
     clearSession();
     setUser(null);
+    // Clear settings on logout
+    dispatch({ type: 'UPDATE_SETTINGS', payload: { name: '', email: '', company: '' } });
   }, []);
 
   const refreshProfile = useCallback(async () => {
@@ -143,6 +153,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       setUser(userData);
       saveSession(userData);
+      // Sync profile to app settings
+      dispatch({ type: 'UPDATE_SETTINGS', payload: { name: profile.name, email: profile.email } });
     } catch {
       // ignore
     }
