@@ -124,8 +124,10 @@ export async function deleteLeadsBulk(req: AuthRequest, res: Response) {
     console.log('[leadController] deleteLeadsBulk - body:', req.body);
     console.log('[leadController] deleteLeadsBulk - leadIds:', leadIds);
     console.log('[leadController] deleteLeadsBulk - organizationId:', req.organizationId);
-    
-    const result = await leadService.deleteLeadsBulk(req.organizationId!, req.userId!, leadIds);
+    console.log('[leadController] deleteLeadsBulk - isSuperAdmin:', isSuperAdmin(req.userRole!));
+
+    const orgId = isSuperAdmin(req.userRole!) ? undefined : req.organizationId;
+    const result = await leadService.deleteLeadsBulk(orgId!, req.userId!, leadIds);
     console.log('[leadController] deleteLeadsBulk - result:', result);
     return res.status(200).json({ count: result.count });
   } catch (error: any) {

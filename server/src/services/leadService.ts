@@ -190,44 +190,17 @@ export async function deleteLead(organizationId: string, userId: string, leadId:
   });
 }
 
-export async function deleteLeadsBulk(organizationId: string, _userId: string, leadIds: string[]) {
+export async function deleteLeadsBulk(organizationId: string | undefined, _userId: string, leadIds: string[]) {
   if (!Array.isArray(leadIds) || leadIds.length === 0) {
     throw new Error('Lista de leads inválida');
   }
 
-  console.log('[deleteLeadsBulk] organizationId:', JSON.stringify(organizationId));
-  console.log('[deleteLeadsBulk] leadIds:', JSON.stringify(leadIds));
-
-  // Verificar quais leads existem com esses IDs (sem filtro de org)
-  const leadsFound = await prisma.lead.findMany({
-    where: { id: { in: leadIds } },
-    select: { id: true, organizationId: true },
-  });
-
-  console.log('[deleteLeadsBulk] leadsFound count:', leadsFound.length);
-  if (leadsFound.length > 0) {
-    console.log('[deleteLeadsBulk] sample lead orgId:', JSON.stringify(leadsFound[0].organizationId));
-    console.log('[deleteLeadsBulk] orgId match:', leadsFound[0].organizationId === organizationId);
-    console.log('[deleteLeadsBulk] orgId lengths:', leadsFound[0].organizationId.length, 'vs', organizationId.length);
+  const where: Record<string, unknown> = { id: { in: leadIds } };
+  if (organizationId) {
+    where.organizationId = organizationId;
   }
 
-  // Excluir apenas leads que pertencem à organização do utilizador
-  const result = await prisma.lead.deleteMany({
-    where: {
-      id: { in: leadIds },
-      organizationId,
-    },
-  });
-
-  console.log('[deleteLeadsBulk] deleted:', result.count);
-
-  // Se não eliminou nenhum mas os leads existem, reportar no erro
-  if (result.count === 0 && leadsFound.length > 0) {
-    const orgs = [...new Set(leadsFound.map(l => l.organizationId))];
-    console.error('[deleteLeadsBulk] MISMATCH! Lead orgs:', orgs, 'User org:', organizationId);
-    throw new Error(`Organization mismatch: leads belong to ${orgs.join(',')} but user is in ${organizationId}`);
-  }
-
+  const result = await prisma.lead.deleteMany({ where });
   return result;
 }
 
