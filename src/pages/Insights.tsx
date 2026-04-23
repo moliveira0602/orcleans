@@ -697,6 +697,7 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                             url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
                             attribution='&copy; Google'
                         />
+                        <MapFlyTo center={flyToCenter} zoom={flyToZoom} />
                         
                         {/* Static Radar Center */}
                         <Circle
@@ -834,11 +835,32 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                         <input
                             className="input"
                             placeholder="Endereço, cidade ou coordenadas"
-                            style={{ paddingLeft: 36, background: 'rgba(0,0,0,0.2)', borderColor: 'rgba(255,255,255,0.05)', color: '#FFF' }}
+                            style={{ paddingLeft: 36, paddingRight: 36, background: 'rgba(0,0,0,0.2)', borderColor: 'rgba(255,255,255,0.05)', color: '#FFF' }}
                             value={scanConfig.location}
                             onChange={(e) => setScanConfig({ ...scanConfig, location: e.target.value })}
                             onBlur={handleLocationBlur}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleLocationBlur();
+                            }}
                         />
+                        <button 
+                            onClick={handleLocationBlur}
+                            style={{ 
+                                position: 'absolute', 
+                                right: 10, 
+                                top: '50%', 
+                                transform: 'translateY(-50%)', 
+                                background: 'none', 
+                                border: 'none', 
+                                color: '#444', 
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center'
+                            }}
+                            title="Localizar no mapa"
+                        >
+                            <RotateCw size={14} />
+                        </button>
                     </div>
                     <button
                         className="btn"
