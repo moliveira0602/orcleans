@@ -32,11 +32,11 @@ import MistBackground from '../components/ui/MistBackground';
 const faqItems = [
     {
         question: "Como funciona o período de teste?",
-        answer: "Oferecemos 14 dias de teste gratuito com acesso completo a todas as funcionalidades. Não é necessário cartão de crédito. No final, escolha o plano ideal."
+        answer: "Oferecemos 7 dias de teste gratuito com acesso completo a todas as funcionalidades. Não é necessário cartão de crédito. No final, escolha o plano ideal."
     },
     {
         question: "Preciso de cartão de crédito para começar?",
-        answer: "Não. Crie sua conta e explore todas as funcionalidades gratuitamente por 14 dias. Só pedimos pagamento se decidir fazer upgrade."
+        answer: "Não. Crie sua conta e explore todas as funcionalidades gratuitamente por 7 dias. Só pedimos pagamento se decidir fazer upgrade."
     },
     {
         question: "Posso importar meus leads existentes?",
@@ -139,7 +139,7 @@ const pricingPlans = [
             "Até 10 utilizadores",
             "Suporte prioritário"
         ],
-        cta: "Experimentar 14 Dias",
+        cta: "Experimentar 7 Dias",
         highlighted: true,
         badge: "Mais escolhido por times de 5–15 pessoas"
     },
@@ -753,7 +753,7 @@ export default function LandingPage() {
                             </span>
                             <span className="hero-capture__trust-item">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                                14 dias grátis
+                                7 dias grátis
                             </span>
                             <span className="hero-capture__trust-item">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
@@ -912,7 +912,7 @@ export default function LandingPage() {
                                 <button className={`btn ${plan.highlighted ? 'btn-primary' : 'btn-ghost'} pricing-cta`}>
                                     {plan.cta}
                                 </button>
-                                <p className="pricing-guarantee">Garantia de 14 dias ou seu dinheiro de volta</p>
+                                <p className="pricing-guarantee">Garantia de 7 dias ou seu dinheiro de volta</p>
                             </div>
                         ))}
                     </div>
@@ -953,7 +953,7 @@ export default function LandingPage() {
                     <p className="cta-subtitle">Setup em menos de 10 minutos. Primeiros leads ainda hoje.</p>
                     <div className="cta-buttons">
                         <a href="/login" className="btn btn-primary btn-lg pulse-animation">
-                            Começar agora — é grátis por 14 dias
+                            Começar agora — é grátis por 7 dias
                         </a>
                     </div>
                 </div>
