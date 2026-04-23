@@ -84,6 +84,7 @@ export function Topbar({ currentPage, onNavigate, onSearch, onMobileMenuToggle }
                 >
                     ↑ Importar
                 </button>
+                <button className="btn-icon" onClick={showNotif}>
                     <Bell size={20} strokeWidth={1.75} />
                 </button>
                 <button className="btn-icon" onClick={logout} title="Sair">
