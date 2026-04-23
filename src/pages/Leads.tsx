@@ -62,6 +62,14 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
 
     // Sync external search query
     useEffect(() => {
+        refreshLeads();
+        // Diagnóstico de sessão para depurar erro de exclusão
+        api.get('/leads/debug')
+            .then(res => console.log('[Leads] Session Debug:', res))
+            .catch(err => console.warn('[Leads] Session Debug failed:', err));
+    }, [refreshLeads]);
+
+    useEffect(() => {
         setSearch(searchQuery);
         setPage(0);
     }, [searchQuery]);

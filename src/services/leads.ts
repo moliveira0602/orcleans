@@ -73,17 +73,21 @@ export async function fetchLeads(params?: {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }): Promise<LeadsResponse> {
-  const queryParams: Record<string, string> = {};
-  if (params?.page) queryParams.page = String(params.page);
-  if (params?.limit) queryParams.limit = String(params.limit);
-  if (params?.search) queryParams.search = params.search;
-  if (params?.pipelineStage) queryParams.pipelineStage = params.pipelineStage;
-  if (params?.scoreMin !== undefined) queryParams.scoreMin = String(params.scoreMin);
-  if (params?.scoreMax !== undefined) queryParams.scoreMax = String(params.scoreMax);
-  if (params?.segmento) queryParams.segmento = params.segmento;
-  if (params?.sortBy) queryParams.sortBy = params.sortBy;
-  if (params?.sortOrder) queryParams.sortOrder = params.sortOrder;
-  return api.get<LeadsResponse>('/leads', { params: queryParams });
+  const queryParams = new URLSearchParams();
+  if (params?.page) queryParams.append('page', params.page.toString());
+  if (params?.limit) queryParams.append('limit', params.limit.toString());
+  if (params?.search) queryParams.append('search', params.search);
+  if (params?.pipelineStage) queryParams.append('pipelineStage', params.pipelineStage);
+  if (params?.scoreMin !== undefined) queryParams.append('scoreMin', params.scoreMin.toString());
+  if (params?.scoreMax !== undefined) queryParams.append('scoreMax', params.scoreMax.toString());
+  if (params?.segmento) queryParams.append('segmento', params.segmento);
+  if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
+  if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+  
+  // Burlar cache da Vercel
+  queryParams.append('_cb', Date.now().toString());
+
+  return api.get<LeadsResponse>(`/leads?${queryParams.toString()}`);
 }
 
 export async function fetchLeadById(id: string): Promise<Lead> {

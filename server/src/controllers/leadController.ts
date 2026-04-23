@@ -118,6 +118,40 @@ export async function deleteLead(req: AuthRequest, res: Response) {
   }
 }
 
+export async function debugLeads(req: AuthRequest, res: Response) {
+  try {
+    const orgId = isSuperAdmin(req.userRole!) ? undefined : req.organizationId;
+    
+    // Pegar amostra de leads
+    const sample = await prisma.lead.findMany({
+      where: orgId ? { organizationId: orgId } : {},
+      take: 5,
+      select: { id: true, organizationId: true, nome: true }
+    });
+
+    const totalCount = await prisma.lead.count();
+    const orgCount = orgId ? await prisma.lead.count({ where: { organizationId: orgId } }) : totalCount;
+
+    return res.json({
+      timestamp: new Date().toISOString(),
+      user: {
+        id: req.userId,
+        orgId: req.organizationId,
+        role: req.userRole,
+        isSuper: isSuperAdmin(req.userRole!)
+      },
+      database: {
+        totalLeadsInDb: totalCount,
+        leadsInThisOrg: orgCount,
+        sampleLeads: sample
+      },
+      version: 'v14_debug'
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+}
+
 export async function deleteLeadsBulk(req: AuthRequest, res: Response) {
   try {
     const { leadIds } = req.body;
