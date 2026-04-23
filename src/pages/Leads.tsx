@@ -143,6 +143,9 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
 
         try {
             const ids = Array.from(selectedLeads);
+            console.log('[Leads] IDs to delete:', ids);
+            const leadDetails = leads.filter(l => selectedLeads.has(l.id));
+            console.log('[Leads] Lead details to delete:', leadDetails);
             
             // 1. Chamar API e aguardar confirmação real
             let result;
