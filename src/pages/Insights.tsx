@@ -3,7 +3,7 @@ import {
     Radar, Search, MapPin, Activity, Globe, Phone, Mail, 
     Share2, Star, Check, Trash2, Download, FolderPlus, 
     ChevronRight, Map as MapIcon, Info, AlertTriangle, Crosshair,
-    RotateCw, RefreshCw, X
+    RotateCw, RefreshCw
 } from 'lucide-react';
 import { useAppState, useAppDispatch } from '../store';
 import { getLeadName, getLeadCategory, detectAddressCol, getLeadAddress, detectPostalCol, getLeadPostal, detectLatCol, detectLngCol, getRawCoord } from '../utils/detect';
@@ -117,14 +117,8 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
     const { leads, settings } = useAppState();
     const dispatch = useAppDispatch();
     const toast = useToast();
-    const [radius, setRadius] = useState<number>(5); // km
-    const [filterCategory, setFilterCategory] = useState<string>('todos');
-    const [locationText, setLocationText] = useState('');
-    const [locationPin, setLocationPin] = useState<[number, number] | null>(null);
-    const [locationError, setLocationError] = useState<string | null>(null);
-    const [isLocating, setIsLocating] = useState(false);
     const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
-    const [legendFilter, setLegendFilter] = useState<'all' | 'green' | 'amber' | 'gray'>('all');
+    const [locationPin, setLocationPin] = useState<[number, number] | null>(null);
     const [mapZoom] = useState(13);
     const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
     const [flyToCenter, setFlyToCenter] = useState<[number, number] | null>(null);
@@ -155,11 +149,8 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
     }, []);
 
     // GeoScout Scan State
-    const [scanModalOpen, setScanModalOpen] = useState(false);
     const [scanLoading, setScanLoading] = useState(false);
     const [scanProgress, setScanProgress] = useState('');
-    const [selectedPreset] = useState<ScanPresetKey>('clinicasOlhao');
-    const [useDemoMode] = useState(() => localStorage.getItem('orca_scan_demo') === 'true');
     const [customApiKey, setCustomApiKey] = useState('');
     const [scanSource, setScanSource] = useState<'demo' | 'google'>(() => {
         const saved = localStorage.getItem('orca_scan_source');
@@ -404,45 +395,25 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
         return [38.7223, -9.1393] as [number, number];
     }, [mappableLeads, locationPin, userLocation]);
 
-    const categories = useMemo(() => {
-        const set = new Set<string>();
-        leads.forEach(l => {
-            const cat = getLeadCategory(l, 'segmento');
-            if (cat) set.add(cat);
-        });
-        return Array.from(set);
-    }, [leads]);
-
     const filteredLeads = useMemo(() => {
-        // If no user location is set (locationPin is null), show all leads without radius filter
-        if (!locationPin) {
-            const results = mappableLeads.filter(l => {
-                // Only apply category filter, no radius filter
-                const matchesCat = filterCategory === 'todos' || getLeadCategory(l, 'segmento') === filterCategory;
-                // Apply legend filter
-                const matchesLegend = legendFilter === 'all' || getMarkerColorClass(l._score) === legendFilter;
-                (l as any)._distance = 0; // No distance when not filtering
-                return matchesCat && matchesLegend;
-            });
-            console.log('[ORCA Map] Filtered leads (no location):', results.length, 'of', mappableLeads.length, '(category:', filterCategory, ', legend:', legendFilter, ')');
-            return results;
-        }
-        
-        // User has set a location - apply radius filter
-        const results = mappableLeads.filter(l => {
-            // Recalculate distance to current center for filtering
+        return mappableLeads.filter(l => {
+            // Category filter
+            const matchesCat = scanConfig.categories.length === 0 || 
+                scanConfig.categories.some(c => {
+                    const cat = categoryOptions.find(o => o.id === c);
+                    return getLeadCategory(l, 'segmento') === (cat?.segment || c);
+                });
+
+            // Radius filter
             const dLat = (l as any)._lat - activeCenter[0];
             const dLng = (l as any)._lng - activeCenter[1];
             const dKm = Math.sqrt(dLat * dLat + dLng * dLng) * 111;
             (l as any)._distance = dKm;
+            const inRadius = dKm <= scanConfig.radius;
 
-            const inRadius = dKm <= radius;
-            const matchesCat = filterCategory === 'todos' || getLeadCategory(l, 'segmento') === filterCategory;
-            return inRadius && matchesCat;
+            return matchesCat && inRadius;
         });
-        console.log('[ORCA Map] Filtered leads (with location):', results.length, 'of', mappableLeads.length, '(radius:', radius, 'km, category:', filterCategory, ')');
-        return results;
-    }, [mappableLeads, radius, filterCategory, activeCenter, locationPin]);
+    }, [mappableLeads, scanConfig.categories, scanConfig.radius, activeCenter]);
 
     const leadsWithQueryButNoCoords = useMemo(() => {
         return leads.filter(l => {
@@ -515,7 +486,7 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
             let totalFound = 0;
             
             for (const segment of segments) {
-                setScanProgress(`🔍 Buscando: ${segment} em ${location}...`);
+                setScanProgress(`Buscando: ${segment} em ${location}...`);
                 console.log('[GeoScout] Running scan for:', segment, 'in', location);
                 
                 const result = await runScan(
@@ -627,858 +598,520 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
         return '#404040'; // Dark Graphite
     };
 
+    const scanStatus = { hasCache: false }; // Placeholder or derive from logic if needed
+
     const getMarkerColorClass = (score: number) => {
         if (score >= settings.hotThreshold) return 'green';
         if (score >= settings.warmThreshold) return 'amber';
         return 'gray';
     };
 
-    const locate = async () => {
-        const raw = locationText.trim();
-        if (!raw) {
-            setLocationPin(null);
-            setLocationError(null);
-            return;
-        }
-
-        setLocationError(null);
-        setIsLocating(true);
+    const handleLocationBlur = async () => {
+        const raw = scanConfig.location.trim();
+        if (!raw) return;
+        
         try {
-            const m = raw.match(/(-?\d+(?:[.,]\d+)?)\s*,\s*(-?\d+(?:[.,]\d+)?)/);
-            if (m) {
-                const lat = Number(m[1].replace(',', '.'));
-                const lng = Number(m[2].replace(',', '.'));
-                if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
-                    setLocationPin([lat, lng]);
-                    return;
-                }
-            }
-
             const coords = await geocodeAddress(raw);
-            if (!coords) {
-                setLocationError('Não foi possível encontrar este local.');
-                return;
+            if (coords) {
+                setLocationPin([coords.lat, coords.lng]);
+                setFlyToCenter([coords.lat, coords.lng]);
+                setFlyToZoom(13);
             }
-            setLocationPin([coords.lat, coords.lng]);
-        } finally {
-            setIsLocating(false);
+        } catch (err) {
+            console.error('Geocoding error:', err);
         }
     };
 
     return (
-        <div className="page" style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: 24, height: '100%' }}>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                <div>
-                    <button
-                        className="btn btn-primary"
-                        onClick={() => setScanModalOpen(true)}
-                        style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: 8,
-                            background: 'linear-gradient(135deg, #333333 0%, #0A0A0A 100%)',
-                            boxShadow: '0 2px 8px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
-                            color: '#FFFFFF'
-                        }}
-                    >
-                        <Radar size={18} strokeWidth={1.75} />
-                        Iniciar Varredura
-                    </button>
-                    {scanStatus?.hasCache && (
-                        <span style={{ fontSize: 11, color: 'var(--t3)', marginLeft: 8 }}>
-                            Scan recente: {scanStatus.cachedCount} estabelecimentos ({scanStatus.ageDays} dias)
-                        </span>
-                    )}
+        <div className="page" style={{ display: 'flex', gap: 0, padding: 0, height: '100%', background: '#07070a', overflow: 'hidden' }}>
+            {/* LEFT AREA: CONTENT & MAP */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '32px 40px', overflowY: 'auto', position: 'relative' }}>
+                
+                {/* Header Text */}
+                <div style={{ marginBottom: 32 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                        <h1 style={{ fontSize: 32, fontWeight: 800, color: '#FFF', margin: 0, letterSpacing: '-0.02em' }}>
+                            Encontre os melhores pontos para <br />
+                            prospecção com inteligência geográfica.
+                        </h1>
+                        <button 
+                            className="btn"
+                            style={{ 
+                                background: 'rgba(255,255,255,0.03)', 
+                                border: '1px solid rgba(255,255,255,0.1)', 
+                                color: '#AAA',
+                                fontSize: 11,
+                                padding: '8px 16px',
+                                borderRadius: 8,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8
+                            }}
+                        >
+                            <Activity size={14} /> Histórico de Scans
+                        </button>
+                    </div>
+                    <p style={{ fontSize: 14, color: 'rgba(234, 246, 255, 0.5)', maxWidth: 600, lineHeight: 1.6 }}>
+                        O Sonar analisa locais, segmentos e avaliações para identificar oportunidades com alto potencial de negócio de forma automatizada e precisa.
+                    </p>
                 </div>
-                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase' }}>Local</label>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            <input
-                                className="input"
-                                style={{ width: 260 }}
-                                value={locationText}
-                                onChange={(e) => setLocationText(e.target.value)}
-                                placeholder="Morada, código postal ou lat,lng"
-                                onKeyDown={(e) => { if (e.key === 'Enter') void locate(); }}
-                            />
-                            <button className="btn btn-primary" onClick={() => void locate()} disabled={isLocating}>
-                                {isLocating ? '...' : 'Localizar'}
-                            </button>
-                        </div>
-                        {locationError && (
-                            <div style={{ fontSize: 11, color: 'var(--red)' }}>{locationError}</div>
-                        )}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase' }}>Raio de Atuação</label>
-                        <select className="input" style={{ width: 120 }} value={radius} onChange={e => setRadius(Number(e.target.value))}>
-                            <option value={1}>1 km</option>
-                            <option value={5}>5 km</option>
-                            <option value={10}>10 km</option>
-                            <option value={25}>25 km</option>
-                        </select>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase' }}>Segmento</label>
-                        <select className="input" style={{ width: 160 }} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
-                            <option value="todos">Todos os Segmentos</option>
-                            {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                    </div>
-                </div>
-            </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, flex: 1, minHeight: 0 }}>
-                {/* Real Map Component */}
-                <div style={{ position: 'relative', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-                    <MapWithFlashlight>
-                        <MapContainer
+                {/* Status Badges */}
+                <div style={{ display: 'flex', gap: 16, marginBottom: 40 }}>
+                    {[
+                        { icon: <Crosshair size={16} />, title: 'Precisão Geográfica', desc: 'Dados atualizados em tempo real' },
+                        { icon: <Activity size={16} />, title: 'Inteligência de Dados', desc: 'Multi-fonte e alta confiabilidade' },
+                        { icon: <Globe size={16} />, title: 'Conformidade LGPD', desc: '100% em conformidade' },
+                    ].map((badge, i) => (
+                        <div key={i} style={{ 
+                            flex: 1, 
+                            background: 'rgba(255,255,255,0.02)', 
+                            border: '1px solid rgba(255,255,255,0.05)', 
+                            padding: '16px 20px', 
+                            borderRadius: 12,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 16
+                        }}>
+                            <div style={{ color: 'rgba(255,255,255,0.3)' }}>{badge.icon}</div>
+                            <div>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: '#FFF' }}>{badge.title}</div>
+                                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{badge.desc}</div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+
+                {/* MAP CONTAINER */}
+                <div style={{ 
+                    flex: 1, 
+                    minHeight: 500, 
+                    borderRadius: 24, 
+                    overflow: 'hidden', 
+                    position: 'relative', 
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+                }} className="monochrome-map">
+                    <MapContainer
                         center={activeCenter}
                         zoom={mapZoom}
                         style={{ height: '100%', width: '100%', background: '#0a0b10' }}
                         zoomControl={false}
                     >
-                        {/* Google Maps Dark Mode - Requires API Key */}
                         <TileLayer
                             url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
-                            attribution='&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+                            attribution='&copy; Google'
                         />
-                        {/* Radar-style radius circle with animated sweep */}
+                        
+                        {/* Static Radar Center */}
                         <Circle
                             center={activeCenter}
-                            radius={radius * 1000}
+                            radius={scanConfig.radius * 1000}
                             pathOptions={{ 
-                                color: 'var(--orca-accent)', 
-                                fillColor: 'var(--orca-accent)', 
-                                fillOpacity: 0.03, 
-                                weight: 2, 
-                                dashArray: '8, 12',
-                                className: 'radar-circle'
+                                color: 'rgba(255,255,255,0.1)', 
+                                fillColor: 'rgba(255,255,255,0.02)', 
+                                fillOpacity: 0.1, 
+                                weight: 1, 
+                                dashArray: '4, 8'
                             }}
                         />
-                        {/* Animated radar sweep overlay */}
-                        <Circle
-                            center={activeCenter}
-                            radius={radius * 1000}
-                            pathOptions={{ 
-                                color: 'var(--orca-accent)', 
-                                fillColor: 'var(--orca-accent)', 
-                                fillOpacity: 0.08, 
-                                weight: 0,
-                                className: 'radar-sweep'
-                            }}
-                        />
-                        {locationPin && (
-                            <CircleMarker
-                                center={locationPin}
-                                radius={8}
-                                pathOptions={{ color: 'var(--blue)', fillColor: 'var(--blue)', fillOpacity: 0.9, weight: 2 }}
-                            >
-                                <Popup>
-                                    <div style={{ color: '#000', padding: '4px' }}>
-                                        <div style={{ fontWeight: 700, fontSize: 13 }}>Local pesquisado</div>
-                                        <div style={{ fontSize: 11, color: '#666' }}>
-                                            {locationPin[0].toFixed(6)}, {locationPin[1].toFixed(6)}
-                                        </div>
-                                    </div>
-                                </Popup>
-                            </CircleMarker>
+
+                        {/* Animated Radar Expansion (Only when scanning) */}
+                        {scanLoading && (
+                            <>
+                                <Circle
+                                    center={activeCenter}
+                                    radius={scanConfig.radius * 1000}
+                                    className="radar-expanding-circle"
+                                    pathOptions={{ color: 'rgba(255,255,255,0.2)', weight: 1, fillOpacity: 0 }}
+                                />
+                                <Circle
+                                    center={activeCenter}
+                                    radius={scanConfig.radius * 1000 * 0.6}
+                                    className="radar-expanding-circle"
+                                    pathOptions={{ color: 'rgba(255,255,255,0.1)', weight: 1, fillOpacity: 0 }}
+                                />
+                            </>
                         )}
-                        {filteredLeads.map((l: any) => {
-                            const isHighlighted = highlightedLeadId === l.id;
+
+                        {/* Technical Pins */}
+                        {mappableLeads.map((l: any) => {
                             const isSelected = selectedLeadId === l.id;
-                            const isSonarActive = isSelected || isHighlighted;
-                            const isCentral = isSelected; // Only selected lead is central
+                            const isRelevant = l._score >= settings.hotThreshold;
+                            
                             return (
                                 <CircleMarker
                                     key={l.id}
-                                    center={[l._lat, l._lng]}
-                                    radius={isCentral ? 14 : isSonarActive ? 10 : 6}
+                                    center={getLeadCoords(l) as [number, number]}
+                                    radius={isSelected ? 10 : isRelevant ? 6 : 4}
                                     pathOptions={{
-                                        color: isCentral ? '#FFFFFF' : isSonarActive ? 'rgba(255,255,255,0.8)' : getMarkerColor(l._score),
-                                        fillColor: isCentral ? '#FFFFFF' : isSonarActive ? 'rgba(255,255,255,0.8)' : getMarkerColor(l._score),
-                                        fillOpacity: isCentral ? 1 : isSonarActive ? 0.7 : 0.9,
-                                        weight: isCentral ? 4 : isSonarActive ? 3 : 2,
-                                        className: isSonarActive ? 'sonar-pulse' : ''
+                                        color: isSelected ? '#FFF' : isRelevant ? '#FFF' : '#444',
+                                        fillColor: isSelected ? '#FFF' : isRelevant ? '#FFF' : '#222',
+                                        fillOpacity: 1,
+                                        weight: isSelected ? 4 : 2,
+                                        className: isSelected ? 'sonar-pulse-white' : isRelevant ? 'relevant-glow' : ''
                                     }}
                                     eventHandlers={{
-                                        click: () => {
-                                            setSelectedLeadId(l.id);
-                                            // Trigger fly-to animation
-                                            const coords = getLeadCoords(l);
-                                            if (coords) {
-                                                setFlyToCenter(coords);
-                                                setFlyToZoom(18);
-                                            }
-                                        }
+                                        click: () => setSelectedLeadId(l.id)
                                     }}
                                 >
                                     <Popup>
-                                        <div style={{ color: '#e5e7eb', padding: '12px', maxWidth: 280 }}>
-                                            <div style={{ fontWeight: 700, fontSize: 14, color: '#f3f4f6', marginBottom: 4 }}>{getLeadName(l, 'nome')}</div>
-                                            <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 6 }}>{getLeadCategory(l, 'segmento') || 'Sem segmento'}</div>
-                                            {l.endereco && <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><MapPin size={12} /> {l.endereco}</div>}
-                                            {l.telefone && <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><Phone size={12} /> <a href={`tel:${l.telefone}`} style={{ color: '#FFF', textDecoration: 'none' }}>{l.telefone}</a></div>}
-                                            {l.website && <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}><Globe size={12} /> <a href={l.website} target="_blank" rel="noreferrer" style={{ color: '#FFF', textDecoration: 'none' }}>{l.website}</a></div>}
-                                            
-                                            {/* Photos section */}
-                                            {l.fotos && l.fotos.length > 0 && (
-                                                <div style={{ marginTop: 8, marginBottom: 8, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 8 }}>
-                                                    <div style={{ display: 'flex', gap: 4, overflowX: 'auto', paddingBottom: 4 }}>
-                                                        {l.fotos.slice(0, 3).map((foto: string, idx: number) => (
-                                                            <img 
-                                                                key={idx} 
-                                                                src={foto} 
-                                                                alt={`Foto ${idx + 1}`} 
-                                                                style={{ 
-                                                                    width: 60, 
-                                                                    height: 60, 
-                                                                    objectFit: 'cover', 
-                                                                    borderRadius: 4,
-                                                                    flexShrink: 0,
-                                                                    border: '1px solid rgba(255,255,255,0.1)'
-                                                                }} 
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                            
-                                            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                                                <span className={`badge badge-${scoreClass(l._score, settings.hotThreshold, settings.warmThreshold)}`} style={{ fontSize: 10, color: '#000', background: '#FFF' }}>
+                                        <div style={{ padding: 12, minWidth: 200 }}>
+                                            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{getLeadName(l, 'nome')}</div>
+                                            <div style={{ fontSize: 11, color: '#888', marginBottom: 8 }}>{getLeadCategory(l, 'segmento')}</div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <div className={`badge badge-${scoreClass(l._score, settings.hotThreshold, settings.warmThreshold)}`}>
                                                     Score: {l._score.toFixed(1)}
-                                                </span>
-                                                {l.avaliacao !== null && l.avaliacao !== undefined && (
-                                                    <span style={{ fontSize: 10, color: '#fbbf24', display: 'flex', alignItems: 'center', gap: 4 }}><Star size={10} fill="#fbbf24" /> {l.avaliacao}{l.reviews ? ` (${l.reviews})` : ''}</span>
-                                                )}
+                                                </div>
+                                                <div style={{ fontSize: 10, color: '#555' }}>{l._distance.toFixed(1)}km</div>
                                             </div>
                                         </div>
                                     </Popup>
                                 </CircleMarker>
                             );
                         })}
+
                         <MapResizer center={activeCenter} zoom={mapZoom} />
                         <MapFlyTo center={flyToCenter} zoom={flyToZoom} />
                     </MapContainer>
-                    </MapWithFlashlight>
 
-                    {/* Interactive Legend Overlay */}
-                    <div style={{ position: 'absolute', top: 16, left: 16, zIndex: 1000, background: 'rgba(13, 21, 37, 0.95)', padding: '12px 14px', borderRadius: 8, border: '1px solid var(--orca-border)', backdropFilter: 'blur(8px)' }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--orca-text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>Legenda (clique para filtrar)</div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            <div 
-                                style={{ 
-                                    display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--orca-text)',
-                                    cursor: 'pointer', opacity: legendFilter === 'all' || legendFilter === 'green' ? 1 : 0.4,
-                                    padding: '4px 6px', borderRadius: 4,
-                                    background: legendFilter === 'green' ? 'rgba(255,255,255,0.1)' : 'transparent',
-                                    transition: 'all 0.2s ease'
-                                }}
-                                onClick={() => setLegendFilter(legendFilter === 'green' ? 'all' : 'green')}
-                            >
-                                <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#FFFFFF', boxShadow: '0 0 6px rgba(255,255,255,0.3)' }} /> 
-                                Quente ({mappableLeads.filter(l => l._score >= settings.hotThreshold).length})
+                    {/* Floating Map Legend */}
+                    <div style={{ position: 'absolute', bottom: 24, left: 24, zIndex: 1000, background: 'rgba(10, 10, 15, 0.8)', padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)' }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: '#555', textTransform: 'uppercase', marginBottom: 8 }}>Legenda</div>
+                        <div style={{ display: 'flex', gap: 16 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#AAA' }}>
+                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#EF4444' }} /> Quente
                             </div>
-                            <div 
-                                style={{ 
-                                    display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--orca-text)',
-                                    cursor: 'pointer', opacity: legendFilter === 'all' || legendFilter === 'amber' ? 1 : 0.4,
-                                    padding: '4px 6px', borderRadius: 4,
-                                    background: legendFilter === 'amber' ? 'rgba(160,160,160,0.1)' : 'transparent',
-                                    transition: 'all 0.2s ease'
-                                }}
-                                onClick={() => setLegendFilter(legendFilter === 'amber' ? 'all' : 'amber')}
-                            >
-                                <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#A0A0A0' }} /> 
-                                Morno ({mappableLeads.filter(l => l._score >= settings.warmThreshold && l._score < settings.hotThreshold).length})
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#AAA' }}>
+                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#F59E0B' }} /> Morno
                             </div>
-                            <div 
-                                style={{ 
-                                    display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--orca-text)',
-                                    cursor: 'pointer', opacity: legendFilter === 'all' || legendFilter === 'gray' ? 1 : 0.4,
-                                    padding: '4px 6px', borderRadius: 4,
-                                    background: legendFilter === 'gray' ? 'rgba(64,64,64,0.1)' : 'transparent',
-                                    transition: 'all 0.2s ease'
-                                }}
-                                onClick={() => setLegendFilter(legendFilter === 'gray' ? 'all' : 'gray')}
-                            >
-                                <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#404040' }} /> 
-                                Frio ({mappableLeads.filter(l => l._score < settings.warmThreshold).length})
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: '#AAA' }}>
+                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#4B5563' }} /> Frio
                             </div>
-                            {legendFilter !== 'all' && (
-                                <div 
-                                    style={{ 
-                                        display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, 
-                                        cursor: 'pointer', color: 'var(--orca-accent)', marginTop: 2,
-                                        padding: '4px 6px', borderRadius: 4,
-                                        transition: 'all 0.2s ease'
-                                    }}
-                                    onClick={() => setLegendFilter('all')}
-                                >
-                                    <RotateCw size={12} /> Mostrar todos
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>
 
-                {/* Sidebar Analysis */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16, overflow: 'hidden' }}>
-                    <div className="card" style={{ padding: 16, flexShrink: 0 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', marginBottom: 12 }}>Resumo da Área</div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                            <div style={{ background: 'var(--card2)', padding: 12, borderRadius: 8 }}>
-                                <div style={{ fontSize: 20, fontWeight: 800 }}>{filteredLeads.length}</div>
-                                <div style={{ fontSize: 10, color: 'var(--t3)' }}>Leads Encontrados</div>
-                            </div>
-                            <div style={{ background: 'var(--card2)', padding: 12, borderRadius: 8 }}>
-                                <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--green)' }}>
-                                    {filteredLeads.filter(l => l._score >= settings.hotThreshold).length}
-                                </div>
-                                <div style={{ fontSize: 10, color: 'var(--t3)' }}>Alta Conversão</div>
-                            </div>
+                {/* BOTTOM FEATURE CARDS */}
+                <div style={{ display: 'flex', gap: 20, marginTop: 40 }}>
+                    {[
+                        { icon: <MapIcon size={20} />, title: 'Mapeamento Inteligente', desc: 'Análise geográfica avançada com dados atualizados' },
+                        { icon: <Globe size={20} />, title: 'Multi-fonte de Dados', desc: 'Google, redes sociais, diretórios e avaliações' },
+                        { icon: <Activity size={20} />, title: 'Ranking de Oportunidades', desc: 'Priorização automática dos melhores locais' },
+                        { icon: <Download size={20} />, title: 'Exportação Avançada', desc: 'Exporte resultados e integre com seu funil' },
+                    ].map((card, i) => (
+                        <div key={i} className="feature-card-premium" style={{ flex: 1 }}>
+                            <div style={{ color: 'rgba(255,255,255,0.2)', marginBottom: 16 }}>{card.icon}</div>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: '#FFF', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.02em' }}>{card.title}</div>
+                            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', lineHeight: 1.5 }}>{card.desc}</div>
                         </div>
-                        <div style={{ marginTop: 12, fontSize: 11, color: 'var(--t3)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                            {geocodingPendingCount > 0 && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <RefreshCw size={12} className="spin" /> A geocodificar {geocodingPendingCount} lead(s)...
-                                </div>
-                            )}
-                            {leadsWithQueryButNoCoords.length > 0 && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <MapPin size={12} /> {leadsWithQueryButNoCoords.length} lead(s) na fila para geocodificação.
-                                </div>
-                            )}
-                            {mappableLeads.length === 0 && leads.length > 0 && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <AlertTriangle size={12} /> Nenhum lead tem coordenadas. Verifique se os leads têm endereço válido.
-                                </div>
-                            )}
-                        </div>
-                        {leadsWithQueryButNoCoords.length > 0 && (
-                            <div style={{ marginTop: 8, fontSize: 10, color: 'var(--t2)' }}>
-                                Exemplo: "{getLeadName(leadsWithQueryButNoCoords[0], 'nome')}" - {getLeadAddress(leadsWithQueryButNoCoords[0], addressCol)}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="card" style={{ flex: 1, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ padding: 16, borderBottom: '1px solid var(--border)', fontSize: 12, fontWeight: 700 }}>PROXIMIDADE E SCORE</div>
-                        <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
-                            {filteredLeads.length > 0 ? (
-                                filteredLeads.sort((a, b) => (a as any)._distance - (b as any)._distance).map((l: any) => (
-                                    <div
-                                        key={l.id}
-                                        className={`hover-card${selectedLeadId === l.id ? ' selected' : ''}`}
-                                        style={{
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
-                                            padding: '12px 10px',
-                                            borderBottom: '1px solid var(--border)',
-                                            margin: '0 -10px',
-                                            borderRadius: 8,
-                                            cursor: 'pointer',
-                                            background: selectedLeadId === l.id ? 'var(--blue-dim)' : 'transparent',
-                                            border: selectedLeadId === l.id ? '1px solid var(--blue)' : 'none',
-                                            transition: 'all 0.3s ease',
-                                        }}
-                                        onClick={() => {
-                                            setSelectedLeadId(l.id);
-                                        }}
-                                    >
-                                        <div>
-                                            <div style={{ fontSize: 13, fontWeight: 600 }}>{getLeadName(l, 'nome')}</div>
-                                            <div style={{ fontSize: 11, color: 'var(--t3)' }}>{l._distance.toFixed(1)}km · {getLeadCategory(l, 'segmento') || '—'}</div>
-                                        </div>
-                                        <div className={`badge badge-${scoreClass(l._score, settings.hotThreshold, settings.warmThreshold)}`} style={{ fontSize: 10 }}>
-                                            {l._score.toFixed(1)}
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--t3)', fontSize: 12 }}>
-                                    Nenhum lead encontrado neste raio.
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    ))}
                 </div>
             </div>
 
-            {/* GeoScout Scan Modal - Enhanced */}
-            {scanModalOpen && (
-                <div className="modal-overlay open" onClick={() => setScanModalOpen(false)}>
-                    <div className="modal" style={{ maxWidth: 700, maxHeight: '85vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header" style={{ flexShrink: 0, background: '#0A0A0A', borderBottom: '1px solid #222' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                <div style={{ background: '#222', padding: 8, borderRadius: 8 }}>
-                                    <Radar size={20} color="#FFF" />
-                                </div>
-                                <div>
-                                    <div className="modal-title" style={{ fontSize: 14, letterSpacing: 2, fontWeight: 800, color: '#FFF', textTransform: 'uppercase' }}>Sonar</div>
-                                    <div style={{ fontSize: 10, color: '#888', marginTop: 2, fontWeight: 500, letterSpacing: 1 }}>VARREDURA TÉCNICA DE MERCADO</div>
-                                </div>
-                            </div>
-                            <button className="modal-close" onClick={() => setScanModalOpen(false)} style={{ color: '#888' }}><X size={18} /></button>
-                        </div>
+            {/* RIGHT SIDEBAR: CONFIGURATION PANEL */}
+            <div className="glass-panel sonar-sidebar" style={{ width: 400, height: '100%', display: 'flex', flexDirection: 'column', padding: 32, overflowY: 'auto' }}>
+                <div style={{ marginBottom: 32 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#FFF', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Configurar Varredura</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>Defina os parâmetros técnicos da operação</div>
+                </div>
 
-                        <div style={{ flex: 1, overflowY: 'auto', padding: '0 4px' }}>
-                            {/* Google API Key status - always Google Places */}
-                            {!GOOGLE_KEY && (
-                                <input
-                                    className="input mb-20"
-                                    type="password"
-                                    placeholder="Google API Key para o Sonar"
-                                    value={customApiKey}
-                                    onChange={(e) => setCustomApiKey(e.target.value)}
-                                />
-                            )}
-                            {GOOGLE_KEY && (
-                                <div style={{ fontSize: 11, color: 'var(--green)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <Check size={14} /> Google Places API configurada
-                                </div>
-                            )}
-
-                            {/* Section 1: Scan Name */}
-                            <div style={{ marginBottom: 24 }}>
-                                <label style={formLabelStyle}>Nome da Operação</label>
-                                <div style={{ position: 'relative' }}>
-                                    <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#555' }} />
-                                    <input
-                                        className="input"
-                                        placeholder="Ex: Clínicas Lisboa Centro"
-                                        style={{ paddingLeft: 36, background: '#111', borderColor: '#222', color: '#FFF' }}
-                                        value={scanConfig.scanName}
-                                        onChange={(e) => setScanConfig({ ...scanConfig, scanName: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Section 2: Location */}
-                            <div style={{ marginBottom: 24 }}>
-                                <label style={formLabelStyle}>Localização de Foco</label>
-                                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                                    <div style={{ position: 'relative', flex: 1 }}>
-                                        <MapPin size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#555' }} />
-                                        <input
-                                            className="input"
-                                            style={{ paddingLeft: 36, background: '#111', borderColor: '#222', color: '#FFF' }}
-                                            placeholder="Endereço, cidade ou coordenadas"
-                                            value={scanConfig.location}
-                                            onChange={(e) => setScanConfig({ ...scanConfig, location: e.target.value })}
-                                        />
-                                    </div>
-                                    <button
-                                        className="btn btn-ghost"
-                                        style={{ whiteSpace: 'nowrap', background: '#1A1A1A', color: '#EEE', borderColor: '#333' }}
-                                        onClick={() => {
-                                            if (userLocation) {
-                                                setScanConfig({
-                                                    ...scanConfig,
-                                                    location: `${userLocation[0].toFixed(6)}, ${userLocation[1].toFixed(6)}`,
-                                                    useCurrentLocation: true
-                                                });
-                                                toast('Localização atual definida', 'success');
-                                            } else {
-                                                toast('Ative a geolocalização', 'info');
-                                            }
-                                        }}
-                                    >
-                                        <Crosshair size={14} style={{ marginRight: 6 }} /> Atual
-                                    </button>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                    <label style={{ fontSize: 11, color: 'var(--t3)', textTransform: 'uppercase', fontWeight: 600 }}>Raio:</label>
-                                    <select
-                                        className="input"
-                                        style={{ width: 120 }}
-                                        value={scanConfig.radius}
-                                        onChange={(e) => setScanConfig({ ...scanConfig, radius: Number(e.target.value) })}
-                                    >
-                                        <option value={1}>1 km</option>
-                                        <option value={5}>5 km</option>
-                                        <option value={10}>10 km</option>
-                                        <option value={25}>25 km</option>
-                                    </select>
-                                    {scanConfig.useCurrentLocation && (
-                                        <span style={{ fontSize: 10, color: 'var(--green)' }}>
-                                            ● Usando localização atual
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Section 3: Business Categories */}
-                            <div style={{ marginBottom: 24 }}>
-                                <label style={formLabelStyle}>Segmentos Alvo</label>
-                                <div style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-                                    gap: 6
-                                }}>
-                                    {categoryOptions.map((cat) => {
-                                        const isSelected = scanConfig.categories.includes(cat.id);
-                                        return (
-                                            <button
-                                                key={cat.id}
-                                                onClick={() => {
-                                                    const newCategories = isSelected
-                                                        ? scanConfig.categories.filter(c => c !== cat.id)
-                                                        : [...scanConfig.categories, cat.id];
-                                                    setScanConfig({ ...scanConfig, categories: newCategories });
-                                                }}
-                                                style={{
-                                                    padding: '10px 12px',
-                                                    borderRadius: 8,
-                                                    border: `1px solid ${isSelected ? '#FFF' : '#222'}`,
-                                                    background: isSelected ? '#FFF' : '#0A0A0A',
-                                                    color: isSelected ? '#000' : '#888',
-                                                    fontSize: 11,
-                                                    fontWeight: isSelected ? 700 : 500,
-                                                    textAlign: 'left',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.2s ease',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: 8,
-                                                }}
-                                            >
-                                                <span style={{ opacity: isSelected ? 1 : 0.6 }}>{cat.icon}</span>
-                                                <span style={{ flex: 1 }}>{cat.label}</span>
-                                                {isSelected && <Check size={12} />}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            {/* Section 4: Advanced Filters */}
-                            <div style={{ marginBottom: 24 }}>
-                                <label style={formLabelStyle}>Configurações Técnicas</label>
-                                <div style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: '1fr 1fr',
-                                    gap: 16,
-                                    background: '#0A0A0A',
-                                    padding: 16,
-                                    borderRadius: 12,
-                                    border: '1px solid #222'
-                                }}>
-                                    <div>
-                                        <label style={subLabelStyle}>Rating Mínimo</label>
-                                        <select
-                                            className="input"
-                                            style={{ background: '#111', borderColor: '#222', color: '#FFF' }}
-                                            value={scanConfig.minRating}
-                                            onChange={(e) => setScanConfig({ ...scanConfig, minRating: Number(e.target.value) })}
-                                        >
-                                            <option value={0}>Todos</option>
-                                            <option value={3}>3+ ★</option>
-                                            <option value={4}>4+ ★</option>
-                                            <option value={4.5}>4.5+ ★</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style={subLabelStyle}>Avaliações Mín.</label>
-                                        <select
-                                            className="input"
-                                            style={{ background: '#111', borderColor: '#222', color: '#FFF' }}
-                                            value={scanConfig.minReviews}
-                                            onChange={(e) => setScanConfig({ ...scanConfig, minReviews: Number(e.target.value) })}
-                                        >
-                                            <option value={0}>Todos</option>
-                                            <option value={10}>10+</option>
-                                            <option value={50}>50+</option>
-                                            <option value={100}>100+</option>
-                                        </select>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                        <input
-                                            type="checkbox"
-                                            id="requireWebsite"
-                                            checked={scanConfig.requireWebsite}
-                                            onChange={(e) => setScanConfig({ ...scanConfig, requireWebsite: e.target.checked })}
-                                            style={{ accentColor: '#FFF' }}
-                                        />
-                                        <label htmlFor="requireWebsite" style={{ ...checkboxLabelStyle, color: '#AAA' }}>Com website</label>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                        <input
-                                            type="checkbox"
-                                            id="requirePhone"
-                                            checked={scanConfig.requirePhone}
-                                            onChange={(e) => setScanConfig({ ...scanConfig, requirePhone: e.target.checked })}
-                                            style={{ accentColor: '#FFF' }}
-                                        />
-                                        <label htmlFor="requirePhone" style={{ ...checkboxLabelStyle, color: '#AAA' }}>Com telefone</label>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                        <input
-                                            type="checkbox"
-                                            id="openNow"
-                                            checked={scanConfig.openNow}
-                                            onChange={(e) => setScanConfig({ ...scanConfig, openNow: e.target.checked })}
-                                            style={{ accentColor: '#FFF' }}
-                                        />
-                                        <label htmlFor="openNow" style={{ ...checkboxLabelStyle, color: '#AAA' }}>Aberto agora</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Section 5: Data Fields to Extract */}
-                            <div style={{ marginBottom: 24 }}>
-                                <label style={formLabelStyle}>Atributos de Extração</label>
-                                <div style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                                    gap: 12,
-                                    background: '#0A0A0A',
-                                    padding: 16,
-                                    borderRadius: 12,
-                                    border: '1px solid #222'
-                                }}>
-                                    {[
-                                        { key: 'extractName', label: 'Nome', icon: <Info size={12} /> },
-                                        { key: 'extractPhone', label: 'Telefone', icon: <Phone size={12} /> },
-                                        { key: 'extractWebsite', label: 'Website', icon: <Globe size={12} /> },
-                                        { key: 'extractEmail', label: 'Email', icon: <Mail size={12} /> },
-                                        { key: 'extractAddress', label: 'Endereço', icon: <MapPin size={12} /> },
-                                        { key: 'extractSocial', label: 'Redes Sociais', icon: <Share2 size={12} /> },
-                                    ].map((field) => (
-                                        <div key={field.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                            <input
-                                                type="checkbox"
-                                                id={field.key}
-                                                checked={scanConfig[field.key as keyof typeof scanConfig] as boolean}
-                                                onChange={(e) => setScanConfig({ ...scanConfig, [field.key]: e.target.checked })}
-                                                style={{ accentColor: '#FFF' }}
-                                            />
-                                            <label htmlFor={field.key} style={{ ...checkboxLabelStyle, color: '#AAA', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                <span style={{ opacity: 0.6 }}>{field.icon}</span> {field.label}
-                                            </label>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Cache Warning */}
-                            {scanStatus?.hasCache && (
-                                <div style={{
-                                    background: 'var(--amber-dim)', border: '1px solid rgba(245,158,11,.25)',
-                                    borderRadius: 8, padding: 12, marginTop: 12,
-                                    fontSize: 11, color: 'var(--amber)',
-                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
-                                }}>
-                                    <span>
-                                        ⚠ Scan recente disponível ({scanStatus.cachedCount} estabelecimentos, {scanStatus.ageDays} dias).
-                                    </span>
-                                    <button
-                                        className="btn btn-ghost btn-sm"
-                                        onClick={() => {
-                                            clearScanCache(SCAN_PRESETS[selectedPreset].segment, SCAN_PRESETS[selectedPreset].city);
-                                            toast('Cache limpo. Você pode realizar um novo scan.', 'success');
-                                        }}
-                                        style={{ fontSize: 10, whiteSpace: 'nowrap', padding: '4px 8px' }}
-                                    >
-                                        Limpar Cache
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Progress */}
-                            {scanProgress && (
-                                <div style={{
-                                    background: 'var(--blue-dim)', border: '1px solid rgba(59,130,246,.25)',
-                                    borderRadius: 8, padding: 12, marginTop: 12,
-                                    fontSize: 12, color: 'var(--blue)',
-                                }}>
-                                    {scanProgress}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Footer Actions */}
-                        <div style={{
-                            display: 'flex', gap: 12, justifyContent: 'flex-end',
-                            padding: '20px 24px',
-                            background: '#0A0A0A',
-                            borderTop: '1px solid #222',
-                            flexShrink: 0
-                        }}>
-                            <button className="btn btn-ghost" onClick={() => setScanModalOpen(false)} style={{ color: '#888', border: 'none' }}>
-                                Cancelar
-                            </button>
-                            <button
-                                className="btn btn-primary"
-                                onClick={handleScan}
-                                disabled={scanLoading}
-                                style={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    gap: 10,
-                                    background: '#FFF',
-                                    color: '#000',
-                                    padding: '10px 24px',
-                                    borderRadius: 8,
-                                    fontWeight: 700,
-                                    boxShadow: '0 4px 12px rgba(255,255,255,0.1)'
-                                }}
-                            >
-                                {scanLoading ? (
-                                    <>
-                                        <Search size={16} className="spin" />
-                                        <span>Processando Varredura...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Radar size={18} />
-                                        <span>Iniciar Varredura</span>
-                                    </>
-                                )}
-                            </button>
-                        </div>
+                {/* Section 1: Operation Name */}
+                <div className="config-card">
+                    <label style={formLabelStyle}>Nome da Operação</label>
+                    <div style={{ position: 'relative' }}>
+                        <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#444' }} />
+                        <input
+                            className="input"
+                            placeholder="Ex: Clínicas Lisboa Centro"
+                            style={{ paddingLeft: 36, background: 'rgba(0,0,0,0.2)', borderColor: 'rgba(255,255,255,0.05)', color: '#FFF' }}
+                            value={scanConfig.scanName}
+                            onChange={(e) => setScanConfig({ ...scanConfig, scanName: e.target.value })}
+                        />
                     </div>
                 </div>
-            )}
+
+                {/* Section 2: Location */}
+                <div className="config-card">
+                    <label style={formLabelStyle}>Localização de Foco</label>
+                    <div style={{ position: 'relative', marginBottom: 12 }}>
+                        <MapPin size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#444' }} />
+                        <input
+                            className="input"
+                            placeholder="Endereço, cidade ou coordenadas"
+                            style={{ paddingLeft: 36, background: 'rgba(0,0,0,0.2)', borderColor: 'rgba(255,255,255,0.05)', color: '#FFF' }}
+                            value={scanConfig.location}
+                            onChange={(e) => setScanConfig({ ...scanConfig, location: e.target.value })}
+                            onBlur={handleLocationBlur}
+                        />
+                    </div>
+                    <button
+                        className="btn"
+                        style={{ width: '100%', background: 'rgba(255,255,255,0.03)', color: '#EEE', border: '1px solid rgba(255,255,255,0.05)', fontSize: 11 }}
+                        onClick={() => {
+                            if (userLocation) {
+                                setScanConfig({
+                                    ...scanConfig,
+                                    location: `${userLocation[0].toFixed(6)}, ${userLocation[1].toFixed(6)}`,
+                                    useCurrentLocation: true
+                                });
+                            }
+                        }}
+                    >
+                        <Crosshair size={14} style={{ marginRight: 8 }} /> Usar Localização Atual
+                    </button>
+                    
+                    <div style={{ marginTop: 16 }}>
+                        <label style={subLabelStyle}>Raio de Busca</label>
+                        <select
+                            className="input"
+                            style={{ background: 'rgba(0,0,0,0.2)', borderColor: 'rgba(255,255,255,0.05)', color: '#FFF' }}
+                            value={scanConfig.radius}
+                            onChange={(e) => setScanConfig({ ...scanConfig, radius: Number(e.target.value) })}
+                        >
+                            <option value={1}>1 km</option>
+                            <option value={5}>5 km</option>
+                            <option value={10}>10 km</option>
+                            <option value={25}>25 km</option>
+                        </select>
+                    </div>
+                </div>
+
+                {/* Section 3: Categories */}
+                <div style={{ marginBottom: 24 }}>
+                    <label style={formLabelStyle}>Segmentos Alvo</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        {categoryOptions.map((cat) => {
+                            const isSelected = scanConfig.categories.includes(cat.id);
+                            return (
+                                <button
+                                    key={cat.id}
+                                    onClick={() => {
+                                        const newCategories = isSelected
+                                            ? scanConfig.categories.filter(c => c !== cat.id)
+                                            : [...scanConfig.categories, cat.id];
+                                        setScanConfig({ ...scanConfig, categories: newCategories });
+                                    }}
+                                    style={{
+                                        padding: '12px',
+                                        borderRadius: 8,
+                                        border: `1px solid ${isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.03)'}`,
+                                        background: isSelected ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.1)',
+                                        color: isSelected ? '#FFF' : '#555',
+                                        fontSize: 11,
+                                        textAlign: 'left',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 8,
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    {isSelected ? <Check size={12} /> : <div style={{ width: 12 }} />}
+                                    {cat.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Section 4: Technical Settings */}
+                <div className="config-card">
+                    <label style={formLabelStyle}>Configurações Técnicas</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <div>
+                            <label style={subLabelStyle}>Rating Mínimo</label>
+                            <select 
+                                className="input" 
+                                style={{ background: 'rgba(0,0,0,0.2)', borderColor: 'rgba(255,255,255,0.05)', color: '#FFF' }}
+                                value={scanConfig.minRating}
+                                onChange={e => setScanConfig({...scanConfig, minRating: Number(e.target.value)})}
+                            >
+                                <option value={0}>Qualquer</option>
+                                <option value={3}>3.0+</option>
+                                <option value={4}>4.0+</option>
+                                <option value={4.5}>4.5+</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style={subLabelStyle}>Avaliações Mínimas</label>
+                            <select 
+                                className="input" 
+                                style={{ background: 'rgba(0,0,0,0.2)', borderColor: 'rgba(255,255,255,0.05)', color: '#FFF' }}
+                                value={scanConfig.minReviews}
+                                onChange={e => setScanConfig({...scanConfig, minReviews: Number(e.target.value)})}
+                            >
+                                <option value={0}>Qualquer</option>
+                                <option value={10}>10+</option>
+                                <option value={50}>50+</option>
+                                <option value={100}>100+</option>
+                            </select>
+                        </div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                            <input 
+                                type="checkbox" 
+                                checked={scanConfig.openNow} 
+                                onChange={e => setScanConfig({...scanConfig, openNow: e.target.checked})}
+                            />
+                            <span style={{ fontSize: 11, color: '#AAA' }}>Incluir temporariamente fechado</span>
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                            <input 
+                                type="checkbox" 
+                                checked={scanConfig.requirePhone} 
+                                onChange={e => setScanConfig({...scanConfig, requirePhone: e.target.checked})}
+                            />
+                            <span style={{ fontSize: 11, color: '#AAA' }}>Apenas com telefone</span>
+                        </label>
+                    </div>
+                </div>
+
+                {/* Primary Action */}
+                <button
+                    className="btn"
+                    onClick={() => handleScan()}
+                    disabled={scanLoading}
+                    style={{
+                        marginTop: 'auto',
+                        background: '#FFF',
+                        color: '#000',
+                        fontWeight: 800,
+                        height: 56,
+                        borderRadius: 12,
+                        fontSize: 14,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 12,
+                        boxShadow: '0 10px 20px rgba(255,255,255,0.1)'
+                    }}
+                >
+                    {scanLoading ? <RefreshCw size={20} className="spin" /> : <Radar size={20} />}
+                    {scanLoading ? 'Varredura em curso...' : 'Iniciar Varredura'}
+                </button>
+                <div style={{ textAlign: 'center', marginTop: 12, fontSize: 10, color: '#444' }}>
+                    A varredura pode levar alguns minutos
+                </div>
+            </div>
+        </div>
 
             <style>{`
                 .leaflet-container {
                     font-family: var(--font);
                 }
+                /* Custom scrollbar for sidebar */
+                .sonar-sidebar::-webkit-scrollbar { width: 4px; }
+                .sonar-sidebar::-webkit-scrollbar-track { background: transparent; }
+                .sonar-sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+                .sonar-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+                /* Monochrome map styling */
+                .monochrome-map .leaflet-tile-pane {
+                    filter: grayscale(1) invert(0.92) brightness(0.9) contrast(1.1);
+                }
+
                 .leaflet-popup-content-wrapper {
-                    background: rgba(15, 16, 22, 0.95) !important;
-                    border: 1px solid var(--border) !important;
+                    background: rgba(10, 11, 16, 0.95) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.1) !important;
                     border-radius: 12px !important;
                     padding: 0 !important;
                     backdrop-filter: blur(12px);
-                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+                    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6) !important;
                     overflow: hidden;
                 }
                 .leaflet-popup-tip {
-                    background: rgba(15, 16, 22, 0.95) !important;
-                    border: 1px solid var(--border) !important;
+                    background: rgba(10, 11, 16, 0.95) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.1) !important;
                 }
-                .leaflet-popup-content {
-                    margin: 0 !important;
-                    padding: 0 !important;
-                }
-                /* Remove close button default styling */
-                .leaflet-container a.leaflet-popup-close-button {
-                   padding: 4px 8px 0 0;
+                .leaflet-popup-content { margin: 0 !important; padding: 0 !important; }
+                
+                /* Sonar pulse animation (Technical White) */
+                @keyframes sonarPulseWhite {
+                    0% { stroke-width: 4; stroke-opacity: 0.8; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)); }
+                    50% { stroke-width: 12; stroke-opacity: 0.4; filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.6)); }
+                    100% { stroke-width: 4; stroke-opacity: 0.8; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8)); }
                 }
                 
-                /* Sonar pulse animation */
-                @keyframes sonarPulse {
-                    0% {
-                        r: 12;
-                        fill-opacity: 0.9;
-                        filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.8));
-                    }
-                    50% {
-                        r: 20;
-                        fill-opacity: 0.4;
-                        filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.4));
-                    }
-                    100% {
-                        r: 12;
-                        fill-opacity: 0.9;
-                        filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.8));
-                    }
+                .sonar-pulse-white {
+                    animation: sonarPulseWhite 2s ease-in-out infinite;
                 }
-                
-                .sonar-pulse circle {
-                    animation: sonarPulse 1.5s ease-in-out infinite;
+
+                /* Radar effect concentric circles */
+                @keyframes radarCircleExpand {
+                    0% { transform: scale(0.1); opacity: 0; }
+                    10% { opacity: 0.5; }
+                    80% { opacity: 0.2; }
+                    100% { transform: scale(1.5); opacity: 0; }
                 }
-                
-                /* Second ring for sonar effect */
-                @keyframes sonarRing {
-                    0% {
-                        r: 12;
-                        opacity: 0.6;
-                    }
-                    100% {
-                        r: 35;
-                        opacity: 0;
-                    }
-                }
-                
-                /* Flashlight/Sonar scan effect on map */
-                .map-flashlight-overlay {
-                    position: absolute;
-                    inset: 0;
-                    z-index: 500;
+
+                .radar-expanding-circle {
+                    transform-origin: center;
+                    animation: radarCircleExpand 4s linear infinite;
                     pointer-events: none;
-                    background: radial-gradient(
-                        circle 150px at var(--mouse-x, 50%) var(--mouse-y, 50%),
-                        transparent 0%,
-                        rgba(255, 255, 255, 0.03) 30%,
-                        rgba(5, 7, 10, 0.4) 70%,
-                        rgba(5, 7, 10, 0.7) 100%
-                    );
-                    transition: background 0.1s ease;
                 }
+
+                .radar-expanding-circle:nth-child(2) { animation-delay: 1.33s; }
+                .radar-expanding-circle:nth-child(3) { animation-delay: 2.66s; }
                 
-                /* Sonar wave ripple effect */
-                @keyframes sonarRipple {
-                    0% {
-                        transform: translate(-50%, -50%) scale(0.5);
-                        opacity: 0.6;
-                    }
-                    100% {
-                        transform: translate(-50%, -50%) scale(3);
-                        opacity: 0;
-                    }
+                /* Feature card hover */
+                .feature-card-premium {
+                    background: rgba(20, 20, 20, 0.4);
+                    border: 1px solid rgba(255, 255, 255, 0.03);
+                    border-radius: 12px;
+                    padding: 20px;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }
-                
-                .sonar-ripple {
-                    position: absolute;
-                    width: 100px;
-                    height: 100px;
-                    border-radius: 50%;
-                    border: 2px solid var(--orca-accent);
-                    pointer-events: none;
-                    z-index: 501;
-                    animation: sonarRipple 2s ease-out infinite;
+                .feature-card-premium:hover {
+                    background: rgba(30, 30, 30, 0.6);
+                    border-color: rgba(255, 255, 255, 0.1);
+                    transform: translateY(-4px);
+                    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
                 }
-                
-                /* Radar circle animation */
-                .radar-circle {
-                    stroke-dasharray: 8, 12;
-                    animation: radarPulseBorder 3s ease-in-out infinite;
+
+                /* Glassmorphism Sidebar */
+                .glass-panel {
+                    background: rgba(15, 15, 15, 0.7);
+                    backdrop-filter: blur(16px) saturate(180%);
+                    -webkit-backdrop-filter: blur(16px) saturate(180%);
+                    border-left: 1px solid rgba(255, 255, 255, 0.08);
                 }
-                
-                @keyframes radarPulseBorder {
-                    0%, 100% {
-                        stroke-opacity: 0.6;
-                        stroke-dashoffset: 0;
-                    }
-                    50% {
-                        stroke-opacity: 1;
-                        stroke-dashoffset: -20;
-                    }
+
+                .config-card {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-radius: 12px;
+                    padding: 16px;
+                    margin-bottom: 16px;
                 }
-                
-                /* Radar sweep animation */
-                .radar-sweep {
-                    fill-opacity: 0 !important;
-                    animation: radarSweepFill 3s linear infinite;
+
+                @keyframes relevantGlow {
+                    0% { filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3)); }
+                    50% { filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6)); }
+                    100% { filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3)); }
                 }
-                
-                @keyframes radarSweepFill {
-                    0% {
-                        fill-opacity: 0;
+
+                .relevant-glow {
+                    animation: relevantGlow 3s ease-in-out infinite;
+                }
+
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                .spin {
+                    animation: spin 2s linear infinite;
+                }
+
+                @media (max-width: 1024px) {
+                    .page { flex-direction: column !important; overflow-y: auto !important; }
+                    .sonar-sidebar { 
+                        width: 100% !important; 
+                        position: relative !important; 
+                        border-left: none !important; 
+                        border-top: 1px solid rgba(255,255,255,0.08) !important;
+                        height: auto !important;
                     }
-                    20% {
-                        fill-opacity: 0.08;
-                    }
-                    80% {
-                        fill-opacity: 0.08;
-                    }
-                    100% {
-                        fill-opacity: 0;
-                    }
+                    .map-container-sonar { height: 400px !important; }
                 }
             `}</style>
         </div>

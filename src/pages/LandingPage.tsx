@@ -482,7 +482,7 @@ export default function LandingPage() {
 
     return (
         <div className="landing-page">
-            <div id="scroll-sentinel" style={{ position: 'absolute', top: 50, left: 0, width: 1, height: 1 }} />
+            <div id="scroll-sentinel" style={{ position: 'absolute', top: 10, left: 0, width: 1, height: 1 }} />
             {/* ===== NAVBAR ===== */}
             <header className={`landing-header${scrolled ? ' scrolled' : ''}`}>
                 <div className="landing-header-inner">
@@ -1232,11 +1232,11 @@ export default function LandingPage() {
                     transition: all 0.3s ease; background: transparent;
                 }
                 .landing-header.scrolled {
-                    background: rgba(10, 10, 10, 0.75);
-                    backdrop-filter: blur(12px) saturate(180%);
-                    -webkit-backdrop-filter: blur(12px) saturate(180%);
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-                    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+                    background: rgba(5, 7, 10, 0.4);
+                    backdrop-filter: blur(16px) saturate(180%);
+                    -webkit-backdrop-filter: blur(16px) saturate(180%);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
                 }
                 .landing-header-inner {
                     max-width: 1400px; margin: 0 auto; padding: 0 48px;
