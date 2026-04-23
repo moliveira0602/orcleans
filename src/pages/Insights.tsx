@@ -10,7 +10,7 @@ import { getLeadName, getLeadCategory, detectAddressCol, getLeadAddress, detectP
 import { scoreClass } from '../utils/scoring';
 import { geocodeAddress } from '../utils/geocoding';
 import { MapContainer, TileLayer, Circle, CircleMarker, Popup, useMap } from 'react-leaflet';
-import { runScan, getScanStatus, SCAN_PRESETS, clearScanCache, type ScanPresetKey, GOOGLE_KEY } from '../utils/scanService';
+import { runScan, getScanStatus, clearScanCache, GOOGLE_KEY } from '../utils/scanService';
 import { useToast } from '../components/Toast';
 import { createLeadsBulk } from '../services/leads';
 import 'leaflet/dist/leaflet.css';
@@ -433,10 +433,6 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
     }, [leads]);
 
     // GeoScout Scan Handlers
-    const refreshScanStatus = () => {
-        const preset = SCAN_PRESETS[selectedPreset];
-        return getScanStatus(preset.segment, preset.city);
-    };
 
     const handleScan = async () => {
         setScanLoading(true);
@@ -590,7 +586,6 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
         }
     };
 
-    const scanStatus = refreshScanStatus();
 
     const getMarkerColor = (score: number) => {
         if (score >= settings.hotThreshold) return '#FFFFFF';  // High Contrast White
