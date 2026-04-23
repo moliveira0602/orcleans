@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { 
-    Radar, Search, MapPin, Activity, Globe, Phone, Mail, 
-    Share2, Star, Check, Trash2, Download, FolderPlus, 
-    ChevronRight, Map as MapIcon, Info, AlertTriangle, Crosshair,
+    Radar, Search, MapPin, Activity, Phone, Mail, 
+    Share2, Star, Check, Trash2, FolderPlus, 
+    ChevronRight, Info, AlertTriangle, Crosshair,
     RotateCw, RefreshCw
 } from 'lucide-react';
 import { useAppState, useAppDispatch } from '../store';
@@ -650,31 +650,6 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                     </p>
                 </div>
 
-                {/* Status Badges */}
-                <div style={{ display: 'flex', gap: 16, marginBottom: 40 }}>
-                    {[
-                        { icon: <Crosshair size={16} />, title: 'Precisão Geográfica', desc: 'Dados atualizados em tempo real' },
-                        { icon: <Activity size={16} />, title: 'Inteligência de Dados', desc: 'Multi-fonte e alta confiabilidade' },
-                        { icon: <Globe size={16} />, title: 'Conformidade LGPD', desc: '100% em conformidade' },
-                    ].map((badge, i) => (
-                        <div key={i} style={{ 
-                            flex: 1, 
-                            background: 'rgba(255,255,255,0.02)', 
-                            border: '1px solid rgba(255,255,255,0.05)', 
-                            padding: '16px 20px', 
-                            borderRadius: 12,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 16
-                        }}>
-                            <div style={{ color: 'rgba(255,255,255,0.3)' }}>{badge.icon}</div>
-                            <div>
-                                <div style={{ fontSize: 12, fontWeight: 700, color: '#FFF' }}>{badge.title}</div>
-                                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{badge.desc}</div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
 
 
                 {/* MAP CONTAINER */}
@@ -751,16 +726,81 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                                         click: () => setSelectedLeadId(l.id)
                                     }}
                                 >
-                                    <Popup>
-                                        <div style={{ padding: 12, minWidth: 200 }}>
-                                            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{getLeadName(l, 'nome')}</div>
-                                            <div style={{ fontSize: 11, color: '#888', marginBottom: 8 }}>{getLeadCategory(l, 'segmento')}</div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <div className={`badge badge-${scoreClass(l._score, settings.hotThreshold, settings.warmThreshold)}`}>
-                                                    Score: {l._score.toFixed(1)}
+                                    <Popup className="sonar-premium-popup">
+                                        <div style={{ padding: '16px 20px', minWidth: 260, background: 'linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%)' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                                <div style={{ 
+                                                    width: 32, 
+                                                    height: 32, 
+                                                    borderRadius: 8, 
+                                                    background: 'rgba(255,255,255,0.05)', 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'center',
+                                                    color: isRelevant ? '#FFF' : '#AAA'
+                                                }}>
+                                                    <Radar size={16} />
                                                 </div>
-                                                <div style={{ fontSize: 10, color: '#555' }}>{l._distance.toFixed(1)}km</div>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                        {getLeadCategory(l, 'segmento') || 'Negócio'}
+                                                    </div>
+                                                    <div style={{ fontWeight: 800, fontSize: 16, color: '#FFF', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+                                                        {getLeadName(l, 'nome')}
+                                                    </div>
+                                                </div>
                                             </div>
+
+                                            <div style={{ 
+                                                display: 'flex', 
+                                                flexDirection: 'column', 
+                                                gap: 8, 
+                                                paddingTop: 12, 
+                                                borderTop: '1px solid rgba(255,255,255,0.08)' 
+                                            }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
+                                                        <Activity size={12} /> Probabilidade
+                                                    </div>
+                                                    <div style={{ 
+                                                        fontSize: 12, 
+                                                        fontWeight: 800, 
+                                                        color: isRelevant ? '#FFF' : '#CCC' 
+                                                    }}>
+                                                        {l._score.toFixed(1)}%
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
+                                                        <MapPin size={12} /> Distância
+                                                    </div>
+                                                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
+                                                        {l._distance.toFixed(2)} km
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <button 
+                                                style={{
+                                                    width: '100%',
+                                                    marginTop: 16,
+                                                    padding: '8px',
+                                                    borderRadius: 8,
+                                                    background: 'rgba(255,255,255,0.08)',
+                                                    border: '1px solid rgba(255,255,255,0.05)',
+                                                    color: '#FFF',
+                                                    fontSize: 11,
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: 8
+                                                }}
+                                                onClick={() => setSelectedLeadId(l.id)}
+                                            >
+                                                Ver Detalhes Técnicos <ChevronRight size={12} />
+                                            </button>
                                         </div>
                                     </Popup>
                                 </CircleMarker>
@@ -788,21 +828,7 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                     </div>
                 </div>
 
-                {/* BOTTOM FEATURE CARDS */}
-                <div style={{ display: 'flex', gap: 20, marginTop: 40 }}>
-                    {[
-                        { icon: <MapIcon size={20} />, title: 'Mapeamento Inteligente', desc: 'Análise geográfica avançada com dados atualizados' },
-                        { icon: <Globe size={20} />, title: 'Multi-fonte de Dados', desc: 'Google, redes sociais, diretórios e avaliações' },
-                        { icon: <Activity size={20} />, title: 'Ranking de Oportunidades', desc: 'Priorização automática dos melhores locais' },
-                        { icon: <Download size={20} />, title: 'Exportação Avançada', desc: 'Exporte resultados e integre com seu funil' },
-                    ].map((card, i) => (
-                        <div key={i} className="feature-card-premium" style={{ flex: 1 }}>
-                            <div style={{ color: 'rgba(255,255,255,0.2)', marginBottom: 16 }}>{card.icon}</div>
-                            <div style={{ fontSize: 11, fontWeight: 700, color: '#FFF', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.02em' }}>{card.title}</div>
-                            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', lineHeight: 1.5 }}>{card.desc}</div>
-                        </div>
-                    ))}
-                </div>
+
             </div>
 
             {/* RIGHT SIDEBAR: CONFIGURATION PANEL */}
@@ -1026,19 +1052,29 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                 }
 
                 .leaflet-popup-content-wrapper {
-                    background: rgba(10, 11, 16, 0.95) !important;
-                    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-                    border-radius: 12px !important;
+                    background: rgba(15, 15, 20, 0.92) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                    border-radius: 16px !important;
                     padding: 0 !important;
-                    backdrop-filter: blur(12px);
-                    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6) !important;
+                    backdrop-filter: blur(20px) saturate(180%);
+                    -webkit-backdrop-filter: blur(20px) saturate(180%);
+                    box-shadow: 
+                        0 20px 50px rgba(0, 0, 0, 0.8),
+                        inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
                     overflow: hidden;
+                    animation: popupFadeScale 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                 }
                 .leaflet-popup-tip {
-                    background: rgba(10, 11, 16, 0.95) !important;
-                    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                    background: rgba(15, 15, 20, 0.92) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                    box-shadow: none !important;
                 }
                 .leaflet-popup-content { margin: 0 !important; padding: 0 !important; }
+
+                @keyframes popupFadeScale {
+                    from { opacity: 0; transform: scale(0.9) translateY(10px); }
+                    to { opacity: 1; transform: scale(1) translateY(0); }
+                }
                 
                 /* Sonar pulse animation (Technical White) */
                 @keyframes sonarPulseWhite {
@@ -1068,20 +1104,6 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                 .radar-expanding-circle:nth-child(2) { animation-delay: 1.33s; }
                 .radar-expanding-circle:nth-child(3) { animation-delay: 2.66s; }
                 
-                /* Feature card hover */
-                .feature-card-premium {
-                    background: rgba(20, 20, 20, 0.4);
-                    border: 1px solid rgba(255, 255, 255, 0.03);
-                    border-radius: 12px;
-                    padding: 20px;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                }
-                .feature-card-premium:hover {
-                    background: rgba(30, 30, 30, 0.6);
-                    border-color: rgba(255, 255, 255, 0.1);
-                    transform: translateY(-4px);
-                    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
-                }
 
                 /* Glassmorphism Sidebar */
                 .glass-panel {
