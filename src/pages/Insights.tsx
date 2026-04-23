@@ -671,7 +671,8 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                             alignItems: 'center', 
                             gap: 8,
                             background: 'linear-gradient(135deg, #333333 0%, #0A0A0A 100%)',
-                            boxShadow: '0 2px 8px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.1)'
+                            boxShadow: '0 2px 8px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
+                            color: '#FFFFFF'
                         }}
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>

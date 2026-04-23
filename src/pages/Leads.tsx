@@ -271,7 +271,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                             {bulkPipelineStage && (
                                 <button
                                     className="btn btn-sm"
-                                    style={{ background: 'var(--blue)', color: '#fff' }}
+                                    style={{ background: '#FFFFFF', color: '#0A0A0A', fontWeight: 700 }}
                                     onClick={handleBulkMovePipeline}
                                 >
                                     ↪ Mover {selectedLeads.size}
@@ -279,7 +279,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                             )}
                             <button
                                 className="btn btn-sm"
-                                style={{ background: 'var(--red)', color: '#fff' }}
+                                style={{ background: '#333333', color: '#FFFFFF', border: '1px solid #FFFFFF' }}
                                 onClick={handleBulkDelete}
                                 disabled={isDeleting}
                             >
@@ -403,7 +403,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                                         const extra = services.length - 2;
                                         return (
                                             <td key={col.key}>
-                                                {visible.map(s => <span key={s} style={{ fontSize: 11, background: 'var(--gray-dim)', padding: '2px 6px', borderRadius: 4, marginRight: 4 }}>{s}</span>)}
+                                                {visible.map(s => <span key={s} style={{ fontSize: 11, background: '#333333', color: '#FFFFFF', padding: '2px 8px', borderRadius: 4, marginRight: 4 }}>{s}</span>)}
                                                 {extra > 0 && <span style={{ fontSize: 11, color: 'var(--t2)' }}>+{extra}</span>}
                                             </td>
                                         );

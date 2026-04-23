@@ -50,24 +50,24 @@
   --orca-gradient:    linear-gradient(180deg, #0A0A0A 0%, #333333 100%);
   --orca-gradient-radial: radial-gradient(ellipse at center, #333333 0%, #0A0A0A 80%);
 
-  /* Legacy aliases for compatibility */
+  /* Legacy aliases for compatibility - Fixed for contrast */
   --bg: var(--orca-bg);
   --bg2: var(--orca-surface);
   --bg3: var(--orca-surface-2);
   --bg4: var(--orca-surface-2);
   --bg5: var(--orca-border);
-  --blue: var(--orca-accent);
-  --blue2: #38BDF8;
-  --blue3: var(--orca-accent);
-  --blue-dim: var(--orca-accent-glow);
-  --cyan: var(--orca-accent);
-  --green: var(--orca-hot);
-  --green-dim: rgba(16, 217, 160, 0.12);
-  --amber: var(--orca-warm);
-  --amber-dim: rgba(245, 158, 11, 0.1);
-  --red: #EF4444;
-  --red-dim: rgba(239, 68, 68, 0.1);
-  --purple: #8B5CF6;
+  --blue: #FFFFFF;
+  --blue2: #E6E6E6;
+  --blue3: #FFFFFF;
+  --blue-dim: rgba(255, 255, 255, 0.08);
+  --cyan: #FFFFFF;
+  --green: #FFFFFF;
+  --green-dim: rgba(255, 255, 255, 0.08);
+  --amber: #E6E6E6;
+  --amber-dim: rgba(255, 255, 255, 0.05);
+  --red: #333333;
+  --red-dim: rgba(51, 51, 51, 0.8);
+  --purple: #FFFFFF;
   --t1: var(--orca-text);
   --t2: var(--orca-text-muted);
   --t3: var(--orca-text-muted);
@@ -457,15 +457,15 @@ body {
 }
 
 .btn-ghost {
-  background: var(--bg4);
-  color: #fff;
-  border: 1px solid var(--border)
+  background: rgba(255, 255, 255, 0.05);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .btn-ghost:hover {
-  background: var(--bg5);
-  border-color: var(--border2);
-  color: #fff
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
 }
 
 .btn-danger {
@@ -569,21 +569,22 @@ body {
 .kpi-label {
   font-family: var(--font-s);
   font-size: 11px;
-  color: #9FB3C8;
+  color: #E6E6E6;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  font-weight: 500;
-  margin-bottom: 10px
+  font-weight: 600;
+  margin-bottom: 10px;
+  opacity: 0.8;
 }
 
 .kpi-val {
   font-family: var(--font-d);
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 700;
   line-height: 1;
   margin-bottom: 4px;
-  letter-spacing: 0.02em;
-  color: #EAF6FF;
+  letter-spacing: -0.02em;
+  color: #FFFFFF;
 }
 
 .kpi-val.green {
@@ -728,33 +729,33 @@ td.muted {
 }
 
 .badge-green {
-  background: var(--green-dim);
-  color: var(--green);
-  border: 1px solid rgba(16, 185, 129, .2)
+  background: #FFFFFF;
+  color: #0A0A0A;
+  border: 1px solid #FFFFFF;
 }
 
 .badge-amber {
-  background: var(--amber-dim);
-  color: var(--amber);
-  border: 1px solid rgba(245, 158, 11, .2)
+  background: #E6E6E6;
+  color: #0A0A0A;
+  border: 1px solid #E6E6E6;
 }
 
 .badge-blue {
-  background: var(--blue-dim);
-  color: var(--blue3);
-  border: 1px solid rgba(37, 99, 235, .2)
+  background: #FFFFFF;
+  color: #0A0A0A;
+  border: 1px solid #FFFFFF;
 }
 
 .badge-red {
-  background: var(--red-dim);
-  color: var(--red);
-  border: 1px solid rgba(239, 68, 68, .2)
+  background: #0A0A0A;
+  color: #FFFFFF;
+  border: 1px solid #333333;
 }
 
 .badge-gray {
-  background: var(--card2);
-  color: var(--t3);
-  border: 1px solid var(--border)
+  background: #333333;
+  color: #FFFFFF;
+  border: 1px solid #333333;
 }
 
 /* ── SCORE RING ── */
@@ -773,21 +774,21 @@ td.muted {
 }
 
 .score-hot {
-  color: var(--green);
-  border-color: rgba(16, 185, 129, .4);
-  background: var(--green-dim)
+  color: #FFFFFF;
+  background: #333333;
+  border-color: #FFFFFF;
 }
 
 .score-warm {
-  color: var(--amber);
-  border-color: rgba(245, 158, 11, .3);
-  background: var(--amber-dim)
+  color: #0A0A0A;
+  background: #E6E6E6;
+  border-color: #E6E6E6;
 }
 
 .score-cold {
-  color: var(--t3);
-  border-color: rgba(100, 116, 139, .3);
-  background: var(--card)
+  color: #E6E6E6;
+  background: #0A0A0A;
+  border-color: #333333;
 }
 
 /* ── PROGRESS BAR ── */
