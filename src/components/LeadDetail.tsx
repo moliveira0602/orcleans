@@ -15,12 +15,19 @@ import {
     Layout,
     Flame,
     Thermometer,
-    Snowflake
+    Snowflake,
+    Target,
+    ShieldCheck,
+    Globe,
+    Instagram,
+    Facebook,
+    Code
 } from 'lucide-react';
 import { useAppState, useAppDispatch } from '../store';
 import { useToast } from './Toast';
 import { useConfirm } from './ConfirmModal';
 import EmailTemplateModal from './EmailTemplateModal';
+import OutcomeModal from './OutcomeModal';
 import { detectNameCol, detectCatCol, getLeadName, getLeadCategory } from '../utils/detect';
 import { scoreClass, scoreLabel, scoreReason } from '../utils/scoring';
 import { PIPELINE_COLS } from '../types';
@@ -46,41 +53,38 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     const [noteText, setNoteText] = useState('');
     const [activeTab, setActiveTab] = useState<'info' | 'intel' | 'notes'>('info');
     const [emailModalOpen, setEmailModalOpen] = useState(false);
+    const [outcomeModalOpen, setOutcomeModalOpen] = useState(false);
     const [contactHistory, setContactHistory] = useState<Array<{ id: string; channel: string; title: string; sub: string; icon: string; createdAt: string; userName: string }>>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
 
-    // Buscar lead - NÃO é um hook, pode ficar onde quiser
+    const [enriching, setEnriching] = useState(false);
+
+    // Buscar lead
     const lead = leads.find((l) => l.id === leadId);
 
-    // Fetch contact history - DEVE estar antes do early return
-    useEffect(() => {
-        if (!leadId) {
-            setContactHistory([]);
-            return;
-        }
-        // Não dependemos de lead dentro do useEffect para evitar re-renders desnecessários
-        // O lead será pego dentro via leadId (assumimos que lead já está disponível)
-        const currentLead = leads.find(l => l.id === leadId);
-        if (!currentLead) {
-            setContactHistory([]);
-            return;
-        }
+    // Fetch contact history
+    const refreshHistory = async () => {
+        if (!leadId) return;
         setLoadingHistory(true);
-        leadApi.fetchLeadActivities(currentLead.id, { limit: 10 })
-            .then((result) => setContactHistory(result.activities || []))
-            .catch((err) => {
-                console.error('Failed to fetch activities:', err);
-                setContactHistory([]);
-            })
-            .finally(() => setLoadingHistory(false));
-    }, [leadId, leads]);
+        try {
+            const result = await leadApi.fetchLeadActivities(leadId, { limit: 10 });
+            setContactHistory(result.activities || []);
+        } catch (err) {
+            console.error('Failed to fetch activities:', err);
+        } finally {
+            setLoadingHistory(false);
+        }
+    };
 
-    // Reset activeTab para 'info' quando o leadId muda
+    useEffect(() => {
+        if (leadId) refreshHistory();
+    }, [leadId]);
+
+    // Reset activeTab
     useEffect(() => {
         setActiveTab('info');
-    }, [leadId]); // Dependemos apenas de leadId e leads
+    }, [leadId]);
 
-    // Early return DEPOIS de todos os hooks
     if (!lead) {
         return <div className={`detail-panel${leadId ? ' open' : ''}`} />;
     }
@@ -90,6 +94,41 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     const name = getLeadName(lead, nameCol);
     const cat = getLeadCategory(lead, catCol);
     const cls = scoreClass(lead._score, settings.hotThreshold, settings.warmThreshold);
+
+    const handleSaveOutcome = async (data: { type: string; outcome: string; notes: string }) => {
+        try {
+            await leadApi.logLeadInteraction(lead.id, data);
+            toast('Resultado registado com sucesso.', 'success');
+            
+            // Refresh lead data in store
+            const updatedLead = await leadApi.fetchLeadById(lead.id);
+            dispatch({ type: 'UPDATE_LEAD', payload: { id: lead.id, fields: { 
+                _pipeline: updatedLead.pipelineStage,
+                _lastContact: new Date().toISOString(),
+                outcomeScore: updatedLead.outcomeScore,
+                lastOutcome: updatedLead.lastOutcome
+            } } });
+            
+            refreshHistory();
+        } catch (err) {
+            console.error('Failed to log interaction:', err);
+            toast('Erro ao registar resultado.', 'error');
+        }
+    };
+
+    const handleEnrich = async () => {
+        setEnriching(true);
+        try {
+            const updatedLead = await leadApi.enrichLead(lead.id);
+            dispatch({ type: 'UPDATE_LEAD', payload: { id: lead.id, fields: { insight: updatedLead.insight } } });
+            toast('Lead enriquecido com sucesso.', 'success');
+        } catch (err) {
+            console.error('Failed to enrich lead:', err);
+            toast('Erro ao enriquecer lead.', 'error');
+        } finally {
+            setEnriching(false);
+        }
+    };
 
     const fields = [
         ['nome', String(lead.nome || '')],
@@ -106,54 +145,23 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
         ['email', String(lead.email || '')],
         ['observacoes', String(lead.observacoes || '')],
     ].filter(([_, v]) => v !== '');
+
     const fieldLabel = (k: string) => {
         const map: Record<string, string> = {
             id: 'ID',
-            name: 'Nome',
-            Name: 'Nome',
-            company: 'Empresa',
-            Company: 'Empresa',
+            nome: 'Nome',
             segmento: 'Segmento',
-            categoria: 'Segmento',
-            category: 'Segmento',
-            Category: 'Segmento',
-            segment: 'Segmento',
-            Segment: 'Segmento',
-            address: 'Morada',
-            Address: 'Morada',
-            morada: 'Morada',
-            'Endereço': 'Endereço',
-            phone: 'Telefone',
-            Phone: 'Telefone',
+            endereco: 'Morada',
             telefone: 'Telefone',
             email: 'Email',
             cidade: 'Cidade',
-            Cidade: 'Cidade',
-            Email: 'Email',
             website: 'Website',
-            Website: 'Website',
-            url: 'URL',
-            URL: 'URL',
-            city: 'Cidade',
-            City: 'Cidade',
-            country: 'País',
-            Country: 'País',
-            state: 'Distrito/Estado',
-            State: 'Distrito/Estado',
-            postcode: 'Código Postal',
-            postal_code: 'Código Postal',
-            zip: 'Código Postal',
-            CEP: 'Código Postal',
-            'Código Postal': 'Código Postal',
-            latitude: 'Latitude',
-            Latitude: 'Latitude',
-            longitude: 'Longitude',
-            Longitude: 'Longitude',
-            rating: 'Avaliação',
-            Rating: 'Avaliação',
-            'Featured image': 'Imagem destacada',
-            'Rating Info': 'Info da Avaliação',
-            'Bing Maps URL': 'URL do Bing Maps',
+            status: 'Status',
+            horario: 'Horário',
+            avaliacao: 'Avaliação',
+            reviews: 'Reviews',
+            preco: 'Preço',
+            observacoes: 'Obs',
         };
         return map[k] || k;
     };
@@ -215,62 +223,38 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     };
 
     const handleContact = async (channel: 'telefone' | 'email' | 'whatsapp') => {
-        // Validate lead has required contact info
-        if (!lead) {
-            toast('Lead não encontrado.', 'error');
+        if (!lead) return;
+        const phone = lead.telefone?.replace(/\D/g, '') || '';
+        
+        if (channel === 'telefone') {
+            if (!phone) { toast('Telefone não disponível.', 'info'); return; }
+            window.open(`tel:${lead.telefone}`);
+        } else if (channel === 'whatsapp') {
+            if (!phone) { toast('Telefone não disponível.', 'info'); return; }
+            window.open('https://wa.me/' + phone, '_blank');
+        } else if (channel === 'email') {
+            if (!lead.email) { toast('Email não disponível.', 'info'); return; }
+            setEmailModalOpen(true);
             return;
         }
 
-        const phone = lead.telefone?.replace(/\D/g, '') || '';
-        
-        // Open the appropriate URL immediately
-        if (channel === 'telefone') {
-            if (!phone) {
-                toast('Telefone não disponível para este lead.', 'info');
-                return;
-            }
-            window.open(`tel:${lead.telefone}`);
-        } else if (channel === 'whatsapp') {
-            if (!phone) {
-                toast('Telefone não disponível para este lead.', 'info');
-                return;
-            }
-            window.open('https://wa.me/' + phone, '_blank');
-        } else if (channel === 'email') {
-            if (!lead.email) {
-                toast('Email não disponível para este lead.', 'info');
-                return;
-            }
-            setEmailModalOpen(true);
-            return; // Don't log yet — will log after template modal confirms
-        }
-
-        // Log the activity
         try {
             await leadApi.logLeadActivity(lead.id, channel);
-            dispatch({
-                type: 'UPDATE_LEAD',
-                payload: { id: lead.id, fields: { _lastContact: new Date().toISOString() } },
-            });
+            dispatch({ type: 'UPDATE_LEAD', payload: { id: lead.id, fields: { _lastContact: new Date().toISOString() } } });
             const labels = { telefone: 'Telefonei', email: 'Email enviado', whatsapp: 'WhatsApp enviado' };
             toast(`${labels[channel]} · Registo guardado.`, 'success');
-            // O useEffect já atualiza o histórico automaticamente
+            refreshHistory();
         } catch (err) {
             console.error('Failed to log contact:', err);
-            toast('Erro ao registar contato.', 'error');
         }
     };
 
     const handleEmailSent = async () => {
-        // Called from EmailTemplateModal after user confirms
         try {
             await leadApi.logLeadActivity(lead.id, 'email');
-            dispatch({
-                type: 'UPDATE_LEAD',
-                payload: { id: lead.id, fields: { _lastContact: new Date().toISOString() } },
-            });
+            dispatch({ type: 'UPDATE_LEAD', payload: { id: lead.id, fields: { _lastContact: new Date().toISOString() } } });
             toast('Email registrado.', 'success');
-            // O useEffect já atualiza o histórico automaticamente
+            refreshHistory();
         } catch (err) {
             console.error('Failed to log email:', err);
         }
@@ -279,7 +263,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     const handleDelete = async () => {
         const ok = await confirm({
             title: 'Remover lead',
-            message: `Tem certeza que deseja remover "${name}" permanentemente? Esta ação não pode ser desfeita.`,
+            message: `Remover "${name}" permanentemente?`,
             confirmLabel: 'Remover',
             variant: 'danger',
         });
@@ -290,12 +274,12 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
             toast('Lead removido.', 'info');
             onClose();
         } catch (err) {
-            console.error('Failed to delete lead on server:', err);
-            toast('Falha ao eliminar lead. Tente novamente.', 'error');
+            toast('Falha ao eliminar lead.', 'error');
         }
     };
 
     const notes = lead._notes || [];
+    const enrichment = (lead.insight as any)?.enrichment;
 
     return (
         <>
@@ -309,21 +293,9 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                     <button className="btn-icon" onClick={onClose}><X size={20} /></button>
                 </div>
 
-                <div className="detail-tabs" style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'transparent' }}>
+                <div className="detail-tabs">
                     {(['info', 'intel', 'notes'] as const).map((t) => (
-                        <button
-                            key={t}
-                            className={`detail-tab ${activeTab === t ? 'active' : ''}`}
-                            onClick={() => setActiveTab(t)}
-                            style={{
-                                flex: 1, padding: '12px 0', fontSize: 11, fontWeight: 700,
-                                color: activeTab === t ? 'var(--blue)' : 'var(--t3)',
-                                borderBottom: activeTab === t ? '2px solid var(--blue)' : 'none',
-                                background: 'none', borderTop: 'none', borderLeft: 'none', borderRight: 'none',
-                                cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
-                            }}
-                        >
+                        <button key={t} className={`detail-tab ${activeTab === t ? 'active' : ''}`} onClick={() => setActiveTab(t)}>
                             {t === 'info' && <Database size={12} />}
                             {t === 'intel' && <Zap size={12} />}
                             {t === 'notes' && <FileText size={12} />}
@@ -332,65 +304,102 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                     ))}
                 </div>
 
-                <div className="detail-body" style={{ flex: 1, overflowY: 'auto' }}>
+                <div className="detail-body">
                     {activeTab === 'info' && (
                         <>
-                            {/* Score */}
+                            {/* Score & Adaptive IQ */}
                             <div className="detail-section">
-                                <div className="detail-section-title">Score OrcaLens</div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
+                                <div className="detail-section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>Análise de Performance</span>
+                                    <button 
+                                        className={`btn btn-ghost btn-sm ${enriching ? 'loading' : ''}`}
+                                        onClick={handleEnrich}
+                                        disabled={enriching}
+                                        style={{ fontSize: 10, padding: '2px 8px', gap: 4 }}
+                                    >
+                                        <RotateCw size={10} className={enriching ? 'loading-spinner-fast' : ''} />
+                                        {enriching ? 'Scouting...' : 'Enriquecer'}
+                                    </button>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
                                     <div className={`score-ring score-${cls}`} style={{ width: 56, height: 56, fontSize: 20 }}>
                                         {lead._score.toFixed(1)}
                                     </div>
-                                    <div>
+                                    <div style={{ flex: 1 }}>
                                         <div style={{ fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                                             {cls === 'hot' ? <Flame size={14} color="var(--green)" /> : cls === 'warm' ? <Thermometer size={14} color="var(--amber)" /> : <Snowflake size={14} color="var(--t3)" />}
                                             {scoreLabel(lead._score, settings.hotThreshold, settings.warmThreshold)}
                                         </div>
-                                        <div style={{ fontSize: 12, color: 'var(--t3)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            <Check size={12} /> {scoreReason(lead)}
+                                        <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{scoreReason(lead)}</div>
+                                    </div>
+                                    {lead.outcomeScore !== 0 && (
+                                        <div style={{ padding: '4px 8px', background: 'var(--blue-dim)', border: '1px solid var(--blue)', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <Target size={12} color="var(--blue)" />
+                                            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--blue)' }}>IQ {lead.outcomeScore > 0 ? '+' : ''}{lead.outcomeScore}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Digital Presence (Enrichment) */}
+                            {enrichment && (
+                                <div className="detail-section" style={{ background: 'var(--card2)', padding: 12, borderRadius: 12, border: '1px solid var(--border)', marginBottom: 20 }}>
+                                    <div className="detail-section-title" style={{ fontSize: 10, opacity: 0.6 }}>Presença Digital Detetada</div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: enrichment.presence.hasWebsite ? 'var(--green)' : 'var(--t3)' }}>
+                                            <Globe size={12} /> Website {enrichment.presence.hasWebsite ? <ShieldCheck size={10} /> : ''}
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: enrichment.presence.hasInstagram ? 'var(--blue)' : 'var(--t3)' }}>
+                                            <Instagram size={12} /> Instagram {enrichment.presence.hasInstagram ? <ShieldCheck size={10} /> : ''}
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: enrichment.presence.hasFacebook ? 'var(--blue)' : 'var(--t3)' }}>
+                                            <Facebook size={12} /> Facebook {enrichment.presence.hasFacebook ? <ShieldCheck size={10} /> : ''}
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: enrichment.presence.hasPixel ? 'var(--amber)' : 'var(--t3)' }}>
+                                            <Code size={12} /> Pixel Ads {enrichment.presence.hasPixel ? <ShieldCheck size={10} /> : ''}
                                         </div>
                                     </div>
                                 </div>
-                                <div className="progress">
-                                    <div
-                                        className="progress-fill" style={{
-                                            width: `${lead._score * 10}%`,
-                                            background: cls === 'hot' ? 'var(--green)' : cls === 'warm' ? 'var(--amber)' : 'var(--t3)',
-                                        }}
-                                    />
+                            )}
+
+                            {/* Funil & Desfecho */}
+                            <div className="detail-section" style={{ background: 'var(--card2)', padding: 12, borderRadius: 12, border: '1px solid var(--border)' }}>
+                                <div className="detail-section-title">Estado no Funil</div>
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <select className="input" style={{ flex: 1 }} value={lead._pipeline || 'novo'} onChange={(e) => movePipeline(e.target.value as PipelineStage)}>
+                                        <option value="novo">Novo</option>
+                                        <option value="qualificado">Qualificado</option>
+                                        <option value="proposta">Proposta</option>
+                                        <option value="negociacao">Negociação</option>
+                                        <option value="ganho">Ganho</option>
+                                        <option value="perdido">Perdido</option>
+                                    </select>
+                                    <button 
+                                        className="btn btn-primary btn-sm" 
+                                        style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                                        onClick={() => setOutcomeModalOpen(true)}
+                                    >
+                                        <Target size={14} /> Desfecho
+                                    </button>
                                 </div>
                             </div>
 
-                            {/* Pipeline */}
-                            <div className="detail-section">
-                                <div className="detail-section-title">Funil</div>
-                                <select className="input" value={lead._pipeline || 'novo'} onChange={(e) => movePipeline(e.target.value as PipelineStage)}>
-                                    <option value="novo">Novo</option>
-                                    <option value="qualificado">Qualificado</option>
-                                    <option value="proposta">Proposta</option>
-                                    <option value="negociacao">Negociação</option>
-                                    <option value="ganho">Ganho</option>
-                                    <option value="perdido">Perdido</option>
-                                </select>
-                            </div>
-
-                            <div className="detail-section">
-                                <div className="detail-section-title">Informações</div>
+                            <div className="detail-section" style={{ marginTop: 20 }}>
+                                <div className="detail-section-title">Dados Gerais</div>
                                 {fields.map(([k, v]) => {
                                     const vs = String(v || '');
                                     const isEditing = editingField === k;
                                     return (
-                                        <div className="detail-field" key={k} style={{ cursor: isEditing ? 'default' : 'pointer' }}>
+                                        <div className="detail-field" key={k}>
                                             <span className="detail-field-label">{fieldLabel(k)}</span>
                                             {isEditing ? (
-                                                <span style={{ display: 'flex', gap: 4, alignItems: 'center', flex: 1 }}>
+                                                <div style={{ display: 'flex', gap: 4, alignItems: 'center', flex: 1 }}>
                                                     <input className="input" style={{ flex: 1, padding: '4px 8px', fontSize: 12 }} value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }} autoFocus />
                                                     <button className="btn btn-primary btn-sm" onClick={saveEdit}><Check size={14} /></button>
-                                                </span>
+                                                </div>
                                             ) : (
-                                                <span className="detail-field-value" onClick={() => startEdit(k, vs)} style={{ flex: 1, textAlign: 'right' }}>
-                                                    {vs.startsWith('http') ? <a href={vs} target="_blank" rel="noreferrer" style={{ color: 'var(--blue3)', display: 'inline-flex', alignItems: 'center', gap: 4 }}><ExternalLink size={12} /> abrir</a> : vs.slice(0, 50) || '—'}
+                                                <span className="detail-field-value" onClick={() => startEdit(k, vs)} style={{ flex: 1, textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    {vs.startsWith('http') ? <a href={vs} target="_blank" rel="noreferrer" style={{ color: 'var(--blue3)' }}><ExternalLink size={12} /> abrir</a> : vs || '—'}
                                                 </span>
                                             )}
                                         </div>
@@ -398,88 +407,18 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                 })}
                             </div>
 
-                            {/* Cadence indicator */}
-                            {(() => {
-                                const lc = lead._lastContact;
-                                if (!lc) {
-                                    const isHot = lead._score >= settings.hotThreshold;
-                                    return (
-                                        <div className="detail-section" style={{ marginTop: 12 }}>
-                                            <div style={{
-                                                background: isHot ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)',
-                                                border: `1px solid ${isHot ? 'rgba(239,68,68,0.25)' : 'rgba(245,158,11,0.25)'}`,
-                                                borderRadius: 8, padding: '10px 12px', fontSize: 12,
-                                                color: isHot ? 'var(--red)' : 'var(--amber)',
-                                                display: 'flex', alignItems: 'center', gap: 8
-                                            }}>
-                                                <AlertCircle size={14} />
-                                                <span>{isHot ? 'Lead quente' : 'Lead'} nunca contactado — inicie o contato agora.</span>
-                                            </div>
-                                        </div>
-                                    );
-                                }
-                                const days = Math.floor((Date.now() - new Date(lc).getTime()) / (86400000));
-                                const isHot = lead._score >= settings.hotThreshold;
-                                if ((isHot && days > 3) || days > 7) {
-                                    return (
-                                        <div className="detail-section" style={{ marginTop: 12 }}>
-                                            <div style={{
-                                                background: 'rgba(245,158,11,0.1)',
-                                                border: '1px solid rgba(245,158,11,0.25)',
-                                                borderRadius: 8, padding: '10px 12px', fontSize: 12,
-                                                color: 'var(--amber)',
-                                                display: 'flex', alignItems: 'center', gap: 8
-                                            }}>
-                                                <AlertCircle size={14} />
-                                                <span>Último contato há {days} dias — pode ser necessário follow-up.</span>
-                                            </div>
-                                        </div>
-                                    );
-                                }
-                                return (
-                                    <div className="detail-section" style={{ marginTop: 12 }}>
-                                        <div style={{ fontSize: 11, color: 'var(--green)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            <Check size={12} />
-                                            <span>Último contato há {days} dia(s)</span>
-                                        </div>
+                            {/* History Section */}
+                            <div className="detail-section">
+                                <div className="detail-section-title">Histórico Recente</div>
+                                {loadingHistory ? <div style={{ fontSize: 11, color: 'var(--t3)' }}>A carregar...</div> : 
+                                 contactHistory.length === 0 ? <div style={{ fontSize: 11, color: 'var(--t3)' }}>Sem registos.</div> : 
+                                 contactHistory.map(a => (
+                                    <div key={a.id} style={{ display: 'flex', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 12, alignItems: 'center' }}>
+                                        <span style={{ color: 'var(--blue)' }}>{a.icon}</span>
+                                        <span style={{ flex: 1 }}>{a.title} · <small style={{ color: 'var(--t3)' }}>{a.sub}</small></span>
+                                        <span style={{ fontSize: 10, color: 'var(--t3)' }}>{new Date(a.createdAt).toLocaleDateString()}</span>
                                     </div>
-                                );
-                            })()}
-
-                            {/* Contact History */}
-                            <div className="detail-section" style={{ marginTop: 12 }}>
-                                <div className="detail-section-title">Histórico de Contatos</div>
-                                {loadingHistory ? (
-                                    <div style={{ fontSize: 11, color: 'var(--t3)' }}>A carregar...</div>
-                                ) : contactHistory.length === 0 ? (
-                                    <div style={{ fontSize: 11, color: 'var(--t3)' }}>Nenhum contato registrado.</div>
-                                ) : (
-                                    contactHistory.map((a) => {
-                                        const iconMap: Record<string, React.ReactNode> = {
-                                            '✉': <Mail size={14} />,
-                                            '📞': <Phone size={14} />,
-                                            '💬': <MessageCircle size={14} />,
-                                            'mail': <Mail size={14} />,
-                                            'phone': <Phone size={14} />,
-                                            'whatsapp': <MessageCircle size={14} />
-                                        };
-                                        return (
-                                            <div key={a.id} style={{
-                                                display: 'flex', gap: 8, padding: '8px 0',
-                                                borderBottom: '1px solid var(--border)',
-                                                fontSize: 12, alignItems: 'center',
-                                            }}>
-                                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--blue)' }}>
-                                                    {iconMap[a.icon] || a.icon}
-                                                </span>
-                                                <span style={{ flex: 1, color: 'var(--t2)' }}>{a.title}</span>
-                                                <span style={{ fontSize: 10, color: 'var(--t3)' }}>
-                                                    {new Date(a.createdAt).toLocaleDateString('pt-BR')}
-                                                </span>
-                                            </div>
-                                        );
-                                    })
-                                )}
+                                 ))}
                             </div>
                         </>
                     )}
@@ -490,34 +429,28 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                         <div className="detail-section">
                             <div className="detail-section-title">Notas</div>
                             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                                <textarea className="input" rows={2} placeholder="Adicionar nota..." value={noteText} onChange={(e) => setNoteText(e.target.value)} style={{ resize: 'vertical', flex: 1 }} />
-                                <button className="btn btn-primary btn-sm" style={{ alignSelf: 'flex-end' }} onClick={addNote}>Salvar</button>
+                                <textarea className="input" rows={2} placeholder="Adicionar nota..." value={noteText} onChange={(e) => setNoteText(e.target.value)} style={{ resize: 'none', flex: 1 }} />
+                                <button className="btn btn-primary btn-sm" onClick={addNote}>Salvar</button>
                             </div>
                             {notes.map((n, i) => (
                                 <div key={i} style={{ background: 'var(--card2)', borderRadius: 8, padding: '10px 12px', border: '1px solid var(--border)', marginBottom: 8 }}>
                                     <div style={{ fontSize: 13, color: 'var(--t1)' }}>{n.text}</div>
-                                    <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 4 }}>{new Date(n.date).toLocaleString('pt-BR')}</div>
+                                    <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 4 }}>{new Date(n.date).toLocaleString()}</div>
                                 </div>
                             ))}
                         </div>
                     )}
                 </div>
 
-                <div className="detail-footer" style={{ padding: 16, borderTop: '1px solid var(--border)', display: 'flex', gap: 8 }}>
-                    <button className="btn btn-ghost btn-sm" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={() => handleContact('telefone')}><Phone size={14} /> Telefone</button>
-                    <button className="btn btn-ghost btn-sm" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={() => handleContact('email')}><Mail size={14} /> Email</button>
-                    <button className="btn btn-ghost btn-sm" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={() => handleContact('whatsapp')}><MessageCircle size={14} /> WhatsApp</button>
+                <div className="detail-footer">
+                    <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => handleContact('telefone')}><Phone size={14} /> Telefone</button>
+                    <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => handleContact('email')}><Mail size={14} /> Email</button>
+                    <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => handleContact('whatsapp')}><MessageCircle size={14} /> WhatsApp</button>
                     <button className="btn btn-danger btn-sm" onClick={handleDelete}><Trash2 size={14} /></button>
                 </div>
 
-                {/* Email Template Modal */}
-                {emailModalOpen && (
-                    <EmailTemplateModal
-                        lead={lead}
-                        onClose={() => setEmailModalOpen(false)}
-                        onSend={handleEmailSent}
-                    />
-                )}
+                {emailModalOpen && <EmailTemplateModal lead={lead} onClose={() => setEmailModalOpen(false)} onSend={handleEmailSent} />}
+                {outcomeModalOpen && <OutcomeModal isOpen={outcomeModalOpen} onClose={() => setOutcomeModalOpen(false)} onSave={handleSaveOutcome} leadName={name} />}
             </div>
         </>
     );
@@ -530,99 +463,43 @@ function IntelligenceView({ lead, settings }: { lead: any, settings: any }) {
     
     useEffect(() => {
         let mounted = true;
-        
-        generateLeadInsight(lead, settings).then(result => {
-            if (mounted) {
-                setInsight(result);
-                setLoading(false);
-            }
-        }).catch(() => {
-            if (mounted) setLoading(false);
-        });
-        
+        generateLeadInsight(lead, settings).then(res => { if (mounted) { setInsight(res); setLoading(false); } }).catch(() => { if (mounted) setLoading(false); });
         return () => { mounted = false; };
     }, [lead.id]);
     
     const handleRegenerate = () => {
-        const cacheKey = `insight_${lead.id}`;
-        localStorage.removeItem(cacheKey);
+        localStorage.removeItem(`insight_${lead.id}`);
         setLoading(true);
-        generateLeadInsight(lead, settings).then(result => {
-            setInsight(result);
-            setLoading(false);
-            toast('Análise regenerada!', 'success');
-        });
+        generateLeadInsight(lead, settings).then(res => { setInsight(res); setLoading(false); toast('Análise regenerada!', 'success'); });
     };
     
     const copy = (text: string) => { copyToClipboard(text); toast('Copiado!', 'success'); };
     
-    if (loading) {
-        return (
-            <div style={{ padding: 20, textAlign: 'center' }}>
-                <div style={{ fontSize: 12, color: 'var(--t3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                    <RotateCw size={14} className="loading-spinner-fast" />
-                    <span>Analisando lead com IA...</span>
-                </div>
-                <div style={{ marginTop: 12 }}>
-                    <div className="skeleton" style={{ height: 4, width: '100%', background: 'var(--card2)', borderRadius: 2 }}>
-                        <div className="skeleton-loading" style={{ height: '100%', background: 'var(--blue)', borderRadius: 2, animationDuration: '1.5s' }} />
-                    </div>
-                </div>
-            </div>
-        );
-    }
-    
-    if (!insight) {
-        return (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--t3)' }}>
-                Não foi possível gerar análise. Configure a API da OpenRouter.
-            </div>
-        );
-    }
+    if (loading) return <div style={{ padding: 20, textAlign: 'center', fontSize: 12, color: 'var(--t3)' }}><RotateCw size={14} className="loading-spinner-fast" style={{ marginRight: 8 }} /> Analisando lead...</div>;
+    if (!insight) return <div style={{ padding: 20, textAlign: 'center', color: 'var(--t3)' }}>Sem análise disponível.</div>;
     
     return (
-        <div style={{ padding: 0 }}>
-            <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
-                <button 
-                    className="btn btn-ghost btn-sm" 
-                    onClick={handleRegenerate}
-                    disabled={loading}
-                    style={{ fontSize: 10, display: 'flex', alignItems: 'center', gap: 4 }}
-                >
-                    <RotateCw size={10} /> Regenerar
-                </button>
+        <div>
+            <div style={{ padding: '8px 16px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button className="btn btn-ghost btn-sm" onClick={handleRegenerate} style={{ fontSize: 10 }}><RotateCw size={10} /> Regenerar</button>
             </div>
-            <div className="detail-section" style={{ background: 'var(--blue-dim)', borderRadius: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div className="detail-section" style={{ background: 'var(--blue-dim)' }}>
+                <div className="flex space-between">
                     <div>
-                        <div style={{ fontSize: 10, color: 'var(--blue)', fontWeight: 700 }}>ESTRATÉGIA B2B</div>
-                        <div style={{ fontSize: 14, fontWeight: 700 }}>Especialista em {getLeadCategory(lead, 'segmento') || 'Mercado'}</div>
-                        <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 4 }}>{lead.nome || lead.Name || 'Cliente'}</div>
+                        <div style={{ fontSize: 10, color: 'var(--blue)', fontWeight: 700 }}>IA STRATEGY</div>
+                        <div style={{ fontSize: 14, fontWeight: 700 }}>{getLeadCategory(lead, 'segmento') || 'Mercado'}</div>
                     </div>
-                    <div className={`badge badge-${insight.strategy?.qualification === 'quente' ? 'green' : insight.strategy?.qualification === 'morno' ? 'amber' : 'gray'}`}>{insight.strategy?.qualification?.toUpperCase() || 'N/A'}</div>
+                    <div className={`badge badge-${insight.strategy?.qualification === 'quente' ? 'green' : 'gray'}`}>{insight.strategy?.qualification?.toUpperCase()}</div>
                 </div>
             </div>
             <div className="detail-section">
-                <div className="detail-section-title">Análise de Dores</div>
-                {insight.analysis?.pains?.length ? insight.analysis.pains.map((p: string, i: number) => <div key={i} style={{ fontSize: 12, marginBottom: 4 }}>• {p}</div>) : <div style={{ fontSize: 12, color: 'var(--t3)' }}>Sem dores identificadas</div>}
+                <div className="detail-section-title">Dores & Oportunidades</div>
+                {insight.analysis?.pains?.map((p: string, i: number) => <div key={i} style={{ fontSize: 12 }}>• {p}</div>)}
             </div>
             <div className="detail-section">
-                <div className="detail-section-title">Oportunidades</div>
-                {insight.analysis?.opportunities?.length ? insight.analysis.opportunities.map((o: string, i: number) => <div key={i} style={{ fontSize: 12, marginBottom: 4 }}>• {o}</div>) : <div style={{ fontSize: 12, color: 'var(--t3)' }}>Sem oportunidades identificadas</div>}
-            </div>
-            <div className="detail-section">
-                <div className="detail-section-title">Modelos Prontos</div>
-                <div style={{ marginBottom: 12 }}>
-                    <div className="flex space-between items-center mb-4">
-                        <span style={{ fontSize: 11, fontWeight: 600 }}>Email de Abordagem</span>
-                        <button className="btn btn-ghost btn-sm" onClick={() => copy(insight.templates?.email?.[0] || '')}>Copiar</button>
-                    </div>
-                    <pre style={{ fontSize: 11, background: 'var(--card2)', padding: 8, whiteSpace: 'pre-wrap' }}>{insight.templates?.email?.[0] || 'N/A'}</pre>
-                </div>
-            </div>
-            <div className="detail-section">
-                <div className="detail-section-title">Plano de Ação</div>
-                {insight.actionPlan?.sequence?.length ? insight.actionPlan.sequence.map((s: string, i: number) => <div key={i} style={{ fontSize: 12, marginBottom: 4 }}>{i + 1}. {s}</div>) : <div style={{ fontSize: 12, color: 'var(--t3)' }}>Sem plano definido</div>}
+                <div className="detail-section-title">Modelos</div>
+                <pre style={{ fontSize: 11, background: 'var(--card2)', padding: 8, whiteSpace: 'pre-wrap' }}>{insight.templates?.email?.[0]}</pre>
+                <button className="btn btn-ghost btn-sm mt-4" onClick={() => copy(insight.templates?.email?.[0] || '')}>Copiar</button>
             </div>
         </div>
     );

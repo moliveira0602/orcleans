@@ -210,6 +210,27 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
         display: 'block',
     };
 
+    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+
+    useEffect(() => {
+        const fetchSuggestions = async () => {
+            setLoadingSuggestions(true);
+            try {
+                const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/sonar/suggestions`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('orca_token')}` }
+                });
+                const data = await res.json();
+                setSuggestions(data);
+            } catch (err) {
+                console.error('Failed to fetch suggestions:', err);
+            } finally {
+                setLoadingSuggestions(false);
+            }
+        };
+        fetchSuggestions();
+    }, []);
+
     const checkboxLabelStyle: React.CSSProperties = {
         fontSize: 11,
         color: 'var(--t2)',
@@ -834,6 +855,55 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
 
             {/* RIGHT SIDEBAR: CONFIGURATION PANEL */}
             <div className="glass-panel sonar-sidebar" style={{ width: 400, height: '100%', display: 'flex', flexDirection: 'column', padding: 32, overflowY: 'auto' }}>
+                
+                {/* Spatial Suggestions */}
+                <div style={{ marginBottom: 32, borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 24 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                        <Crosshair size={18} color="var(--blue)" />
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#FFF' }}>Inteligência Geográfica</div>
+                    </div>
+                    
+                    {loadingSuggestions ? (
+                        <div style={{ fontSize: 11, color: 'var(--t3)' }}>Analisando padrões...</div>
+                    ) : suggestions.length === 0 ? (
+                        <div style={{ fontSize: 11, color: 'var(--t3)' }}>Sem sugestões no momento. Registe interações para calibrar o Sonar.</div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            {suggestions.map((s, i) => (
+                                <div 
+                                    key={i} 
+                                    onClick={async () => {
+                                        const coords = await geocodeAddress(s.region);
+                                        if (coords) {
+                                            setFlyToCenter([coords.lat, coords.lng]);
+                                            setFlyToZoom(14);
+                                            setScanConfig(prev => ({ ...prev, location: s.region }));
+                                        }
+                                    }}
+                                    style={{ 
+                                        background: 'rgba(255,255,255,0.03)', 
+                                        padding: '10px 12px', 
+                                        borderRadius: 10, 
+                                        border: '1px solid rgba(255,255,255,0.05)', 
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                                        <div style={{ fontSize: 12, fontWeight: 700, color: '#FFF' }}>{s.region}</div>
+                                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--blue)' }}>P:{s.potential}</div>
+                                    </div>
+                                    <div style={{ fontSize: 10, color: 'var(--t3)', lineHeight: 1.2 }}>{s.reason}</div>
+                                    <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+                                        <div style={{ fontSize: 9, color: 'var(--t3)', display: 'flex', alignItems: 'center', gap: 3 }}><Users size={10} /> {s.density}</div>
+                                        <div style={{ fontSize: 9, color: 'var(--t3)', display: 'flex', alignItems: 'center', gap: 3 }}><Target size={10} /> IQ {s.avgOutcome.toFixed(1)}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
                 <div style={{ marginBottom: 32 }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: '#FFF', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Configurar Varredura</div>
                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>Defina os parâmetros técnicos da operação</div>

@@ -176,3 +176,15 @@ export async function fetchLeadActivities(leadId: string, options?: {
 export async function fetchDashboardMetrics(): Promise<DashboardMetrics> {
   return api.get<DashboardMetrics>('/leads/dashboard');
 }
+
+export async function logLeadInteraction(leadId: string, data: { type: string; outcome: string; notes?: string }): Promise<any> {
+  return api.post(`/leads/${leadId}/interactions`, data);
+}
+
+export async function fetchLeadInteractions(leadId: string): Promise<any[]> {
+  return api.get(`/leads/${leadId}/interactions`);
+}
+
+export async function enrichLead(leadId: string): Promise<Lead> {
+  return api.post<Lead>(`/leads/${leadId}/enrich`, {});
+}

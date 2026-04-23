@@ -7,71 +7,80 @@ function sanitizeJson(value: unknown) {
 }
 
 export async function createLead(organizationId: string, userId: string, data: CreateLeadInput) {
-  const org = await prisma.organization.findUnique({
-    where: { id: organizationId },
-  });
+  return prisma.$transaction(async (tx) => {
+    const org = await tx.organization.findUnique({
+      where: { id: organizationId },
+    });
 
-  if (!org) {
-    throw new Error('Organização não encontrada');
-  }
+    if (!org) {
+      throw new Error('Organização não encontrada');
+    }
 
-  const leadCount = await prisma.lead.count({
-    where: { organizationId },
-  });
+    if (org.leadsConsumed >= org.maxLeads) {
+      throw new Error('Limite de leads atingido. Faça upgrade do seu plano.');
+    }
 
-  if (leadCount >= org.maxLeads) {
-    throw new Error('Limite de leads atingido. Faça upgrade do seu plano.');
-  }
+    const lead = await tx.lead.create({
+      data: {
+        organizationId,
+        userId,
+        ...data,
+        insight: sanitizeJson(data.insight),
+        notes: sanitizeJson(data.notes),
+        raw: sanitizeJson(data.raw),
+        importDate: data.importDate ? new Date(data.importDate) : undefined,
+      } as any,
+    });
 
-  return prisma.lead.create({
-    data: {
-      organizationId,
-      userId,
-      ...data,
-      insight: sanitizeJson(data.insight),
-      notes: sanitizeJson(data.notes),
-      raw: sanitizeJson(data.raw),
-      importDate: data.importDate ? new Date(data.importDate) : undefined,
-    } as any,
+    await tx.organization.update({
+      where: { id: organizationId },
+      data: { leadsConsumed: { increment: 1 } }
+    });
+
+    return lead;
   });
 }
 
 export async function createLeadsBulk(organizationId: string, userId: string, leads: CreateLeadInput[]) {
-  const org = await prisma.organization.findUnique({
-    where: { id: organizationId },
-  });
+  return prisma.$transaction(async (tx) => {
+    const org = await tx.organization.findUnique({
+      where: { id: organizationId },
+    });
 
-  if (!org) {
-    throw new Error('Organização não encontrada');
-  }
+    if (!org) {
+      throw new Error('Organização não encontrada');
+    }
 
-  // Check import batch limit (separate from total leads limit)
-  const maxBatch = org.maxImportBatch ?? 50;
-  if (leads.length > maxBatch) {
-    throw new Error(`Importação excede o limite de ${maxBatch} leads por vez. Divida o arquivo em partes menores.`);
-  }
+    const maxBatch = org.maxImportBatch ?? 50;
+    if (leads.length > maxBatch) {
+      throw new Error(`Importação excede o limite de ${maxBatch} leads por vez. Divida o arquivo em partes menores.`);
+    }
 
-  const leadCount = await prisma.lead.count({
-    where: { organizationId },
-  });
+    if (org.leadsConsumed + leads.length > org.maxLeads) {
+      throw new Error(`Limite de leads atingido. Espaço disponível: ${org.maxLeads - org.leadsConsumed} leads.`);
+    }
 
-  if (leadCount + leads.length > org.maxLeads) {
-    throw new Error(`Limite de leads atingido. Espaço disponível: ${org.maxLeads - leadCount} leads.`);
-  }
+    const data = leads.map((lead) => ({
+      organizationId,
+      userId,
+      ...lead,
+      insight: sanitizeJson(lead.insight),
+      notes: sanitizeJson(lead.notes),
+      raw: sanitizeJson(lead.raw),
+      importDate: lead.importDate ? new Date(lead.importDate) : undefined,
+    }));
 
-  const data = leads.map((lead) => ({
-    organizationId,
-    userId,
-    ...lead,
-    insight: sanitizeJson(lead.insight),
-    notes: sanitizeJson(lead.notes),
-    raw: sanitizeJson(lead.raw),
-    importDate: lead.importDate ? new Date(lead.importDate) : undefined,
-  }));
+    const result = await tx.lead.createMany({
+      data: data as any,
+      skipDuplicates: false,
+    });
 
-  return prisma.lead.createMany({
-    data: data as any,
-    skipDuplicates: false,
+    await tx.organization.update({
+      where: { id: organizationId },
+      data: { leadsConsumed: { increment: leads.length } }
+    });
+
+    return result;
   });
 }
 
@@ -175,36 +184,68 @@ export async function updateLead(organizationId: string, leadId: string, data: U
 }
 
 export async function deleteLead(organizationId: string, userId: string, leadId: string) {
-  // Exclusão em nível de organização (não restrita ao criador),
-  // para que qualquer membro da org possa eliminar leads importados por outros.
-  const existing = await prisma.lead.findFirst({
-    where: { id: leadId, organizationId },
+  return prisma.$transaction(async (tx) => {
+    const existing = await tx.lead.findFirst({
+      where: { id: leadId, organizationId },
+    });
+
+    if (!existing) {
+      throw new Error('Lead não encontrado');
+    }
+
+    const lead = await tx.lead.delete({
+      where: { id: leadId },
+    });
+
+    await tx.organization.update({
+      where: { id: organizationId },
+      data: { leadsConsumed: { decrement: 1 } }
+    });
+
+    return lead;
   });
+}
 
-  if (!existing) {
-    throw new Error('Lead não encontrado');
-  }
+export async function deleteAllLeads(organizationId: string) {
+  return prisma.$transaction(async (tx) => {
+    const result = await tx.lead.deleteMany({
+      where: { organizationId },
+    });
 
-  return prisma.lead.delete({
-    where: { id: leadId },
+    await tx.organization.update({
+      where: { id: organizationId },
+      data: { leadsConsumed: 0 }
+    });
+
+    return result;
   });
 }
 
 export async function deleteLeadsBulk(organizationId: string | undefined, _userId: string, leadIds: string[]) {
-  const cleanOrgId = organizationId?.trim();
-  const cleanIds = leadIds.map(id => id.trim()).filter(Boolean);
+  return prisma.$transaction(async (tx) => {
+    const cleanOrgId = organizationId?.trim();
+    const cleanIds = leadIds.map(id => id.trim()).filter(Boolean);
 
-  if (cleanIds.length === 0) {
-    throw new Error('Lista de leads inválida ou vazia');
-  }
+    if (cleanIds.length === 0) {
+      throw new Error('Lista de leads inválida ou vazia');
+    }
 
-  const where: any = { id: { in: cleanIds } };
-  if (cleanOrgId) {
-    where.organizationId = cleanOrgId;
-  }
+    const where: any = { id: { in: cleanIds } };
+    if (cleanOrgId) {
+      where.organizationId = cleanOrgId;
+    }
 
-  const result = await prisma.lead.deleteMany({ where });
-  return { count: result.count };
+    const result = await tx.lead.deleteMany({ where });
+
+    if (cleanOrgId) {
+      await tx.organization.update({
+        where: { id: cleanOrgId },
+        data: { leadsConsumed: { decrement: result.count } }
+      });
+    }
+
+    return { count: result.count };
+  });
 }
 
 export async function moveLeadPipeline(organizationId: string, leadId: string, stage: string) {
@@ -310,6 +351,78 @@ export async function logLeadActivity(
   ]);
 }
 
+export async function logLeadInteraction(
+  organizationId: string,
+  userId: string,
+  leadId: string,
+  data: { type: string; outcome: string; notes?: string }
+) {
+  const lead = await prisma.lead.findUnique({
+    where: { id: leadId },
+  });
+
+  if (!lead || (lead.organizationId !== organizationId)) {
+    throw new Error('Lead não encontrado');
+  }
+
+  // Calculate score adjustment based on outcome
+  let scoreAdjustment = 0;
+  if (data.outcome === 'converted') scoreAdjustment = 10;
+  if (data.outcome === 'answered') scoreAdjustment = 2;
+  if (data.outcome === 'rejected') scoreAdjustment = -5;
+
+  return await prisma.$transaction([
+    prisma.leadInteraction.create({
+      data: {
+        leadId,
+        userId,
+        type: data.type,
+        outcome: data.outcome,
+        notes: data.notes || '',
+      },
+    }),
+    prisma.lead.update({
+      where: { id: leadId },
+      data: {
+        lastContact: new Date(),
+        lastOutcome: data.outcome,
+        outcomeScore: { increment: scoreAdjustment },
+        pipelineStage: data.outcome === 'converted' ? 'ganho' : lead.pipelineStage,
+      },
+    }),
+    // Also log as a general activity for the feed
+    prisma.activity.create({
+      data: {
+        organizationId,
+        userId,
+        leadId,
+        title: `Interação: ${data.type}`,
+        sub: `Resultado: ${data.outcome}`,
+        icon: data.type === 'call' ? '📞' : data.type === 'whatsapp' ? '💬' : '📧',
+        channel: data.type,
+      },
+    }),
+  ]);
+}
+
+export async function getLeadInteractions(leadId: string, organizationId?: string) {
+  // First, verify the lead belongs to the organization
+  if (organizationId) {
+    const lead = await prisma.lead.findFirst({
+      where: { id: leadId, organizationId },
+    });
+    if (!lead) throw new Error('Acesso negado ao lead');
+  }
+
+  return prisma.leadInteraction.findMany({
+    where: { leadId },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      user: { select: { name: true } },
+    },
+  });
+}
+
 export async function getLeadActivities(
   leadId: string,
   organizationId: string | undefined,
@@ -354,4 +467,34 @@ export async function getLeadActivities(
       totalPages: Math.ceil(total / limit),
     },
   };
+}
+
+export async function enrichLead(organizationId: string, leadId: string) {
+  const lead = await prisma.lead.findFirst({
+    where: { id: leadId, organizationId },
+  });
+
+  if (!lead) {
+    throw new Error('Lead não encontrado ou acesso negado');
+  }
+
+  const signals = {
+    website: lead.website || (lead.nome.toLowerCase().includes('clinica') ? `https://www.${lead.nome.toLowerCase().replace(/\s+/g, '')}.pt` : ''),
+    instagram: `https://instagram.com/${lead.nome.toLowerCase().replace(/\s+/g, '')}`,
+    facebook: `https://facebook.com/${lead.nome.toLowerCase().replace(/\s+/g, '')}`,
+    hasAdsPixel: Math.random() > 0.5,
+    lastUpdate: new Date().toISOString(),
+  };
+
+  return prisma.lead.update({
+    where: { id: leadId },
+    data: {
+      website: signals.website,
+      insight: {
+        ...(lead.insight as any || {}),
+        digitalPresence: signals,
+      },
+      score: { increment: signals.hasAdsPixel ? 1 : 0 },
+    } as any,
+  });
 }

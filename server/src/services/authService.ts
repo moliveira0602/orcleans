@@ -18,9 +18,10 @@ export async function register(input: RegisterInput) {
     const org = await tx.organization.create({
       data: {
         name: input.organizationName,
-        plan: 'starter',
-        maxLeads: 500,
+        plan: 'trial',
+        maxLeads: 25,
         maxUsers: 1,
+        trialExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days trial
       },
     });
 
@@ -194,7 +195,11 @@ export async function getProfile(userId: string) {
           name: true,
           plan: true,
           maxLeads: true,
+          leadsConsumed: true,
           maxUsers: true,
+          trialExpiresAt: true,
+          lastBillingDate: true,
+          stripeId: true,
         },
       },
     },
@@ -244,7 +249,11 @@ export async function updateProfile(userId: string, data: { name?: string; email
           name: true,
           plan: true,
           maxLeads: true,
+          leadsConsumed: true,
           maxUsers: true,
+          trialExpiresAt: true,
+          lastBillingDate: true,
+          stripeId: true,
         },
       },
     },

@@ -11,6 +11,7 @@ import authRoutes from './routes/auth';
 import leadRoutes from './routes/leads';
 import adminRoutes from './routes/admin';
 import scanRoutes from './routes/scan';
+import organizationRoutes from './routes/organizations';
 
 const app = express();
 
@@ -110,6 +111,7 @@ app.use('/api/admin', adminRoutes);
 
 app.use('/api/leads', leadRoutes);
 app.use('/api/scan', scanRoutes);
+app.use('/api/organizations', organizationRoutes);
 
 const PORT = Number(process.env.PORT || env.PORT || 3333);
 

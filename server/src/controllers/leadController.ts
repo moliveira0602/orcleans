@@ -74,6 +74,16 @@ export async function getLeadById(req: AuthRequest, res: Response) {
   }
 }
 
+export async function enrich(req: AuthRequest, res: Response) {
+  try {
+    const leadId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const lead = await leadService.enrichLead(req.organizationId!, leadId);
+    return res.status(200).json(lead);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+}
+
 export async function createLead(req: AuthRequest, res: Response) {
   try {
     const lead = await leadService.createLead(req.organizationId!, req.userId!, req.body);
@@ -110,6 +120,15 @@ export async function deleteLead(req: AuthRequest, res: Response) {
     return res.status(204).send();
   } catch (error: any) {
     return res.status(404).json({ error: error.message });
+  }
+}
+
+export async function deleteAllLeads(req: AuthRequest, res: Response) {
+  try {
+    const result = await leadService.deleteAllLeads(req.organizationId!);
+    return res.status(200).json({ count: result.count });
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message });
   }
 }
 
@@ -161,6 +180,37 @@ export async function logActivity(req: AuthRequest, res: Response) {
     }
     await leadService.logLeadActivity(req.organizationId!, req.userId!, leadId, channel);
     return res.status(200).json({ success: true });
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message });
+  }
+}
+
+export async function logInteraction(req: AuthRequest, res: Response) {
+  try {
+    const leadId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const { type, outcome, notes } = req.body;
+    
+    if (!type || !outcome) {
+      return res.status(400).json({ error: 'Tipo e resultado são obrigatórios' });
+    }
+
+    const result = await leadService.logLeadInteraction(req.organizationId!, req.userId!, leadId, {
+      type,
+      outcome,
+      notes,
+    });
+    
+    return res.status(200).json(result);
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message });
+  }
+}
+
+export async function getInteractions(req: AuthRequest, res: Response) {
+  try {
+    const leadId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const result = await leadService.getLeadInteractions(leadId, req.organizationId);
+    return res.status(200).json(result);
   } catch (error: any) {
     return res.status(400).json({ error: error.message });
   }

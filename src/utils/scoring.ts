@@ -40,13 +40,27 @@ export function computeScore(
         if (lead.email && String(lead.email).includes('@')) score += 0.5;
         if (lead.telefone && String(lead.telefone).match(/\d{8,}/)) score += 0.8;
         
+        // Enrichment Boosts
+        const enrichment = (lead.insight as any)?.enrichment?.presence;
+        if (enrichment) {
+            if (enrichment.hasPixel) score += 1.0; // Companies spending on ads are high potential
+            if (enrichment.hasInstagram) score += 0.4;
+            if (enrichment.hasFacebook) score += 0.2;
+        }
+
+        // Adaptive IQ (Feedback Loop)
+        // Adjust final score based on previous interactions
+        if (lead.outcomeScore) {
+            score += lead.outcomeScore / 10; // e.g., +20 interaction score = +2.0 total score
+        }
+
         // Industry keywords
         const name = (lead.nome || '').toLowerCase();
         if (name.match(/clinic|saúde|medic|health|clínica|clinica/)) score += 0.3;
         if (name.match(/laser|estética|estetic|beauty|beleza/)) score += 0.4;
         if (name.match(/dentist|odonto/)) score += 0.3;
         
-        return Math.round(score * 10) / 10;
+        return Math.max(1, Math.min(10, Math.round(score * 10) / 10));
     }
 
     // Legacy scoring for non-canonical rows
@@ -130,18 +144,22 @@ export function scoreLabel(
 
 export function scoreReason(row: Record<string, unknown>): string {
     const reasons: string[] = [];
+    const lead = row as any;
+
+    if (lead.outcomeScore > 0) reasons.push('feedback positivo');
+    if (lead.outcomeScore < 0) reasons.push('baixo interesse');
+    
+    const enrichment = lead.insight?.enrichment?.presence;
+    if (enrichment?.hasPixel) reasons.push('investe em ads');
+    if (enrichment?.hasInstagram) reasons.push('presença social');
+
     if (Object.values(row).some((v) => String(v).match(/@/)))
         reasons.push('tem email');
     if (Object.values(row).some((v) => String(v).match(/\d{8,}/)))
         reasons.push('tem telefone');
     if (Object.values(row).some((v) => String(v).trim().startsWith('http')))
         reasons.push('tem website');
-    if (
-        Object.values(row).some((v) =>
-            String(v).match(/facebook|instagram/i)
-        )
-    )
-        reasons.push('tem redes sociais');
+    
     return reasons.length
         ? reasons.join(', ')
         : 'Scoring baseado em perfil';

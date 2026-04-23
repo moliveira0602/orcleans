@@ -10,14 +10,19 @@ datasource db {
 }
 
 model Organization {
-  id          String   @id @default(uuid())
-  name        String
-  plan            String   @default("starter")
-  maxLeads        Int      @default(500)
+  id              String   @id @default(uuid())
+  name            String
+  plan            String   @default("trial")
+  maxLeads        Int      @default(25)
+  leadsConsumed   Int      @default(0)
   maxImportBatch  Int      @default(50)
   maxUsers        Int      @default(1)
+  trialExpiresAt  DateTime?
+  lastBillingDate DateTime @default(now())
+  stripeId        String?
+  apiKey          String?  @unique
   createdAt       DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt       DateTime @updatedAt
 
   users       User[]
   leads       Lead[]
@@ -45,6 +50,7 @@ model User {
   refreshTokens  RefreshToken[]
   activities     Activity[]
   leads          Lead[]
+  leadInteractions LeadInteraction[]
 
   @@index([organizationId])
   @@map("users")
@@ -86,6 +92,8 @@ model Lead {
   linkPedido    String   @default("")
   observacoes   String   @default("")
   score         Int      @default(0)
+  outcomeScore  Float    @default(0) // Inteligência adaptativa baseada em resultados
+  lastOutcome   String?  // 'converteu', 'rejeitou', 'interessado'
   pipelineStage String   @default("novo")
   lat           Float?
   lng           Float?
@@ -103,6 +111,7 @@ model Lead {
   organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
   activities    Activity[]
+  interactions  LeadInteraction[]
 
   @@index([organizationId])
   @@index([userId])
@@ -111,6 +120,24 @@ model Lead {
   @@index([createdAt])
   @@index([segmento])
   @@map("leads")
+}
+
+model LeadInteraction {
+  id             String   @id @default(uuid())
+  leadId         String
+  userId         String
+  type           String   // 'call', 'email', 'whatsapp', 'meeting'
+  outcome        String   // 'answered', 'no_answer', 'converted', 'rejected'
+  notes          String   @default("")
+  createdAt      DateTime @default(now())
+
+  lead           Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("lead_interactions")
 }
 
 model Activity {

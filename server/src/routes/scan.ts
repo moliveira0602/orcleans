@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { env } from '../config/env';
+import { authenticate, AuthRequest } from '../middleware/auth';
+import * as sonarService from '../services/sonarService';
 
 const router = Router();
 
@@ -30,8 +32,14 @@ cache.clear();
 
 const BASIC_FIELDS = 'place_id,name,formatted_address,geometry,types,business_status,rating,user_ratings_total,price_level,opening_hours,formatted_phone_number,website,utc_offset_minutes,vicinity';
 
+import { checkPlanLimits } from '../middleware/plans';
+
+// Apply authentication and plan limits to ALL scan routes
+router.use(authenticate);
+router.use(checkPlanLimits);
+
 // Details endpoint - only call when user explicitly needs more info
-router.get('/textsearch', async (req: Request, res: Response) => {
+router.get('/textsearch', async (req: AuthRequest, res: Response) => {
   try {
     const query = req.query.query as string;
     const location = req.query.location as string;
@@ -112,7 +120,7 @@ router.get('/textsearch', async (req: Request, res: Response) => {
 });
 
 // Nearby Search endpoint (cheaper but no phone/website)
-router.get('/nearby', async (req: Request, res: Response) => {
+router.get('/nearby', async (req: AuthRequest, res: Response) => {
   try {
     const location = req.query.location as string;
     const radius = Math.min(parseInt(req.query.radius as string) || 2000, 5000);
@@ -156,7 +164,7 @@ router.get('/nearby', async (req: Request, res: Response) => {
 });
 
 // Details endpoint - only call when user explicitly needs more info
-router.get('/details', async (req: Request, res: Response) => {
+router.get('/details', async (req: AuthRequest, res: Response) => {
   try {
     const placeId = req.query.place_id as string;
     const fields = req.query.fields as string || BASIC_FIELDS;
@@ -185,7 +193,7 @@ router.get('/details', async (req: Request, res: Response) => {
 });
 
 // Geocode endpoint
-router.get('/geocode', async (req: Request, res: Response) => {
+router.get('/geocode', async (req: AuthRequest, res: Response) => {
   try {
     const address = req.query.address as string;
 
@@ -209,6 +217,16 @@ router.get('/geocode', async (req: Request, res: Response) => {
     return res.status(response.status).json(data);
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
+  }
+});
+
+// Suggestions endpoint
+router.get('/suggestions', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const suggestions = await sonarService.getSpatialSuggestions(req.organizationId!);
+    res.json(suggestions);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 });
 

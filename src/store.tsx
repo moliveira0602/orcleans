@@ -275,6 +275,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 break;
             }
             case 'CLEAR_ALL':
+                updateState({
+                    leads: [],
+                    imports: [],
+                    pipeline: { novo: [], qualificado: [], proposta: [], negociacao: [], ganho: [], perdido: [] },
+                });
                 break;
         }
     }, [updateState, state.settings, state.activities, state.imports]);
