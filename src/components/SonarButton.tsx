@@ -33,8 +33,8 @@ export default function SonarButton({
                 transition: 'all var(--transition)',
                 transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
                 boxShadow: isHovered 
-                    ? '0 8px 32px rgba(0, 194, 255, 0.15), inset 0 1px 0 rgba(0, 194, 255, 0.1)' 
-                    : '0 4px 16px rgba(0, 194, 255, 0.05), inset 0 1px 0 rgba(0, 194, 255, 0.05)',
+                    ? '0 8px 32px rgba(255, 255, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)' 
+                    : '0 4px 16px rgba(255, 255, 255, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
             }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -123,11 +123,11 @@ export default function SonarButton({
                 .sonar-radar {
                     width: 80px;
                     height: 80px;
-                    border: solid 2px rgba(0, 194, 255, 0.6);
+                    border: solid 2px rgba(255, 255, 255, 0.6);
                     border-radius: 50%;
                     position: relative;
                     animation: sonar-rotate 2s linear infinite;
-                    background: rgba(0, 194, 255, 0.1);
+                    background: rgba(255, 255, 255, 0.1);
                 }
 
                 .sonar-radar .blip {
@@ -136,11 +136,11 @@ export default function SonarButton({
                     left: -4px;
                     width: 80px;
                     height: 80px;
-                    border: solid 4px rgba(0, 194, 255, 0.6);
+                    border: solid 4px rgba(255, 255, 255, 0.6);
                     border-radius: 50%;
                     transform: scale(0.4);
                     animation: sonar-blip 2s infinite;
-                    background: rgba(0, 194, 255, 0.4);
+                    background: rgba(255, 255, 255, 0.4);
                 }
 
                 .sonar-radar .line {
@@ -149,7 +149,7 @@ export default function SonarButton({
                     top: 0;
                     width: 1px;
                     height: 40px;
-                    background: rgba(0, 194, 255, 0.6);
+                    background: rgba(255, 255, 255, 0.6);
                 }
                 
                 .sonar-radar .rings {
@@ -158,7 +158,7 @@ export default function SonarButton({
                     left: 19px;
                     width: 40px;
                     height: 40px;
-                    border: solid 1px rgba(0, 194, 255, 0.6);
+                    border: solid 1px rgba(255, 255, 255, 0.6);
                     border-radius: 50%;
                 }
                 
@@ -169,7 +169,7 @@ export default function SonarButton({
                     left: 9px;
                     width: 20px;
                     height: 20px;
-                    border: solid 1px rgba(0, 194, 255, 0.6);
+                    border: solid 1px rgba(255, 255, 255, 0.6);
                     border-radius: 50%;
                 }
                 
@@ -180,7 +180,7 @@ export default function SonarButton({
                     left: -11px;
                     width: 60px;
                     height: 60px;
-                    border: solid 1px rgba(0, 194, 255, 0.6);
+                    border: solid 1px rgba(255, 255, 255, 0.6);
                     border-radius: 50%;
                 }
 

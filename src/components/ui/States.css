@@ -11,8 +11,8 @@
     width: 64px;
     height: 64px;
     border-radius: 16px;
-    background: rgba(0, 194, 255, 0.08);
-    border: 1px solid rgba(0, 194, 255, 0.12);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -22,7 +22,7 @@
 }
 
 .empty-state-title {
-    font-family: 'Sora', sans-serif;
+    font-family: 'Satoshi', sans-serif;
     font-size: 18px;
     font-weight: 600;
     color: var(--orca-text-primary);
@@ -43,7 +43,7 @@
     border: none;
     border-radius: 10px;
     padding: 10px 24px;
-    font-family: 'Sora', sans-serif;
+    font-family: 'Satoshi', sans-serif;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -51,7 +51,7 @@
 }
 
 .empty-state-action:hover {
-    background: #33CFFF;
+    background: #E6E6E6;
     transform: translateY(-1px);
 }
 
@@ -62,7 +62,7 @@
     justify-content: center;
     padding: 80px 24px;
     text-align: center;
-    background: rgba(11, 31, 46, 0.5);
+    background: rgba(51, 51, 51, 0.5);
     border: 1px solid rgba(239, 68, 68, 0.2);
     border-radius: 16px;
     margin: 24px;
@@ -74,7 +74,7 @@
 }
 
 .error-boundary-title {
-    font-family: 'Sora', sans-serif;
+    font-family: 'Satoshi', sans-serif;
     font-size: 20px;
     font-weight: 600;
     color: var(--orca-text-primary);
@@ -94,7 +94,7 @@
     border: none;
     border-radius: 10px;
     padding: 10px 24px;
-    font-family: 'Sora', sans-serif;
+    font-family: 'Satoshi', sans-serif;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -102,7 +102,7 @@
 }
 
 .error-boundary-btn:hover {
-    background: #33CFFF;
+    background: #E6E6E6;
 }
 
 .skeleton {
@@ -123,8 +123,8 @@
 }
 
 .skeleton-card {
-    background: rgba(11, 31, 46, 0.5);
-    border: 1px solid rgba(0, 194, 255, 0.08);
+    background: rgba(51, 51, 51, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 20px;
 }

@@ -1,0 +1,79 @@
+/* ═════════════════════════════════════════════════════════════
+   ORCA Design System — Deep Ocean Intelligence
+   Typography: Inter (refined)
+   Colors: Ocean-inspired dark palette
+   ═════════════════════════════════════════════════════════════ */
+
+/* ── PREMIUM TYPEFACE SYSTEM ── */
+--font-d: 'Satoshi', sans-serif;
+--font-s: 'Satoshi', sans-serif;
+--font-b: 'Satoshi', sans-serif;
+
+/* ── BRAND BOOK COLOR PALETTE ── */
+--orca-bg:          #0A0A0A;    /* Preto Orca */
+--orca-bg-2:        #0A0A0A;    /* Preto Orca */
+--orca-bg-3:        #333333;    /* Cinza Grafite */
+--orca-surface:     rgba(51, 51, 51, 0.7);
+--orca-surface-2:   rgba(51, 51, 51, 0.4);
+
+/* Accent colors - redefined to monochromatic system */
+--orca-accent:      #FFFFFF;    /* Pure White */
+--orca-accent-2:    #E6E6E6;    /* Light Gray */
+--orca-accent-glow: rgba(255, 255, 255, 0.05);
+--orca-accent-glow-strong: rgba(255, 255, 255, 0.15);
+
+/* Text colors - brand book strictly */
+--orca-text:        #FFFFFF;    /* Branco */
+--orca-text-muted:  #E6E6E6;    /* Cinza Claro */
+--orca-text-dim:    rgba(230, 230, 230, 0.5);
+
+/* Border system - subtle and refined */
+--orca-border:      rgba(230, 230, 230, 0.1);
+--orca-border-glow: rgba(255, 255, 255, 0.15);
+
+/* Status colors - monochromatic mapping */
+--orca-hot:         #FFFFFF;
+--orca-warm:        #E6E6E6;
+--orca-cold:        #333333;
+--orca-purple:      #FFFFFF;
+
+/* Gradients - Monochrome */
+--orca-gradient:    linear-gradient(180deg, #0A0A0A 0%, #333333 100%);
+--orca-gradient-radial: radial-gradient(ellipse at center, #333333 0%, #0A0A0A 80%);
+
+/* Legacy aliases for compatibility */
+--bg: var(--orca-bg);
+--bg2: var(--orca-surface);
+--bg3: var(--orca-surface-2);
+--bg4: var(--orca-surface-2);
+--bg5: var(--orca-border);
+--blue: var(--orca-accent);
+--blue2: #38BDF8;
+--blue3: var(--orca-accent);
+--blue-dim: var(--orca-accent-glow);
+--cyan: var(--orca-accent);
+--green: var(--orca-hot);
+--green-dim: rgba(16, 217, 160, 0.12);
+--amber: var(--orca-warm);
+--amber-dim: rgba(245, 158, 11, 0.1);
+--red: #EF4444;
+--red-dim: rgba(239, 68, 68, 0.1);
+--purple: #8B5CF6;
+--t1: var(--orca-text);
+--t2: var(--orca-text-muted);
+--t3: var(--orca-text-muted);
+--t4: #2D3748;
+--border: var(--orca-border);
+--border2: rgba(26, 43, 69, 0.6);
+--card: rgba(17, 29, 51, 0.5);
+--card2: rgba(17, 29, 51, 0.8);
+--radius: 8px;
+--radius-lg: 10px;
+--radius-xl: 14px;
+--font-d: 'Inter', sans-serif;
+--font-s: 'Inter', sans-serif;
+--font-b: 'Inter', sans-serif;
+--shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+--shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+--transition: 200ms cubic-bezier(.4, 0, .2, 1);
+--transition-slow: 300ms cubic-bezier(.4, 0, .2, 1);

@@ -9,47 +9,46 @@
 :root {
   /* ═══════════════════════════════════════════════════════════
      ORCA Design System — Deep Ocean Intelligence
-     Typography: Inter (refined)
+     Typography: Satoshi (refined)
      Colors: Ocean-inspired dark palette
      ═══════════════════════════════════════════════════════════ */
 
   /* ── PREMIUM TYPEFACE SYSTEM ── */
-  --font-d: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-s: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-b: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-d: 'Satoshi', sans-serif;
+  --font-s: 'Satoshi', sans-serif;
+  --font-b: 'Satoshi', sans-serif;
 
-  /* ── DEEP OCEAN COLOR PALETTE ── */
-  /* Background layers - from abyssal black to deep ocean */
-  --orca-bg:          #05070A;    /* Abyssal black */
-  --orca-bg-2:        #0B1F2E;    /* Deep ocean */
-  --orca-bg-3:        #0E3A5D;    /* Mid ocean */
-  --orca-surface:     rgba(11, 31, 46, 0.7);
-  --orca-surface-2:   rgba(14, 58, 93, 0.4);
+  /* ── BRAND BOOK COLOR PALETTE ── */
+  --orca-bg:          #0A0A0A;    /* Preto Orca */
+  --orca-bg-2:        #0A0A0A;    /* Preto Orca */
+  --orca-bg-3:        #333333;    /* Cinza Grafite */
+  --orca-surface:     rgba(51, 51, 51, 0.7);
+  --orca-surface-2:   rgba(51, 51, 51, 0.4);
 
-  /* Accent colors - bioluminescent ocean blues */
-  --orca-accent:      #00C2FF;    /* Neon ocean blue */
-  --orca-accent-2:    #4FDFFF;    /* Soft cyan */
-  --orca-accent-glow: rgba(0, 194, 255, 0.08);
-  --orca-accent-glow-strong: rgba(0, 194, 255, 0.25);
+  /* Accent colors - Monochromatic */
+  --orca-accent:      #FFFFFF;
+  --orca-accent-2:    #E6E6E6;
+  --orca-accent-glow: rgba(255, 255, 255, 0.05);
+  --orca-accent-glow-strong: rgba(255, 255, 255, 0.15);
 
-  /* Text colors - ice white to muted steel */
-  --orca-text:        #EAF6FF;    /* Ice white */
-  --orca-text-muted:  #9FB3C8;    /* Muted steel */
-  --orca-text-dim:    rgba(159, 179, 200, 0.5);
+  /* Text colors - white to light gray */
+  --orca-text:        #FFFFFF;    /* Branco */
+  --orca-text-muted:  #E6E6E6;    /* Cinza Claro */
+  --orca-text-dim:    rgba(230, 230, 230, 0.5);
 
   /* Border system - subtle and refined */
-  --orca-border:      rgba(159, 179, 200, 0.08);
-  --orca-border-glow: rgba(0, 194, 255, 0.12);
+  --orca-border:      rgba(230, 230, 230, 0.1);
+  --orca-border-glow: rgba(255, 255, 255, 0.15);
 
   /* Status colors */
-  --orca-hot:         #00C2FF;
-  --orca-warm:        #4FDFFF;
-  --orca-cold:        #9FB3C8;
-  --orca-purple:      #5B3DF5;
+  --orca-hot:         #FFFFFF;
+  --orca-warm:        #E6E6E6;
+  --orca-cold:        #333333;
+  --orca-purple:      #FFFFFF;
 
   /* Gradients */
-  --orca-gradient:    linear-gradient(135deg, #05070A 0%, #0B1F2E 50%, #0E3A5D 100%);
-  --orca-gradient-radial: radial-gradient(ellipse at center, #0B1F2E 0%, #05070A 70%);
+  --orca-gradient:    linear-gradient(180deg, #0A0A0A 0%, #333333 100%);
+  --orca-gradient-radial: radial-gradient(ellipse at center, #333333 0%, #0A0A0A 80%);
 
   /* Legacy aliases for compatibility */
   --bg: var(--orca-bg);
@@ -74,15 +73,15 @@
   --t3: var(--orca-text-muted);
   --t4: #2D3748;
   --border: var(--orca-border);
-  --border2: rgba(26, 43, 69, 0.6);
-  --card: rgba(17, 29, 51, 0.5);
-  --card2: rgba(17, 29, 51, 0.8);
+  --border2: rgba(232, 232, 232, 0.2);
+  --card: rgba(26, 26, 26, 0.5);
+  --card2: rgba(26, 26, 26, 0.8);
   --radius: 8px;
   --radius-lg: 10px;
   --radius-xl: 14px;
-  --font-d: 'Inter', sans-serif;
-  --font-s: 'Inter', sans-serif;
-  --font-b: 'Inter', sans-serif;
+  --font-d: 'Satoshi', sans-serif;
+  --font-s: 'Satoshi', sans-serif;
+  --font-b: 'Satoshi', sans-serif;
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
   --transition: 200ms cubic-bezier(.4, 0, .2, 1);
@@ -210,7 +209,7 @@ body {
   font-family: var(--font-d);
   font-size: 20px;
   font-weight: 800;
-  background: linear-gradient(135deg, #fff 30%, var(--blue3));
+  background: #FFFFFF;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -282,19 +281,18 @@ body {
 }
 
 .nav-item:hover {
-  background: var(--card2);
-  color: var(--t2)
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--orca-text);
 }
 
 .nav-item.active {
-  background: rgba(0, 194, 255, 0.06);
-  color: var(--color-accent-primary);
-  border-left: 2px solid var(--color-accent-primary);
-  padding-left: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  font-weight: 600;
 }
 
 .nav-item.active .nav-icon {
-  color: var(--color-accent-primary)
+  color: #FFFFFF;
 }
 
 .nav-icon {
@@ -330,7 +328,7 @@ body {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--blue), var(--cyan));
+  background: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -397,7 +395,7 @@ body {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  background: rgba(0, 194, 255, 0.12);
+  background: rgba(255, 255, 255, 0.12);
   border: 1px solid var(--orca-accent);
   color: var(--orca-accent);
   transition: all 0.2s ease;
@@ -405,13 +403,13 @@ body {
 }
 
 .btn-topbar-import:hover {
-  background: rgba(0, 194, 255, 0.25);
+  background: rgba(255, 255, 255, 0.25);
   border-color: var(--orca-accent);
 }
 
 .btn-topbar-import:active {
   transform: translateY(0);
-  background: rgba(0, 194, 255, 0.3);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .content {
@@ -439,18 +437,19 @@ body {
 }
 
     .btn-primary {
-        background: linear-gradient(135deg, #00C2FF 0%, #004E7A 100%);
-        color: #EAF6FF;
-        border: 1px solid rgba(0, 194, 255, 0.3);
-        box-shadow: 0 2px 12px rgba(0, 194, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.1);
-        font-weight: 600;
+        background: #FFFFFF;
+        color: #0A0A0A;
+        border: 1px solid #FFFFFF;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        font-weight: 700;
         letter-spacing: 0.02em;
+        transition: all 0.2s ease;
     }
     .btn-primary:hover {
-        background: linear-gradient(135deg, #4FDFFF 0%, #00699E 100%);
-        border-color: rgba(0, 194, 255, 0.5);
-        box-shadow: 0 4px 20px rgba(0, 194, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.15);
-        transform: translateY(-1px);
+        background: #E6E6E6;
+        border-color: #E6E6E6;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+        transform: translateY(-1.5px);
     }
 
 .btn-primary:active {
@@ -498,23 +497,23 @@ body {
 
 /* ── CARDS ── */
 .card {
-  background: rgba(11, 31, 46, 0.7);
+  background: rgba(51, 51, 51, 0.7);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 194, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-lg);
   padding: 24px;
   transition: all var(--transition-smooth);
 }
 
 .card:hover {
-  border-color: rgba(0, 194, 255, 0.12);
-  box-shadow: 0 0 20px rgba(0, 194, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.08);
 }
 
 .card-sm {
-  background: rgba(11, 31, 46, 0.7);
+  background: rgba(51, 51, 51, 0.7);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 194, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius);
   padding: 18px
 }
@@ -528,9 +527,9 @@ body {
 }
 
 .kpi {
-  background: rgba(11, 31, 46, 0.7);
+  background: rgba(51, 51, 51, 0.7);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 194, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-lg);
   padding: 20px 22px;
   position: relative;
@@ -539,8 +538,8 @@ body {
 }
 
 .kpi:hover {
-  border-color: rgba(0, 194, 255, 0.15);
-  box-shadow: 0 0 20px rgba(0, 194, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
   transform: translateY(-1px);
 }
 

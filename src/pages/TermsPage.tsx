@@ -90,9 +90,9 @@ export default function TermsPage() {
             <style>{`
                 .legal-page {
                     min-height: 100vh;
-                    background: #05070A;
+                    background: #0A0A0A;
                     color: #EAF6FF;
-                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                    font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
                 }
                 .legal-header {
                     position: relative;
@@ -109,13 +109,13 @@ export default function TermsPage() {
                     content: '';
                     position: absolute;
                     inset: 0;
-                    background: radial-gradient(ellipse at 50% 0%, rgba(14, 58, 93, 0.5) 0%, #05070A 80%);
+                    background: radial-gradient(ellipse at 50% 0%, rgba(51, 51, 51, 0.5) 0%, #0A0A0A 80%);
                 }
                 .legal-header-bg::after {
                     content: '';
                     position: absolute;
                     inset: 0;
-                    background-image: radial-gradient(rgba(0, 194, 255, 0.1) 1px, transparent 1px);
+                    background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
                     background-size: 60px 60px;
                     opacity: 0.3;
                 }
@@ -126,7 +126,7 @@ export default function TermsPage() {
                     margin: 0 auto;
                 }
                 .legal-header h1 {
-                    font-family: 'Sora', sans-serif;
+                    font-family: 'Satoshi', sans-serif;
                     font-size: clamp(28px, 5vw, 42px);
                     font-weight: 700;
                     color: #EAF6FF;
@@ -139,12 +139,12 @@ export default function TermsPage() {
                 .legal-back-btn {
                     display: inline-block;
                     margin-bottom: 24px;
-                    color: rgba(0, 194, 255, 0.6);
+                    color: rgba(255, 255, 255, 0.6);
                     text-decoration: none;
                     font-size: 14px;
                     transition: color 0.2s;
                 }
-                .legal-back-btn:hover { color: #00C2FF; }
+                .legal-back-btn:hover { color: var(--orca-accent); }
                 .legal-content {
                     max-width: 800px;
                     margin: 0 auto;
@@ -154,10 +154,10 @@ export default function TermsPage() {
                     margin-bottom: 40px;
                 }
                 .legal-content h2 {
-                    font-family: 'Sora', sans-serif;
+                    font-family: 'Satoshi', sans-serif;
                     font-size: 20px;
                     font-weight: 700;
-                    color: #00C2FF;
+                    color: var(--orca-accent);
                     margin-bottom: 16px;
                     padding-top: 8px;
                 }
@@ -186,11 +186,11 @@ export default function TermsPage() {
                     top: 14px;
                     width: 6px;
                     height: 6px;
-                    background: rgba(0, 194, 255, 0.3);
+                    background: rgba(255, 255, 255, 0.3);
                     border-radius: 50%;
                 }
                 .legal-content a {
-                    color: #00C2FF;
+                    color: var(--orca-accent);
                     text-decoration: none;
                 }
                 .legal-content a:hover { text-decoration: underline; }

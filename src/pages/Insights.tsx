@@ -90,9 +90,9 @@ function MapWithFlashlight({ children }: { children: React.ReactNode }) {
                     pointerEvents: 'none',
                     background: `radial-gradient(
                         circle 250px at ${mousePos.x} ${mousePos.y},
-                        rgba(0, 194, 255, 0.25) 0%,
-                        rgba(0, 194, 255, 0.12) 30%,
-                        rgba(0, 194, 255, 0.04) 60%,
+                        rgba(255, 255, 255, 0.25) 0%,
+                        rgba(255, 255, 255, 0.12) 30%,
+                        rgba(255, 255, 255, 0.04) 60%,
                         transparent 100%
                     )`,
                     transition: 'background 0.15s ease',
@@ -670,8 +670,8 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                             display: 'flex', 
                             alignItems: 'center', 
                             gap: 8,
-                            background: 'linear-gradient(135deg, #0E3A5D 0%, #0B1F2E 100%)',
-                            boxShadow: '0 2px 8px rgba(0, 194, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.1)'
+                            background: 'linear-gradient(135deg, #333333 0%, #0A0A0A 100%)',
+                            boxShadow: '0 2px 8px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.1)'
                         }}
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
@@ -742,8 +742,8 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                             center={activeCenter}
                             radius={radius * 1000}
                             pathOptions={{ 
-                                color: '#00C2FF', 
-                                fillColor: '#00C2FF', 
+                                color: 'var(--orca-accent)', 
+                                fillColor: 'var(--orca-accent)', 
                                 fillOpacity: 0.03, 
                                 weight: 2, 
                                 dashArray: '8, 12',
@@ -755,8 +755,8 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                             center={activeCenter}
                             radius={radius * 1000}
                             pathOptions={{ 
-                                color: '#00C2FF', 
-                                fillColor: '#00C2FF', 
+                                color: 'var(--orca-accent)', 
+                                fillColor: 'var(--orca-accent)', 
                                 fillOpacity: 0.08, 
                                 weight: 0,
                                 className: 'radar-sweep'
@@ -1364,7 +1364,7 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                     background: radial-gradient(
                         circle 150px at var(--mouse-x, 50%) var(--mouse-y, 50%),
                         transparent 0%,
-                        rgba(0, 194, 255, 0.03) 30%,
+                        rgba(255, 255, 255, 0.03) 30%,
                         rgba(5, 7, 10, 0.4) 70%,
                         rgba(5, 7, 10, 0.7) 100%
                     );

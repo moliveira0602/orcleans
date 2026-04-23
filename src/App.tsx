@@ -15,7 +15,7 @@ function LoadingScreen() {
     return (
         <div style={{
             minHeight: '100vh',
-            background: '#05070A',
+            background: '#0A0A0A',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -25,12 +25,12 @@ function LoadingScreen() {
             <div style={{
                 width: '32px',
                 height: '32px',
-                border: '3px solid rgba(0, 194, 255, 0.2)',
-                borderTopColor: '#00C2FF',
+                border: '3px solid rgba(255, 255, 255, 0.2)',
+                borderTopColor: '#FFFFFF',
                 borderRadius: '50%',
                 animation: 'spin 0.8s linear infinite',
             }} />
-            <span style={{ color: 'rgba(234, 246, 255, 0.5)', fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
+            <span style={{ color: 'rgba(230, 230, 230, 0.5)', fontSize: '14px', fontFamily: "'Satoshi', sans-serif" }}>
                 A carregar...
             </span>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

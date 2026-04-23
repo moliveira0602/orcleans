@@ -57,10 +57,10 @@ export function Topbar({ currentPage, onNavigate, onSearch, onMobileMenuToggle }
                     onClick={onMobileMenuToggle}
                     title="Menu"
                 >
-                    <Menu size={18} />
+                    <Menu size={20} strokeWidth={1.5} />
                 </button>
                 <div>
-                    <div className="topbar-title" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, letterSpacing: '0.08em', fontSize: '16px' }}>
+                    <div className="topbar-title" style={{ fontFamily: 'Satoshi, sans-serif', fontWeight: 700, letterSpacing: '0.08em', fontSize: '16px' }}>
                         {PAGE_TITLES[currentPage]}
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--orca-text-muted)', marginTop: 2 }}>{PAGE_SUBTITLES[currentPage]}</div>
@@ -68,7 +68,7 @@ export function Topbar({ currentPage, onNavigate, onSearch, onMobileMenuToggle }
             </div>
             <div className="topbar-right">
                 <div className="search-wrap">
-                    <span className="search-icon"><Search size={14} /></span>
+                    <span className="search-icon"><Search size={16} strokeWidth={1.5} /></span>
                     <input
                         className="input"
                         type="text"
@@ -85,10 +85,10 @@ export function Topbar({ currentPage, onNavigate, onSearch, onMobileMenuToggle }
                     ↑ Importar
                 </button>
                 <button className="btn-icon" onClick={showNotif}>
-                    <Bell size={16} />
+                    <Bell size={18} strokeWidth={1.5} />
                 </button>
                 <button className="btn-icon" onClick={logout} title="Sair">
-                    <LogOut size={16} />
+                    <LogOut size={18} strokeWidth={1.5} />
                 </button>
             </div>
         </div>

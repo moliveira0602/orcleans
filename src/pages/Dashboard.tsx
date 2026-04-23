@@ -454,7 +454,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                         </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '8px 0' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px', background: 'rgba(0, 194, 255, 0.05)', borderRadius: 10, border: '1px solid rgba(0, 194, 255, 0.08)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: 10, border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                             <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--orca-accent)' }}>{recentActivities}</div>
                             <div>
                                 <div style={{ fontSize: 13, fontWeight: 600 }}>Ações Realizadas</div>

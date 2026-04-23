@@ -31,29 +31,29 @@ function buildNavItems(isSuperAdmin: boolean): { section: string; items: { id: P
         {
             section: 'PRINCIPAL',
             items: [
-                { id: 'dashboard', label: 'Centro de Comando', icon: <LayoutDashboard size={16} /> },
-                { id: 'leads', label: 'Alvos', icon: <Users size={16} /> },
-                { id: 'pipeline', label: 'Corrente', icon: <Columns3 size={16} /> },
-                { id: 'insights', label: 'Sonar', icon: <Sparkles size={16} /> },
+                { id: 'dashboard', label: 'Centro de Comando', icon: <LayoutDashboard size={18} strokeWidth={1.5} /> },
+                { id: 'leads', label: 'Alvos', icon: <Users size={18} strokeWidth={1.5} /> },
+                { id: 'pipeline', label: 'Corrente', icon: <Columns3 size={18} strokeWidth={1.5} /> },
+                { id: 'insights', label: 'Sonar', icon: <Sparkles size={18} strokeWidth={1.5} /> },
             ],
         },
         {
             section: 'DADOS',
             items: [
-                { id: 'import', label: 'Captura', icon: <Upload size={16} /> },
-                { id: 'segments', label: 'Cardumes', icon: <Grid3X3 size={16} /> },
+                { id: 'import', label: 'Captura', icon: <Upload size={18} strokeWidth={1.5} /> },
+                { id: 'segments', label: 'Cardumes', icon: <Grid3X3 size={18} strokeWidth={1.5} /> },
             ],
         },
         {
             section: 'CONTA',
             items: [
-                { id: 'settings', label: 'Navegação', icon: <Settings size={16} /> },
+                { id: 'settings', label: 'Navegação', icon: <Settings size={18} strokeWidth={1.5} /> },
             ],
         },
     ];
 
     if (isSuperAdmin) {
-        items[2].items.push({ id: 'admin', label: 'Admin', icon: <Shield size={16} /> });
+        items[2].items.push({ id: 'admin', label: 'Admin', icon: <Shield size={18} strokeWidth={1.5} /> });
     }
 
     return items;
@@ -113,7 +113,6 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, 
                 ))}
             </nav>
             <div className="sidebar-footer" onClick={() => onNavigate('settings')} title={collapsed ? settings.name || 'Usuário' : undefined}>
-                <div className="avatar">{(settings.name || 'U')[0].toUpperCase()}</div>
                 {!collapsed && (
                     <div>
                         <div className="user-name">{settings.name || 'Usuário'}</div>
@@ -173,8 +172,8 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, 
 
                         {scanStatus?.hasCache ? (
                             <div style={{
-                                background: 'rgba(0, 194, 255, 0.08)', 
-                                border: '1px solid rgba(0, 194, 255, 0.2)',
+                                background: 'rgba(255, 255, 255, 0.08)', 
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
                                 borderRadius: 8, 
                                 padding: 12, 
                                 marginBottom: 16,
