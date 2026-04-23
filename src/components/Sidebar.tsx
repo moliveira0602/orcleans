@@ -11,6 +11,11 @@ import {
     LogOut,
     Crown,
     Shield,
+    X,
+    ChevronLeft,
+    ChevronRight,
+    Check,
+    AlertTriangle
 } from 'lucide-react';
 import SonarButton from './SonarButton';
 import { getScanStatus, SCAN_PRESETS } from '../utils/scanService';
@@ -149,7 +154,7 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, 
                 onClick={onToggle}
                 title={collapsed ? 'Expandir menu' : 'Recolher menu'}
             >
-                {collapsed ? '→' : '←'}
+                {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             </button>
 
             {/* Quick Scan Modal - Simplified */}
@@ -157,8 +162,11 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, 
                 <div className="modal-overlay open" onClick={() => setScanModalOpen(false)}>
                     <div className="modal" style={{ maxWidth: 400 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <div className="modal-title">⚡ Scan Rápido</div>
-                            <button className="modal-close" onClick={() => setScanModalOpen(false)}>✕</button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <Radar size={18} />
+                                <div className="modal-title">Scan Rápido</div>
+                            </div>
+                            <button className="modal-close" onClick={() => setScanModalOpen(false)}><X size={18} /></button>
                         </div>
                         
                         <div style={{ marginBottom: 16 }}>
@@ -179,9 +187,12 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, 
                                 marginBottom: 16,
                                 fontSize: 12, 
                                 color: 'var(--orca-accent)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8
                             }}>
-                                ✓ Scan recente disponível<br/>
-                                {scanStatus.cachedCount} estabelecimentos · {scanStatus.ageDays} dias atrás
+                                <Check size={14} /> <span>Scan recente disponível<br/>
+                                {scanStatus.cachedCount} estabelecimentos · {scanStatus.ageDays} dias atrás</span>
                             </div>
                         ) : (
                             <div style={{
@@ -192,8 +203,11 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, 
                                 marginBottom: 16,
                                 fontSize: 12, 
                                 color: 'var(--amber)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8
                             }}>
-                                ⚠ Nenhum scan recente. Execute um novo scan.
+                                <AlertTriangle size={14} /> <span>Nenhum scan recente. Execute um novo scan.</span>
                             </div>
                         )}
 
@@ -207,8 +221,10 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, 
                                     onNavigate('insights');
                                     setScanModalOpen(false);
                                 }}
+                                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                             >
-                                🗺️ Abrir Sonar Completo
+                                <Radar size={16} />
+                                <span>Abrir Sonar</span>
                             </button>
                         </div>
                     </div>

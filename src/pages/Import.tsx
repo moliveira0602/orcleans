@@ -1,4 +1,5 @@
 import { useRef, useState, useMemo, useEffect } from 'react';
+import { UploadCloud, FileSpreadsheet, Trash2, ClipboardList, Check, X, AlertTriangle, Sparkles, Info, ArrowRight } from 'lucide-react';
 import * as ExcelJS from 'exceljs';
 import { useAppState, useAppDispatch, leadFingerprint, useApp } from '../store';
 import { useToast } from '../components/Toast';
@@ -327,7 +328,7 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
             });
             const modeLabel = dupeMode === 'skip' ? 'ignorados' : 'atualizados';
             toast(
-                `✓ ${dupeStats.newCount} novos importados · ${dupeStats.dupeCount} duplicados ${modeLabel} · Fonte: ${sourceType === 'google_maps' ? 'Google Maps' : sourceType === 'linkedin' ? 'LinkedIn' : 'Genérica'}`,
+                `${dupeStats.newCount} novos importados · ${dupeStats.dupeCount} duplicados ${modeLabel} · Fonte: ${sourceType === 'google_maps' ? 'Google Maps' : sourceType === 'linkedin' ? 'LinkedIn' : 'Genérica'}`,
                 'success'
             );
         } else {
@@ -338,12 +339,12 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                     record: importRecord,
                 },
             });
-            toast(`✓ ${pending.rows} leads importados · Fonte: ${sourceType === 'google_maps' ? 'Google Maps' : sourceType === 'linkedin' ? 'LinkedIn' : 'Genérica'}`, 'success');
+            toast(`${pending.rows} leads importados · Fonte: ${sourceType === 'google_maps' ? 'Google Maps' : sourceType === 'linkedin' ? 'LinkedIn' : 'Genérica'}`, 'success');
         }
 
         dispatch({
             type: 'ADD_ACTIVITY',
-            payload: { title: `Importação: ${file}`, sub: `${dupeStats.newCount} novos leads`, icon: '📂', time: new Date().toISOString() },
+            payload: { title: `Importação: ${file}`, sub: `${dupeStats.newCount} novos leads`, icon: 'folder', time: new Date().toISOString() },
         });
         setPending(null);
         setScoreCol('');
@@ -412,10 +413,12 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                         style={{ display: 'none' }}
                         onChange={(e) => { if (e.target.files?.[0]) processFile(e.target.files[0]); }}
                     />
-                    <span className="upload-icon">📂</span>
-                    <div className="upload-title">Solte seu arquivo aqui</div>
-                    <div className="upload-sub">
-                        Arraste e solte ou clique para selecionar. A ORCA detecta automaticamente as colunas e gera o scoring.
+                    <div style={{ background: '#111', padding: 24, borderRadius: '50%', border: '1px solid #222', marginBottom: 20 }}>
+                        <UploadCloud size={40} color="#666" />
+                    </div>
+                    <div className="upload-title" style={{ fontSize: 18, fontWeight: 700, color: '#FFF' }}>Solte seu arquivo aqui</div>
+                    <div className="upload-sub" style={{ fontSize: 13, color: '#888', maxWidth: 400 }}>
+                        Arraste e solte ou clique para selecionar. A ORCA detecta automaticamente as colunas e gera o scoring técnico.
                     </div>
                     <div className="upload-types">
                         <span className="upload-type-tag">xlsx</span>
@@ -438,7 +441,7 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                                     <option value="">Detectar automaticamente</option>
                                     {pending.numericCols.map((c) => <option key={c} value={c}>{c}</option>)}
                                 </select>
-                                <button className="btn btn-primary" onClick={confirmImport}>✓ Confirmar importação</button>
+                                <button className="btn btn-primary" onClick={confirmImport} style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Check size={16} /> Confirmar importação</button>
                                 <button className="btn btn-ghost" onClick={cancelImport}>Cancelar</button>
                             </div>
                         </div>
@@ -474,8 +477,8 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                                 background: 'var(--green-dim)', border: '1px solid rgba(16,185,129,.25)',
                                 borderRadius: 10, padding: '14px 18px', marginBottom: 16,
                             }}>
-                                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--green)', marginBottom: 2 }}>
-                                    ✨ Dados normalizados automaticamente
+                                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--green)', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <Sparkles size={16} /> Dados normalizados automaticamente
                                 </div>
                                 <div style={{ fontSize: 12, color: 'var(--t2)' }}>
                                     {sanitizationSummary.fixedEncoding > 0 && `${sanitizationSummary.fixedEncoding} encoding(s) corrigido(s)`}
@@ -527,7 +530,7 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                                                     title={isUsed ? 'Já mapeada' : 'Não mapeada'}
                                                 >
                                                     {label}
-                                                    {isUsed && ' ✓'}
+                                                    {isUsed && <Check size={10} style={{ marginLeft: 4 }} />}
                                                 </span>
                                             );
                                         })}
@@ -607,7 +610,7 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                                                         {mapping.suggestedName}
                                                     </span>
                                                     {mapping.isStandard ? (
-                                                        <span style={{ fontSize: 11, color: 'var(--green)' }}>✓</span>
+                                                        <span style={{ fontSize: 11, color: 'var(--green)', display: 'flex' }}><Check size={14} /></span>
                                                     ) : null}
                                                 </div>
                                             )}
@@ -657,29 +660,32 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                             <tbody>
                                 {[...imports].reverse().map((imp, i) => (
                                     <tr key={i}>
-                                        <td>📂 {imp.file}</td>
+                                        <td style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                            <FileSpreadsheet size={16} color="#888" />
+                                            <span>{imp.file}</span>
+                                        </td>
                                         <td><span className="badge badge-blue">{imp.rows}</span></td>
                                         <td className="muted">{imp.cols}</td>
                                         <td className="muted">{new Date(imp.date).toLocaleString('pt-BR')}</td>
-                                        <td>
                                             <button 
                                                 className="btn btn-ghost btn-sm" 
-                                                style={{ color: 'var(--red)' }}
+                                                style={{ color: '#EF4444', background: 'transparent' }}
                                                 onClick={() => setDeleteImportId(imp.id)}
-                                                title="Excluir importação e leads associados"
+                                                title="Excluir importação"
                                             >
-                                                🗑
+                                                <Trash2 size={14} />
                                             </button>
-                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
                 ) : (
-                    <div className="empty">
-                        <span className="empty-icon">📋</span>
-                        <div className="empty-title">Nenhuma importação ainda</div>
+                    <div className="empty" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', gap: 16 }}>
+                        <div style={{ background: '#111', padding: 20, borderRadius: '50%', border: '1px solid #222' }}>
+                            <ClipboardList size={32} color="#444" />
+                        </div>
+                        <div className="empty-title" style={{ fontSize: 14, color: '#666' }}>Nenhuma importação ainda</div>
                     </div>
                 )}
             </div>
@@ -689,7 +695,7 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                     <div className="modal" style={{ maxWidth: 400 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <div className="modal-title">Excluir Importação</div>
-                            <button className="modal-close" onClick={() => setDeleteImportId(null)}>✕</button>
+                            <button className="modal-close" onClick={() => setDeleteImportId(null)}><X size={18} /></button>
                         </div>
                         <p style={{ color: 'var(--t2)', marginBottom: 24, lineHeight: 1.6 }}>
                             Tem certeza que deseja excluir esta importação? <strong>Todos os leads associados também serão excluídos.</strong>

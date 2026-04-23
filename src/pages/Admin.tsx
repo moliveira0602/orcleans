@@ -15,7 +15,11 @@ import {
     AlertTriangle,
     CheckCircle,
     XCircle,
-    LogOut
+    LogOut,
+    Play,
+    Pause,
+    Check,
+    X
 } from 'lucide-react';
 
 interface PlatformHealth {
@@ -883,7 +887,7 @@ export default function AdminPage() {
                                                 onClick={() => handleToggleUser(user.id)}
                                                 title={user.isActive ? 'Desativar' : 'Ativar'}
                                             >
-                                                {user.isActive ? '⏸' : '▶'}
+                                                {user.isActive ? <Pause size={14} /> : <Play size={14} />}
                                             </button>
                                             <button
                                                 className="btn btn-ghost btn-sm"
@@ -1091,8 +1095,9 @@ export default function AdminPage() {
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24, padding: '16px 0' }}>
                             <div>
                                 <div style={{ fontSize: 12, color: 'var(--t3)', marginBottom: 4 }}>Status</div>
-                                <div style={{ fontSize: 24, fontWeight: 600, color: health.status === 'healthy' ? 'var(--green)' : 'var(--red)' }}>
-                                    {health.status === 'healthy' ? '✓ Saúde' : '✗ Problema'}
+                                <div style={{ fontSize: 24, fontWeight: 600, color: health.status === 'healthy' ? 'var(--green)' : 'var(--red)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    {health.status === 'healthy' ? <Check size={20} /> : <X size={20} />}
+                                    <span>{health.status === 'healthy' ? 'Saúde OK' : 'Problema'}</span>
                                 </div>
                             </div>
                             <div>
@@ -1278,7 +1283,7 @@ export default function AdminPage() {
                     <div className="modal" style={{ maxWidth: 480 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <div className="modal-title">Novo Utilizador</div>
-                            <button className="modal-close" onClick={closeAddModal}>✕</button>
+                            <button className="modal-close" onClick={closeAddModal}><X size={18} /></button>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                             <div>
@@ -1327,7 +1332,7 @@ export default function AdminPage() {
                     <div className="modal" style={{ maxWidth: 400 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <div className="modal-title">Redefinir Password</div>
-                            <button className="modal-close" onClick={closeResetPasswordModal}>✕</button>
+                            <button className="modal-close" onClick={closeResetPasswordModal}><X size={18} /></button>
                         </div>
                         <div style={{ marginBottom: 16 }}>
                             <p>Nova password para <strong>{selectedUser.name}</strong> ({selectedUser.email})</p>
@@ -1357,7 +1362,7 @@ export default function AdminPage() {
                     <div className="modal" style={{ maxWidth: 400 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <div className="modal-title">Editar Utilizador</div>
-                            <button className="modal-close" onClick={closeEditUserModal}>✕</button>
+                            <button className="modal-close" onClick={closeEditUserModal}><X size={18} /></button>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                             <div>
@@ -1387,7 +1392,7 @@ export default function AdminPage() {
                     <div className="modal" style={{ maxWidth: 480 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <div className="modal-title">Novo Tenant</div>
-                            <button className="modal-close" onClick={closeAddTenantModal}>✕</button>
+                            <button className="modal-close" onClick={closeAddTenantModal}><X size={18} /></button>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                             <div>
@@ -1432,7 +1437,7 @@ export default function AdminPage() {
                     <div className="modal" style={{ maxWidth: 480 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <div className="modal-title">Editar Tenant</div>
-                            <button className="modal-close" onClick={closeEditTenantModal}>✕</button>
+                            <button className="modal-close" onClick={closeEditTenantModal}><X size={18} /></button>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                             <div>

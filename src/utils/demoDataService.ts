@@ -225,7 +225,7 @@ export async function runDemoScan(
 // ============================================================================
 
 export const DEMO_INSTRUCTIONS = `
-🧪 MODO DEMONSTRAÇÃO
+MODO DEMONSTRAÇÃO
 
 Este modo gera dados fictícios para teste da interface.
 Não requer API Key e não tem custos.
@@ -240,8 +240,8 @@ Os dados gerados incluem:
 - Scores calculados automaticamente
 
 Ideal para:
-✓ Desenvolvimento
-✓ Demonstração para clientes
-✓ Testes de funcionalidades
-✓ Prototipagem
+- Desenvolvimento
+- Demonstração para clientes
+- Testes de funcionalidades
+- Prototipagem
 `;

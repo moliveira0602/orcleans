@@ -1,4 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
+import { 
+    X, 
+    Check, 
+    Layout, 
+    Zap, 
+    Target, 
+    BarChart3, 
+    Search, 
+    Layers, 
+    Users, 
+    Star, 
+    ArrowRight, 
+    ChevronUp,
+    ChevronDown,
+    Minus,
+    Plus,
+    MessageSquare,
+    ShieldCheck,
+    Clock,
+    Phone,
+    Mail,
+    Send,
+    Snowflake,
+    UserMinus,
+    FastForward,
+    BarChart
+} from 'lucide-react';
 import MistBackground from '../components/ui/MistBackground';
 
 // ===== DATA: FAQ Items =====
@@ -242,9 +269,19 @@ export default function LandingPage() {
 
     // ===== SCROLL HANDLERS =====
     useEffect(() => {
-        const handleScroll = () => setScrolled(window.scrollY > 50);
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        const sentinel = document.getElementById('scroll-sentinel');
+        if (!sentinel) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                setScrolled(!entry.isIntersecting);
+            },
+            { rootMargin: '0px', threshold: 0 }
+        );
+
+        observer.observe(sentinel);
+
+        return () => observer.disconnect();
     }, []);
 
     // Hero staggered animation
@@ -445,6 +482,7 @@ export default function LandingPage() {
 
     return (
         <div className="landing-page">
+            <div id="scroll-sentinel" style={{ position: 'absolute', top: 50, left: 0, width: 1, height: 1 }} />
             {/* ===== NAVBAR ===== */}
             <header className={`landing-header${scrolled ? ' scrolled' : ''}`}>
                 <div className="landing-header-inner">
@@ -512,7 +550,7 @@ export default function LandingPage() {
                             Ver minha lista de leads grátis
                         </a>
                         <button className="btn btn-ghost btn-lg" onClick={() => scrollToSection('sonar')}>
-                            Ver demo de 2 minutos →
+                            Ver demo de 2 minutos <ArrowRight size={18} style={{ marginLeft: 8 }} />
                         </button>
                     </div>
                     <div className={`hero-stats animate-fade-up${heroAnimated ? ' visible' : ''}`} style={{ animationDelay: '480ms' }}>
@@ -534,21 +572,16 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* ===== PRODUCT PREVIEW (Centro de Comando) ===== */}
-            <section className="product-preview-section animate-fade-up" style={{ padding: '0 0 80px 0', marginTop: '-60px', position: 'relative', zIndex: 10 }}>
+            {/* ===== PRODUCT PREVIEW (MacBook Mockup) ===== */}
+            <section className={`product-preview-section animate-fade-up${heroAnimated ? ' visible' : ''}`} style={{ padding: '0 0 100px 0', marginTop: '-20px', position: 'relative', zIndex: 10, animationDelay: '600ms' }}>
                 <div className="container">
-                    <div className="product-mockup">
-                        <img 
-                            src="/images/plataforma/image-plataforma.png" 
-                            alt="Centro de Comando ORCA" 
-                            className="mockup-img"
-                            style={{ 
-                                width: '100%', 
-                                borderRadius: '12px', 
-                                boxShadow: '0 20px 50px rgba(0,0,0,0.8), 0 0 20px rgba(0,194,255,0.1)',
-                                border: '1px solid rgba(255,255,255,0.1)'
-                            }}
-                        />
+                    <div className="macbook-mockup-container">
+                        <div className="macbook-frame">
+                            <div className="macbook-screen">
+                                <img src="/images/dashboard-mockup.png?v=2" alt="ORCA Dashboard" />
+                            </div>
+                            <div className="macbook-base"></div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -576,38 +609,38 @@ export default function LandingPage() {
                     </div>
                     <div className="pas-grid">
                         <div className="pas-card problem" data-animate="pas-1">
-                            <div className="pas-icon">✕</div>
+                            <div className="pas-icon"><Clock size={20} /></div>
                             <h3>Prospecção manual interminável</h3>
                             <p>Seus SDRs gastam horas garimpando leads no Google, LinkedIn e bases desatualizadas.</p>
                         </div>
                         <div className="pas-card problem" data-animate="pas-2">
-                            <div className="pas-icon">✕</div>
+                            <div className="pas-icon"><Snowflake size={20} /></div>
                             <h3>Listas frias e desatualizadas</h3>
                             <p>Contatos que não respondem, emails que voltam e telefones que não existem mais.</p>
                         </div>
                         <div className="pas-card problem" data-animate="pas-3">
-                            <div className="pas-icon">✕</div>
+                            <div className="pas-icon"><UserMinus size={20} /></div>
                             <h3>Leads sem qualificação real</h3>
                             <p>Reuniões marcadas com empresas que não têm budget, autoridade ou necessidade real.</p>
                         </div>
                         <div className="pas-card problem" data-animate="pas-4">
-                            <div className="pas-icon">✕</div>
+                            <div className="pas-icon"><FastForward size={20} /></div>
                             <h3>Concorrência chegando primeiro</h3>
                             <p>Enquanto seu time analisa planilhas, o concorrente já fechou o contrato.</p>
                         </div>
                         <div className="pas-card problem" data-animate="pas-5">
-                            <div className="pas-icon">✕</div>
+                            <div className="pas-icon"><BarChart size={20} /></div>
                             <h3>Relatórios que ninguém entende</h3>
                             <p>Dashboards complexos que exigem horas de análise e não geram ações práticas.</p>
                         </div>
                         <div className="pas-card problem" data-animate="pas-6">
-                            <div className="pas-icon">✕</div>
+                            <div className="pas-icon"><Users size={20} /></div>
                             <h3>Time comercial desalinhado</h3>
                             <p>Cada vendedor usa seu próprio método, sem padronização ou visibilidade do todo.</p>
                         </div>
                     </div>
                     <div className="pas-solution" data-animate="pas-solution">
-                        <div className="pas-solution-icon">✓</div>
+                        <div className="pas-solution-icon"><Check size={24} /></div>
                         <h3>A ORCA resolve isso automaticamente.</h3>
                         <p>Enquanto seu time dorme, nossa IA varre o mercado, qualifica leads e entrega oportunidades quentes prontas para abordagem.</p>
                     </div>
@@ -626,32 +659,32 @@ export default function LandingPage() {
                     </div>
                     <div className="features-grid">
                         <div className="feature-card" data-animate="feature-1">
-                            <div className="feature-icon">◈</div>
+                            <div className="feature-icon"><Layout size={24} /></div>
                             <h3>Centro de Comando</h3>
                             <p>Visão 360º da sua operação: conversão por etapa, velocidade do pipeline e previsão de receita em tempo real.</p>
                         </div>
                         <div className="feature-card" data-animate="feature-2">
-                            <div className="feature-icon">◎</div>
+                            <div className="feature-icon"><Search size={24} /></div>
                             <h3>Sonar de Mercado</h3>
                             <p>Rastreie sinais de compra, mudanças de cargo e rodadas de investimento automaticamente.</p>
                         </div>
                         <div className="feature-card" data-animate="feature-3">
-                            <div className="feature-icon">⊕</div>
+                            <div className="feature-icon"><Layers size={24} /></div>
                             <h3>Cardumes (Segmentação)</h3>
                             <p>Agrupe leads por comportamento e perfil ideal (ICP) para abordagens cirúrgicas e personalizadas.</p>
                         </div>
                         <div className="feature-card" data-animate="feature-4">
-                            <div className="feature-icon">▦</div>
+                            <div className="feature-icon"><Zap size={24} /></div>
                             <h3>Captura Inteligente</h3>
                             <p>Esqueça o preenchimento manual. Importe listas e deixe nossa IA enriquecer e qualificar cada contato.</p>
                         </div>
                         <div className="feature-card" data-animate="feature-5">
-                            <div className="feature-icon">◉</div>
+                            <div className="feature-icon"><Target size={24} /></div>
                             <h3>Alvos & Corrente</h3>
                             <p>Gestão de leads prioritários e fluxo de negociação com gatilhos automáticos de follow-up.</p>
                         </div>
                         <div className="feature-card" data-animate="feature-6">
-                            <div className="feature-icon">⊡</div>
+                            <div className="feature-icon"><BarChart3 size={24} /></div>
                             <h3>Relatórios Executivos</h3>
                             <p>Gere relatórios de performance do time e ROI por canal em 1 clique, prontos para apresentar ao board.</p>
                         </div>
@@ -752,8 +785,10 @@ export default function LandingPage() {
                                 <div className="testimonial-metric">
                                     <span className="testimonial-metric-value">{t.metric}</span>
                                 </div>
-                                <div className="testimonial-rating">
-                                    {'★'.repeat(t.rating)}{'☆'.repeat(5 - t.rating)}
+                                <div className="testimonial-rating" style={{ display: 'flex', gap: 2 }}>
+                                    {[...Array(5)].map((_, i) => (
+                                        <Star key={i} size={14} fill={i < t.rating ? "#F59E0B" : "none"} color="#F59E0B" />
+                                    ))}
                                 </div>
                             </div>
                         ))}
@@ -776,21 +811,21 @@ export default function LandingPage() {
                             </p>
                             <div className="sonar-features">
                                 <div className="sonar-feature">
-                                    <div className="sonar-feature-icon">◎</div>
+                                    <div className="sonar-feature-icon"><Search size={20} /></div>
                                     <div>
                                         <h4>Escaneamento Ativo</h4>
                                         <p>Identificação de novas empresas no seu radar baseada em sinais de crescimento real.</p>
                                     </div>
                                 </div>
                                 <div className="sonar-feature">
-                                    <div className="sonar-feature-icon">◉</div>
+                                    <div className="sonar-feature-icon"><Target size={20} /></div>
                                     <div>
                                         <h4>Inteligência de Momento</h4>
                                         <p>Saiba quem está contratando ou recebeu aporte antes de todo o mercado.</p>
                                     </div>
                                 </div>
                                 <div className="sonar-feature">
-                                    <div className="sonar-feature-icon">▦</div>
+                                    <div className="sonar-feature-icon"><Zap size={20} /></div>
                                     <div>
                                         <h4>Precisão de Dados</h4>
                                         <p>Informações validadas e atualizadas em tempo real, prontas para prospecção.</p>
@@ -871,7 +906,7 @@ export default function LandingPage() {
                                 {annualBilling && <p className="pricing-annual-note">Faturado anualmente (€{annualBilling ? plan.annualPrice : plan.monthlyPrice} x 12)</p>}
                                 <ul className="pricing-features">
                                     {plan.features.map((feature, idx) => (
-                                        <li key={idx}><span className="feature-check">✓</span>{feature}</li>
+                                        <li key={idx}><span className="feature-check"><Check size={14} /></span>{feature}</li>
                                     ))}
                                 </ul>
                                 <button className={`btn ${plan.highlighted ? 'btn-primary' : 'btn-ghost'} pricing-cta`}>
@@ -896,7 +931,7 @@ export default function LandingPage() {
                             <div key={index} className={`faq-item${openFaqIndex === index ? ' open' : ''}`}>
                                 <button className="faq-question" onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)} aria-expanded={openFaqIndex === index}>
                                     <span>{item.question}</span>
-                                    <span className="faq-icon">{openFaqIndex === index ? '−' : '+'}</span>
+                                    <span className="faq-icon">{openFaqIndex === index ? <Minus size={18} /> : <Plus size={18} />}</span>
                                 </button>
                                 {openFaqIndex === index && <div className="faq-answer"><p>{item.answer}</p></div>}
                             </div>
@@ -937,9 +972,7 @@ export default function LandingPage() {
                             <>
                                 <div className="modal-header">
                                     <div className="modal-header-icon">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--orca-text)" strokeWidth="1.5">
-                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                                        </svg>
+                                        <MessageSquare size={24} color="var(--orca-text)" strokeWidth={1.5} />
                                     </div>
                                     <h3 className="modal-title">Fale com um especialista</h3>
                                     <p className="modal-subtitle">Preencha o formulário e entraremos em contato em até 24 horas.</p>
@@ -987,17 +1020,15 @@ export default function LandingPage() {
                                         {isSubmitting ? <span className="btn-loading"><svg className="spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeDasharray="31.4" strokeDashoffset="10" strokeLinecap="round" /></svg>Enviando...</span> : 'Solicitar contacto'}
                                     </button>
                                     <div className="form-trust">
-                                        <div className="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg><span>Seus dados estão seguros</span></div>
-                                        <div className="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg><span>Resposta em até 24h</span></div>
+                                        <div className="trust-item"><ShieldCheck size={14} /><span>Seus dados estão seguros</span></div>
+                                        <div className="trust-item"><Clock size={14} /><span>Resposta em até 24h</span></div>
                                     </div>
                                 </form>
                             </>
                         ) : (
                             <div className="modal-success">
                                 <div className="success-icon">
-                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--orca-text)" strokeWidth="2">
-                                        <circle cx="12" cy="12" r="10" /><polyline points="8 12 11 15 16 9" />
-                                    </svg>
+                                    <Check size={64} color="var(--orca-text)" strokeWidth={1.5} />
                                 </div>
                                 <h3 className="modal-title">Mensagem enviada!</h3>
                                 <p className="modal-subtitle">Obrigado pelo contato. Nossa equipe entrará em contato em até 24 horas.</p>
@@ -1103,9 +1134,7 @@ export default function LandingPage() {
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                     aria-label="Voltar ao topo"
                 >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="18 15 12 9 6 15" />
-                    </svg>
+                    <ChevronUp size={24} />
                 </button>
             )}
 
@@ -1203,9 +1232,11 @@ export default function LandingPage() {
                     transition: all 0.3s ease; background: transparent;
                 }
                 .landing-header.scrolled {
-                    background: rgba(5, 7, 10, 0.95);
-                    backdrop-filter: blur(20px);
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                    background: rgba(10, 10, 10, 0.75);
+                    backdrop-filter: blur(12px) saturate(180%);
+                    -webkit-backdrop-filter: blur(12px) saturate(180%);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
                 }
                 .landing-header-inner {
                     max-width: 1400px; margin: 0 auto; padding: 0 48px;
@@ -1299,6 +1330,53 @@ export default function LandingPage() {
                 .stat-value { font-size: 28px; font-weight: 700; color: var(--orca-text); }
                 .stat-label { font-size: 13px; color: rgba(234, 246, 255, 0.5); }
                 .stat-divider { width: 1px; height: 40px; background: rgba(234, 246, 255, 0.1); }
+
+                /* ===== MACBOOK MOCKUP ===== */
+                .macbook-mockup-container {
+                    width: 100%;
+                    max-width: 1000px;
+                    margin: 0 auto;
+                }
+                .macbook-frame {
+                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.05);
+                    border-radius: 12px;
+                }
+                .macbook-screen {
+                    background: #111;
+                    border-radius: 16px 16px 0 0;
+                    padding: 16px 16px 24px 16px;
+                    border: 1px solid #222;
+                    border-bottom: none;
+                    box-shadow: inset 0 0 0 1px #333;
+                    position: relative;
+                }
+                .macbook-screen img {
+                    width: 100%;
+                    height: auto;
+                    display: block;
+                    border-radius: 4px;
+                    border: 1px solid #000;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+                }
+                .macbook-base {
+                    height: 16px;
+                    background: linear-gradient(to bottom, #444, #1a1a1a);
+                    border-radius: 0 0 16px 16px;
+                    width: 100%;
+                    position: relative;
+                    box-shadow: inset 0 2px 2px rgba(255,255,255,0.1), 0 10px 20px rgba(0,0,0,0.5);
+                }
+                .macbook-base::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 100px;
+                    height: 4px;
+                    background: #000;
+                    border-radius: 0 0 4px 4px;
+                }
 
                 /* ===== CLIENT LOGOS ===== */
                 .clients-section { padding: 60px 0; background: #0A0A0A; border-top: 1px solid rgba(255, 255, 255, 0.05); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }

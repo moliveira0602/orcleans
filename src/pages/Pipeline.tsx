@@ -60,7 +60,7 @@ export default function Pipeline({ onOpenDetail }: PipelineProps) {
         toast(`Lead movido para "${label}"`, 'success');
         dispatch({
             type: 'ADD_ACTIVITY',
-            payload: { title: `Lead movido para "${label}"`, sub: new Date().toLocaleString('pt-BR'), icon: '▦', time: new Date().toISOString() },
+            payload: { title: `Lead movido para "${label}"`, sub: new Date().toLocaleString('pt-BR'), icon: 'pipeline', time: new Date().toISOString() },
         });
         setDragId(null);
     }, [dragId, dispatch, toast]);
@@ -116,9 +116,11 @@ export default function Pipeline({ onOpenDetail }: PipelineProps) {
                                         </div>
                                     </div>
                                 )) : (
-                                    <div className="empty" style={{ padding: '30px 12px' }}>
-                                        <span className="empty-icon" style={{ fontSize: 28 }}>○</span>
-                                        <div className="text-sm text-muted">Sem leads</div>
+                                    <div className="empty" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 12px', gap: 10 }}>
+                                        <div style={{ opacity: 0.15 }}>
+                                            <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid #888' }} />
+                                        </div>
+                                        <div className="text-sm text-muted">Vazio</div>
                                     </div>
                                 )}
                             </div>

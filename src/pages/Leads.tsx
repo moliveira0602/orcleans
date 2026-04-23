@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { Search, MapPin, Star, Trash2, Download, ExternalLink, ChevronRight, Filter, MoreHorizontal, ArrowRight, XCircle, CheckCircle, Info } from 'lucide-react';
 import { useAppState, useAppDispatch, useApp } from '../store';
 import { LEAD_COLUMNS } from '../utils/leadMapper';
 import ScoreRing from '../components/ScoreRing';
@@ -195,10 +196,12 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
 
     if (!leads.length) {
         return (
-            <div className="empty">
-                <span className="empty-icon">◉</span>
-                <div className="empty-title">Nenhum lead ainda</div>
-                <div className="empty-sub">Importe uma lista para começar.</div>
+            <div className="empty" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', gap: 16 }}>
+                <div style={{ background: '#111', padding: 24, borderRadius: '50%', border: '1px solid #222' }}>
+                    <Info size={48} color="#444" />
+                </div>
+                <div className="empty-title" style={{ fontSize: 18, fontWeight: 700, color: '#FFF' }}>Nenhum lead encontrado</div>
+                <div className="empty-sub" style={{ fontSize: 13, color: '#888' }}>Sua base está vazia ou os filtros aplicados não retornaram resultados.</div>
             </div>
         );
     }
@@ -210,12 +213,12 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                     {total} leads{(search || scoreFilter || catFilter) ? ' (filtrado)' : ''} · {leads.length} total
                 </div>
                 <div className="flex flex-center gap-8">
-                    <div className="search-wrap">
-                        <span className="search-icon">⌕</span>
+                    <div className="search-wrap" style={{ position: 'relative' }}>
+                        <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#555' }} />
                         <input
                             className="input"
                             type="text"
-                            placeholder="Filtrar leads..."
+                            placeholder="Pesquisar..."
                             value={search}
                             onChange={(e) => {
                                 const val = e.target.value;
@@ -223,7 +226,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                                 setPage(0);
                                 if (onSearch) onSearch(val);
                             }}
-                            style={{ width: 180, paddingLeft: 30 }}
+                            style={{ width: 180, paddingLeft: 32, background: '#111', borderColor: '#222' }}
                         />
                     </div>
                     <select className="input" style={{ width: 130 }} value={importFilter} onChange={(e) => { setImportFilter(e.target.value); setPage(0); }}>
@@ -251,7 +254,10 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                         <option value="ganho">Ganho</option>
                         <option value="perdido">Perdido</option>
                     </select>
-                    <button className="btn btn-ghost btn-sm" onClick={handleExport}>↓ Exportar CSV</button>
+                    <button className="btn btn-ghost btn-sm" onClick={handleExport} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#111', borderColor: '#222' }}>
+                        <Download size={14} /> 
+                        <span>Exportar</span>
+                    </button>
                     {selectedLeads.size > 0 && (
                         <>
                             <select 
@@ -271,19 +277,20 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                             {bulkPipelineStage && (
                                 <button
                                     className="btn btn-sm"
-                                    style={{ background: '#FFFFFF', color: '#0A0A0A', fontWeight: 700 }}
+                                    style={{ background: '#FFFFFF', color: '#0A0A0A', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}
                                     onClick={handleBulkMovePipeline}
                                 >
-                                    ↪ Mover {selectedLeads.size}
+                                    <ArrowRight size={14} /> Mover {selectedLeads.size}
                                 </button>
                             )}
                             <button
                                 className="btn btn-sm"
-                                style={{ background: '#333333', color: '#FFFFFF', border: '1px solid #FFFFFF' }}
+                                style={{ background: '#000', color: '#EF4444', border: '1px solid #EF4444', display: 'flex', alignItems: 'center', gap: 6 }}
                                 onClick={handleBulkDelete}
                                 disabled={isDeleting}
                             >
-                                {isDeleting ? 'A eliminar...' : `🗑 ${selectedLeads.size} eliminar`}
+                                <Trash2 size={14} />
+                                <span>{isDeleting ? 'A eliminar...' : `Eliminar (${selectedLeads.size})`}</span>
                             </button>
                         </>
                     )}
@@ -361,14 +368,14 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                                                         title="Ver no mapa"
                                                         style={{
                                                             background: 'none', border: 'none', cursor: 'pointer',
-                                                            color: 'var(--blue3)', fontSize: 14, padding: 2,
+                                                            color: '#FFF', fontSize: 14, padding: 2,
                                                             display: 'flex', alignItems: 'center', justifyContent: 'center'
                                                         }}
                                                     >
-                                                        📍
+                                                        <MapPin size={12} />
                                                     </button>
                                                 ) : l.linkOrigem ? (
-                                                    <a href={String(l.linkOrigem)} target="_blank" rel="noreferrer" style={{ color: 'var(--blue3)', fontSize: 12 }}>🔗</a>
+                                                    <a href={String(l.linkOrigem)} target="_blank" rel="noreferrer" style={{ color: '#FFF', fontSize: 12 }}><ExternalLink size={12} /></a>
                                                 ) : null}
                                             </td>
                                         );
@@ -377,7 +384,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                                     // Special rendering for 'avaliacao'
                                     if (col.key === 'avaliacao') {
                                         if (value === null || value === undefined || value === 0) return <td key={col.key}><span className="text-muted">—</span></td>;
-                                        return <td key={col.key}>⭐ {String(value)}</td>;
+                                        return <td key={col.key}><div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#fbbf24' }}><Star size={10} fill="#fbbf24" /> {String(value)}</div></td>;
                                     }
 
                                     // Special rendering for 'reviews'
@@ -390,9 +397,9 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                                     if (col.key === 'status') {
                                         const status = String(value || '');
                                         if (!status) return <td key={col.key}><span className="text-muted">—</span></td>;
-                                        if (status === 'Aberto' || status === 'Ativo') return <td key={col.key}><span style={{ color: 'var(--green)' }}>● {status}</span></td>;
-                                        if (status === 'Fechado' || status === 'Inativo') return <td key={col.key}><span style={{ color: 'var(--red)' }}>● {status}</span></td>;
-                                        return <td key={col.key}><span style={{ color: 'var(--gray)' }}>● {status}</span></td>;
+                                        if (status === 'Aberto' || status === 'Ativo') return <td key={col.key}><span style={{ color: '#22C55E', display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}><CheckCircle size={10} /> {status}</span></td>;
+                                        if (status === 'Fechado' || status === 'Inativo') return <td key={col.key}><span style={{ color: '#EF4444', display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}><XCircle size={10} /> {status}</span></td>;
+                                        return <td key={col.key}><span style={{ color: '#888', display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}><MoreHorizontal size={10} /> {status}</span></td>;
                                     }
 
                                     // Special rendering for 'servicos'
@@ -413,14 +420,14 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                                     if (col.key === 'linkOrigem') {
                                         const url = String(value || '');
                                         if (!url) return <td key={col.key}><span className="text-muted">—</span></td>;
-                                        return <td key={col.key}><a href={url} target="_blank" rel="noreferrer" style={{ color: 'var(--blue3)' }}>↗</a></td>;
+                                        return <td key={col.key}><a href={url} target="_blank" rel="noreferrer" style={{ color: 'var(--blue3)', display: 'flex', alignItems: 'center' }}><ExternalLink size={14} /></a></td>;
                                     }
 
                                     // Special rendering for 'website'
                                     if (col.key === 'website') {
                                         const url = String(value || '');
                                         if (!url) return <td key={col.key}><span className="text-muted">—</span></td>;
-                                        return <td key={col.key}><a href={url.startsWith('http') ? url : `https://${url}`} target="_blank" rel="noreferrer" style={{ color: 'var(--blue3)', fontSize: 11 }}>↗</a></td>;
+                                        return <td key={col.key}><a href={url.startsWith('http') ? url : `https://${url}`} target="_blank" rel="noreferrer" style={{ color: 'var(--blue3)', display: 'flex', alignItems: 'center' }}><ExternalLink size={14} /></a></td>;
                                     }
 
                                     // Special rendering for '_score'
@@ -438,7 +445,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                                     if (!v) return <td key={col.key}><span className="text-muted">—</span></td>;
                                     return <td key={col.key} title={v.length > 45 ? v : undefined}>{v.length > 45 ? v.slice(0, 45) + '…' : v}</td>;
                                 })}
-                                <td><button className="btn btn-ghost btn-sm" onClick={() => onOpenDetail(l.id)}>Ver →</button></td>
+                                <td><button className="btn btn-ghost btn-sm" onClick={() => onOpenDetail(l.id)} style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span>Detalhes</span> <ArrowRight size={12} /></button></td>
                             </tr>
                         ))}
                     </tbody>

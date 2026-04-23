@@ -277,7 +277,7 @@ export async function runScan(
         const cachedResult = getCached<{ results: any[] }>(cacheKey);
         if (cachedResult) {
             console.log('[Cache] HIT — Resultados do cache local (0 chamadas à API)');
-            onProgress?.(`✓ Resultados do cache local (0 chamadas à API)`);
+            onProgress?.(`Resultados do cache local (0 chamadas à API)`);
             
             // Process cached results
             const searchData = { results: cachedResult.results, status: 'OK' };
@@ -304,7 +304,7 @@ export async function runScan(
 
         // Rate limit check
         if (!trackApiCall('textsearch')) {
-            onProgress?.(`⚠ Limite de chamadas atingido hoje. Tente novamente amanhã.`);
+            onProgress?.(`Limite de chamadas atingido hoje. Tente novamente amanhã.`);
             return {
                 success: false,
                 totalFound: 0,
@@ -413,7 +413,7 @@ export async function runScan(
         // ========================================================================
         setCached(cacheKey, { results: searchData.results });
         console.log('[Cache] Resultados guardados no cache para:', cacheKey);
-        onProgress?.(`✓ ${validLeads.length} leads carregados via Google Places API (cacheado por 7 dias)`);
+        onProgress?.(`${validLeads.length} leads carregados via Google Places API (cacheado por 7 dias)`);
 
         const message = `Scan concluído: ${validLeads.length} novos leads.`;
         onProgress?.(message);

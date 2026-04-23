@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Radar, Upload, Columns3, Activity, Trash2, Search, MapPin, Globe, Phone, Mail, Share2, Info, Star, X, AlertTriangle, ArrowUpRight, Check, MessageCircle } from 'lucide-react';
 import { useAppState, useAppDispatch } from '../store';
 import { detectNameCol, detectCatCol, getLeadName, getLeadCategory } from '../utils/detect';
 import ScoreRing from '../components/ScoreRing';
@@ -91,7 +92,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                     payload: {
                         title: `Scan Sonar: ${preset.label}`,
                         sub: `${result.imported} novos leads`,
-                        icon: '🗺️',
+                        icon: 'radar',
                         time: new Date().toISOString(),
                     },
                 });
@@ -99,7 +100,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 // Save API key
                 localStorage.setItem('orca_google_api_key', apiKey);
 
-                toast(`✓ ${result.imported} leads importados do scan!`, 'success');
+                toast(`${result.imported} leads importados do scan!`, 'success');
                 setScanModalOpen(false);
             } else if (result.cached) {
                 toast('Scan recente já existe. Aguarde 7 dias ou limpe o cache.', 'info');
@@ -128,7 +129,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                         style={{ fontSize: 15, padding: '12px 32px' }}
                         onClick={() => onNavigate('import')}
                     >
-                        ↑ Importar minha primeira lista
+                        <Upload size={16} /> Importar minha primeira lista
                     </button>
                     <div style={{ marginTop: 20, fontSize: 12, color: 'var(--t3)', maxWidth: 400 }}>
                         A ORCA utilizará <strong>Inteligência B2B Especializada</strong> para analisar cada lead, identificar dores e sugerir a melhor abordagem comercial automaticamente.
@@ -219,7 +220,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                     <div className="kpi-label">Leads Quentes</div>
                     <div className="kpi-val green">{hot.length}</div>
                     <div className="kpi-sub">
-                        <span className="kpi-delta up">↑ {Math.round((hot.length / leads.length) * 100)}%</span> da base
+                        <span className="kpi-delta up"><ArrowUpRight size={14} /> {Math.round((hot.length / leads.length) * 100)}%</span> da base
                     </div>
                 </div>
                 <div className="kpi amber">
@@ -278,7 +279,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 <div className="card mb-24">
                     <div className="sec-header">
                         <div>
-                            <div className="sec-title">📊 Sua Produtividade</div>
+                            <div className="sec-title">Sua Produtividade</div>
                             <div className="sec-sub">Leads que você criou esta semana</div>
                         </div>
                     </div>
@@ -289,7 +290,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                                 l._importedAt && l._importedAt >= weekAgo
                             );
                             const myContacts = activities.filter(a => 
-                                a.icon === '✉' || a.icon === '📞' || a.icon === '💬'
+                                a.icon === '✉' || a.icon === '📞' || a.icon === '💬' || a.icon === 'mail' || a.icon === 'phone' || a.icon === 'whatsapp'
                             ).filter(a => {
                                 const days = (Date.now() - new Date(a.time).getTime()) / (1000 * 60 * 60 * 24);
                                 return days <= 7;
@@ -515,10 +516,24 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                     </div>
                     <div className="activity-list">
                         {activities.length ? activities.slice(0, 6).map((a, i) => {
-                            const colors: Record<string, string> = { '📂': 'var(--blue-dim)', '◉': 'var(--green-dim)', '▦': 'var(--amber-dim)' };
+                            const iconMap: Record<string, React.ReactNode> = { 
+                                'folder': <Upload size={14} />, 
+                                'radar': <Radar size={14} />, 
+                                'pipeline': <Columns3 size={14} />,
+                                'edit': <Activity size={14} />,
+                                'trash': <Trash2 size={14} />,
+                                '✉': <Mail size={14} />,
+                                '📞': <Phone size={14} />,
+                                '💬': <MessageCircle size={14} />,
+                                'mail': <Mail size={14} />,
+                                'phone': <Phone size={14} />,
+                                'whatsapp': <MessageCircle size={14} />
+                            };
                             return (
                                 <div className="activity-item" key={i}>
-                                    <div className="activity-dot" style={{ background: colors[a.icon] || 'var(--card2)' }}>{a.icon}</div>
+                                    <div className="activity-dot" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        {iconMap[a.icon] || <Activity size={14} />}
+                                    </div>
                                     <div className="activity-content">
                                         <div className="activity-title">{a.title}</div>
                                         <div className="activity-sub">{a.sub} · {formatTime(a.time)}</div>
@@ -539,8 +554,11 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 <div className="modal-overlay open" onClick={() => setScanModalOpen(false)}>
                     <div className="modal" style={{ maxWidth: 500 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <div className="modal-title">🗺️ Sonar - Scan de Estabelecimentos</div>
-                            <button className="modal-close" onClick={() => setScanModalOpen(false)}>✕</button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <Radar size={18} />
+                                <div className="modal-title">Scan Rápido</div>
+                            </div>
+                            <button className="modal-close" onClick={() => setScanModalOpen(false)}><X size={18} /></button>
                         </div>
 
                         <div style={{ marginBottom: 20 }}>
@@ -551,8 +569,8 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                                 onChange={(e) => setApiKey(e.target.value)}
                                 style={{ marginBottom: 4 }}
                             >
-                                <option value="demo">🧪 Demo (dados fictícios - grátis)</option>
-                                <option value="google">🔍 Google Places API (dados reais - pago)</option>
+                                <option value="demo">Demo (dados fictícios)</option>
+                                <option value="google">Google Places API (dados reais)</option>
                             </select>
                             {apiKey === 'google' && (
                                 <div>
@@ -567,11 +585,6 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                                     <div style={{ fontSize: 11, color: 'var(--t2)', marginTop: 4 }}>
                                         ~$17/1000 buscas. Necessário API Key com Places API ativada.
                                     </div>
-                                </div>
-                            )}
-                            {apiKey === 'demo' && (
-                                <div style={{ fontSize: 11, color: 'var(--green)', marginTop: 4 }}>
-                                    ✓ Modo demonstração - ideal para testes
                                 </div>
                             )}
                         </div>
@@ -595,8 +608,8 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                                 borderRadius: 8, padding: 12, marginBottom: 16,
                                 fontSize: 12, color: 'var(--amber)',
                             }}>
-                                ⚠ Scan recente disponível ({scanStatus.cachedCount} estabelecimentos, {scanStatus.ageDays} dias). 
-                                Novo scan só será realizado após {CACHE_TTL_DAYS} dias.
+                                <AlertTriangle size={14} style={{ marginRight: 6 }} />
+                                Scan recente disponível ({scanStatus.cachedCount} estabelecimentos, {scanStatus.ageDays} dias). 
                             </div>
                         )}
 
@@ -612,14 +625,25 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
 
                         <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
                             <button className="btn btn-ghost" onClick={() => setScanModalOpen(false)}>
-                                Cancelar
+                                Fechar
                             </button>
                             <button
                                 className="btn btn-primary"
                                 onClick={handleScan}
                                 disabled={scanLoading || !apiKey}
+                                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                             >
-                                {scanLoading ? '🔍 Escaneando...' : '🗺️ Iniciar Scan'}
+                                {scanLoading ? (
+                                    <>
+                                        <Search size={16} className="spin" />
+                                        <span>Processando...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Radar size={16} />
+                                        <span>Iniciar Scan</span>
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>

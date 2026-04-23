@@ -1,11 +1,11 @@
 import { useState, useCallback } from 'react';
-import { ArrowRight, ArrowLeft, Check } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, Waves, Download, Target, Radar, BarChart3, Rocket } from 'lucide-react';
 import './ui/Onboarding.css';
 
 type Step = {
     title: string;
     description: string;
-    icon: string;
+    icon: React.ReactNode;
     action?: { label: string; onClick: () => void };
 };
 
@@ -13,33 +13,33 @@ const ONBOARDING_STEPS: Step[] = [
     {
         title: 'Bem-vindo à ORCA',
         description: 'A sua plataforma de inteligência comercial B2B. Vamos configurar tudo em poucos passos.',
-        icon: '🐋',
+        icon: <Waves size={40} />,
     },
     {
         title: 'Importe os seus leads',
         description: 'Carregue ficheiros Excel, CSV ou importe do Google Maps. A ORCA deteta automaticamente o formato e mapeia as colunas.',
-        icon: '📥',
+        icon: <Download size={40} />,
         action: { label: 'Ir para Captura', onClick: () => {} },
     },
     {
         title: 'Scoring automático com IA',
         description: 'Cada lead recebe uma pontuação de 1 a 10 baseada na completude dos dados, avaliações, website e palavras-chave do setor.',
-        icon: '🎯',
+        icon: <Target size={40} />,
     },
     {
         title: 'Explore com o Sonar',
         description: 'Escaneie áreas geográficas para descobrir novos negócios. O Sonar encontra empresas no mapa e adiciona aos seus leads.',
-        icon: '📡',
+        icon: <Radar size={40} />,
     },
     {
         title: 'Gerencie o pipeline',
         description: 'Arraste leads entre etapas do funil: Novo → Qualificado → Proposta → Negociação → Ganho/Perdido.',
-        icon: '📊',
+        icon: <BarChart3 size={40} />,
     },
     {
         title: 'Pronto a começar!',
         description: 'A sua conta está configurada. Explore os módulos e comece a captar leads inteligentes.',
-        icon: '🚀',
+        icon: <Rocket size={40} />,
     },
 ];
 

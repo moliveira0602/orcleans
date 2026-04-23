@@ -123,9 +123,9 @@ export function scoreLabel(
     hot: number,
     warm: number
 ): string {
-    if (score >= hot) return '🔥 Lead Quente';
-    if (score >= warm) return '🌡 Lead Morno';
-    return '❄ Lead Frio';
+    if (score >= hot) return 'Lead Quente';
+    if (score >= warm) return 'Lead Morno';
+    return 'Lead Frio';
 }
 
 export function scoreReason(row: Record<string, unknown>): string {
@@ -143,7 +143,7 @@ export function scoreReason(row: Record<string, unknown>): string {
     )
         reasons.push('tem redes sociais');
     return reasons.length
-        ? '✓ ' + reasons.join(', ')
+        ? reasons.join(', ')
         : 'Scoring baseado em perfil';
 }
 
@@ -162,7 +162,7 @@ export function buildInsights(
     }[] = [];
 
     ins.push({
-        icon: '🔥',
+        icon: 'flame',
         title: `${hot.length} lead${hot.length !== 1 ? 's' : ''} quente${hot.length !== 1 ? 's' : ''} aguardando contato`,
         text: `${Math.round((hot.length / leads.length) * 100)}% da sua base tem score ≥${hotThreshold}. Leads quentes perdem qualidade em 48–72h — priorize contato hoje.`,
         cls: 'green',
@@ -179,7 +179,7 @@ export function buildInsights(
         )[0];
         if (topCat)
             ins.push({
-                icon: '📌',
+                icon: 'pin',
                 title: `Segmento mais quente: "${topCat[0]}"`,
                 text: `${topCat[1]} leads com score alto neste segmento. Concentre energia aqui para maximizar conversão.`,
                 cls: 'green',
@@ -192,14 +192,14 @@ export function buildInsights(
     );
     if (noContact.length)
         ins.push({
-            icon: '⚠',
+            icon: 'alert',
             title: `${noContact.length} leads sem telefone ou email`,
             text: `Esses registros não têm informação de contato detectável. Enriqueça antes de ativar.`,
             cls: 'amber',
         });
 
     ins.push({
-        icon: '📈',
+        icon: 'trending-up',
         title: `Score médio: ${avg.toFixed(1)}/10`,
         text:
             avg >= 7
@@ -217,7 +217,7 @@ export function buildInsights(
     );
     if (withSocial.length)
         ins.push({
-            icon: '📱',
+            icon: 'smartphone',
             title: `${withSocial.length} leads com redes sociais`,
             text: `Esses leads têm presença digital ativa — canal adicional de contato disponível.`,
             cls: '',
@@ -226,7 +226,7 @@ export function buildInsights(
     const ganhos = leads.filter((l) => l._pipeline === 'ganho');
     if (ganhos.length)
         ins.push({
-            icon: '✅',
+            icon: 'check-circle',
             title: `${ganhos.length} lead${ganhos.length !== 1 ? 's' : ''} marcado${ganhos.length !== 1 ? 's' : ''} como ganho${ganhos.length !== 1 ? 's' : ''}`,
             text: `Taxa de fechamento atual: ${Math.round((ganhos.length / leads.length) * 100)}%. Revise os padrões desses leads para otimizar o scoring.`,
             cls: 'green',

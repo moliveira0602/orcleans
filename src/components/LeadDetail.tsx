@@ -1,4 +1,21 @@
-import { useState, useEffect } from 'react';
+import { 
+    X, 
+    Database, 
+    Zap, 
+    FileText, 
+    Phone, 
+    Mail, 
+    MessageCircle, 
+    Trash2, 
+    Check, 
+    ExternalLink, 
+    AlertCircle, 
+    RotateCw,
+    Layout,
+    Flame,
+    Thermometer,
+    Snowflake
+} from 'lucide-react';
 import { useAppState, useAppDispatch } from '../store';
 import { useToast } from './Toast';
 import { useConfirm } from './ConfirmModal';
@@ -151,7 +168,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
         toast(`Lead movido para "${label}"`, 'success');
         dispatch({
             type: 'ADD_ACTIVITY',
-            payload: { title: `Funil: ${name}`, sub: `Movido para ${label}`, icon: '▦', time: new Date().toISOString() },
+            payload: { title: `Funil: ${name}`, sub: `Movido para ${label}`, icon: <Layout size={14} />, time: new Date().toISOString() },
         });
     };
 
@@ -288,7 +305,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                         <div style={{ fontFamily: 'var(--font-d)', fontSize: 16, fontWeight: 700 }}>{name}</div>
                         <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2 }}>{cat || 'Sem categoria'}</div>
                     </div>
-                    <button className="btn-icon" onClick={onClose}>✕</button>
+                    <button className="btn-icon" onClick={onClose}><X size={20} /></button>
                 </div>
 
                 <div className="detail-tabs" style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'transparent' }}>
@@ -302,10 +319,14 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                 color: activeTab === t ? 'var(--blue)' : 'var(--t3)',
                                 borderBottom: activeTab === t ? '2px solid var(--blue)' : 'none',
                                 background: 'none', borderTop: 'none', borderLeft: 'none', borderRight: 'none',
-                                cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em'
+                                cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
                             }}
                         >
-                            {t === 'info' ? 'Dados' : t === 'intel' ? 'Inteligência ⚝' : 'Notas'}
+                            {t === 'info' && <Database size={12} />}
+                            {t === 'intel' && <Zap size={12} />}
+                            {t === 'notes' && <FileText size={12} />}
+                            {t === 'info' ? 'Dados' : t === 'intel' ? 'Intel' : 'Notas'}
                         </button>
                     ))}
                 </div>
@@ -321,8 +342,13 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                         {lead._score.toFixed(1)}
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: 13, fontWeight: 600 }}>{scoreLabel(lead._score, settings.hotThreshold, settings.warmThreshold)}</div>
-                                        <div style={{ fontSize: 12, color: 'var(--t3)' }}>{scoreReason(lead)}</div>
+                                        <div style={{ fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            {cls === 'hot' ? <Flame size={14} color="var(--green)" /> : cls === 'warm' ? <Thermometer size={14} color="var(--amber)" /> : <Snowflake size={14} color="var(--t3)" />}
+                                            {scoreLabel(lead._score, settings.hotThreshold, settings.warmThreshold)}
+                                        </div>
+                                        <div style={{ fontSize: 12, color: 'var(--t3)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <Check size={12} /> {scoreReason(lead)}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="progress">
@@ -343,8 +369,8 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                     <option value="qualificado">Qualificado</option>
                                     <option value="proposta">Proposta</option>
                                     <option value="negociacao">Negociação</option>
-                                    <option value="ganho">Ganho ✓</option>
-                                    <option value="perdido">Perdido ✕</option>
+                                    <option value="ganho">Ganho</option>
+                                    <option value="perdido">Perdido</option>
                                 </select>
                             </div>
 
@@ -359,11 +385,11 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                             {isEditing ? (
                                                 <span style={{ display: 'flex', gap: 4, alignItems: 'center', flex: 1 }}>
                                                     <input className="input" style={{ flex: 1, padding: '4px 8px', fontSize: 12 }} value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }} autoFocus />
-                                                    <button className="btn btn-primary btn-sm" onClick={saveEdit}>✓</button>
+                                                    <button className="btn btn-primary btn-sm" onClick={saveEdit}><Check size={14} /></button>
                                                 </span>
                                             ) : (
                                                 <span className="detail-field-value" onClick={() => startEdit(k, vs)} style={{ flex: 1, textAlign: 'right' }}>
-                                                    {vs.startsWith('http') ? <a href={vs} target="_blank" rel="noreferrer" style={{ color: 'var(--blue3)' }}>↗ abrir</a> : vs.slice(0, 50) || '—'}
+                                                    {vs.startsWith('http') ? <a href={vs} target="_blank" rel="noreferrer" style={{ color: 'var(--blue3)', display: 'inline-flex', alignItems: 'center', gap: 4 }}><ExternalLink size={12} /> abrir</a> : vs.slice(0, 50) || '—'}
                                                 </span>
                                             )}
                                         </div>
@@ -383,8 +409,10 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                                 border: `1px solid ${isHot ? 'rgba(239,68,68,0.25)' : 'rgba(245,158,11,0.25)'}`,
                                                 borderRadius: 8, padding: '10px 12px', fontSize: 12,
                                                 color: isHot ? 'var(--red)' : 'var(--amber)',
+                                                display: 'flex', alignItems: 'center', gap: 8
                                             }}>
-                                                ⚠ {isHot ? 'Lead quente' : 'Lead'} nunca contactado — inicie o contato agora.
+                                                <AlertCircle size={14} />
+                                                <span>{isHot ? 'Lead quente' : 'Lead'} nunca contactado — inicie o contato agora.</span>
                                             </div>
                                         </div>
                                     );
@@ -399,16 +427,19 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                                 border: '1px solid rgba(245,158,11,0.25)',
                                                 borderRadius: 8, padding: '10px 12px', fontSize: 12,
                                                 color: 'var(--amber)',
+                                                display: 'flex', alignItems: 'center', gap: 8
                                             }}>
-                                                ⚠ Último contato há {days} dias — pode ser necessário follow-up.
+                                                <AlertCircle size={14} />
+                                                <span>Último contato há {days} dias — pode ser necessário follow-up.</span>
                                             </div>
                                         </div>
                                     );
                                 }
                                 return (
                                     <div className="detail-section" style={{ marginTop: 12 }}>
-                                        <div style={{ fontSize: 11, color: 'var(--green)' }}>
-                                            ✓ Último contato há {days} dia(s)
+                                        <div style={{ fontSize: 11, color: 'var(--green)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <Check size={12} />
+                                            <span>Último contato há {days} dia(s)</span>
                                         </div>
                                     </div>
                                 );
@@ -422,19 +453,31 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                 ) : contactHistory.length === 0 ? (
                                     <div style={{ fontSize: 11, color: 'var(--t3)' }}>Nenhum contato registrado.</div>
                                 ) : (
-                                    contactHistory.map((a) => (
-                                        <div key={a.id} style={{
-                                            display: 'flex', gap: 8, padding: '8px 0',
-                                            borderBottom: '1px solid var(--border)',
-                                            fontSize: 12, alignItems: 'center',
-                                        }}>
-                                            <span style={{ fontSize: 14 }}>{a.icon}</span>
-                                            <span style={{ flex: 1, color: 'var(--t2)' }}>{a.title}</span>
-                                            <span style={{ fontSize: 10, color: 'var(--t3)' }}>
-                                                {new Date(a.createdAt).toLocaleDateString('pt-BR')}
-                                            </span>
-                                        </div>
-                                    ))
+                                    contactHistory.map((a) => {
+                                        const iconMap: Record<string, React.ReactNode> = {
+                                            '✉': <Mail size={14} />,
+                                            '📞': <Phone size={14} />,
+                                            '💬': <MessageCircle size={14} />,
+                                            'mail': <Mail size={14} />,
+                                            'phone': <Phone size={14} />,
+                                            'whatsapp': <MessageCircle size={14} />
+                                        };
+                                        return (
+                                            <div key={a.id} style={{
+                                                display: 'flex', gap: 8, padding: '8px 0',
+                                                borderBottom: '1px solid var(--border)',
+                                                fontSize: 12, alignItems: 'center',
+                                            }}>
+                                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--blue)' }}>
+                                                    {iconMap[a.icon] || a.icon}
+                                                </span>
+                                                <span style={{ flex: 1, color: 'var(--t2)' }}>{a.title}</span>
+                                                <span style={{ fontSize: 10, color: 'var(--t3)' }}>
+                                                    {new Date(a.createdAt).toLocaleDateString('pt-BR')}
+                                                </span>
+                                            </div>
+                                        );
+                                    })
                                 )}
                             </div>
                         </>
@@ -460,10 +503,10 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                 </div>
 
                 <div className="detail-footer" style={{ padding: 16, borderTop: '1px solid var(--border)', display: 'flex', gap: 8 }}>
-                    <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => handleContact('telefone')}>📞 Telefonei</button>
-                    <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => handleContact('email')}>✉ Email</button>
-                    <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => handleContact('whatsapp')}>💬 WhatsApp</button>
-                    <button className="btn btn-danger btn-sm" onClick={handleDelete}>🗑</button>
+                    <button className="btn btn-ghost btn-sm" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={() => handleContact('telefone')}><Phone size={14} /> Telefone</button>
+                    <button className="btn btn-ghost btn-sm" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={() => handleContact('email')}><Mail size={14} /> Email</button>
+                    <button className="btn btn-ghost btn-sm" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }} onClick={() => handleContact('whatsapp')}><MessageCircle size={14} /> WhatsApp</button>
+                    <button className="btn btn-danger btn-sm" onClick={handleDelete}><Trash2 size={14} /></button>
                 </div>
 
                 {/* Email Template Modal */}
@@ -515,8 +558,11 @@ function IntelligenceView({ lead, settings }: { lead: any, settings: any }) {
     if (loading) {
         return (
             <div style={{ padding: 20, textAlign: 'center' }}>
-                <div style={{ fontSize: 12, color: 'var(--t3)' }}>🤖 Analisando lead com IA...</div>
-                <div style={{ marginTop: 8 }}>
+                <div style={{ fontSize: 12, color: 'var(--t3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                    <RotateCw size={14} className="loading-spinner-fast" />
+                    <span>Analisando lead com IA...</span>
+                </div>
+                <div style={{ marginTop: 12 }}>
                     <div className="skeleton" style={{ height: 4, width: '100%', background: 'var(--card2)', borderRadius: 2 }}>
                         <div className="skeleton-loading" style={{ height: '100%', background: 'var(--blue)', borderRadius: 2, animationDuration: '1.5s' }} />
                     </div>
@@ -540,9 +586,9 @@ function IntelligenceView({ lead, settings }: { lead: any, settings: any }) {
                     className="btn btn-ghost btn-sm" 
                     onClick={handleRegenerate}
                     disabled={loading}
-                    style={{ fontSize: 10 }}
+                    style={{ fontSize: 10, display: 'flex', alignItems: 'center', gap: 4 }}
                 >
-                    🔄 Regenerar
+                    <RotateCw size={10} /> Regenerar
                 </button>
             </div>
             <div className="detail-section" style={{ background: 'var(--blue-dim)', borderRadius: 0 }}>
