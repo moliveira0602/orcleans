@@ -54,13 +54,8 @@ function parseQueryParams(query: Record<string, unknown>): ParsedQuery {
 
 export async function getLeads(req: AuthRequest, res: Response) {
   try {
-    console.log('[leadController] req.userRole:', req.userRole);
-    console.log('[leadController] req.organizationId:', req.organizationId);
-    console.log('[leadController] isSuperAdmin:', isSuperAdmin(req.userRole!));
     const orgId = isSuperAdmin(req.userRole!) ? undefined : req.organizationId;
-    console.log('[leadController] orgId used for query:', orgId);
     const query = parseQueryParams(req.query as Record<string, unknown>);
-    console.log('[leadController] getLeads query:', query);
     const result = await leadService.getLeads(orgId, query);
     return res.status(200).json(result);
   } catch (error: any) {
@@ -118,63 +113,18 @@ export async function deleteLead(req: AuthRequest, res: Response) {
   }
 }
 
-export async function debugLeads(req: AuthRequest, res: Response) {
-  try {
-    const orgId = isSuperAdmin(req.userRole!) ? undefined : req.organizationId;
-    
-    // Pegar amostra de leads
-    const sample = await prisma.lead.findMany({
-      where: orgId ? { organizationId: orgId } : {},
-      take: 5,
-      select: { id: true, organizationId: true, nome: true }
-    });
-
-    const totalCount = await prisma.lead.count();
-    const orgCount = orgId ? await prisma.lead.count({ where: { organizationId: orgId } }) : totalCount;
-
-    return res.json({
-      timestamp: new Date().toISOString(),
-      user: {
-        id: req.userId,
-        orgId: req.organizationId,
-        role: req.userRole,
-        isSuper: isSuperAdmin(req.userRole!)
-      },
-      database: {
-        totalLeadsInDb: totalCount,
-        leadsInThisOrg: orgCount,
-        sampleLeads: sample
-      },
-      version: 'v14_debug'
-    });
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message });
-  }
-}
-
 export async function deleteLeadsBulk(req: AuthRequest, res: Response) {
   try {
     const { leadIds } = req.body;
-    
+
     if (!leadIds || !Array.isArray(leadIds) || leadIds.length === 0) {
-      console.warn('[leadController] deleteLeadsBulk - Invalid or empty leadIds array');
       return res.status(400).json({ error: 'Lista de IDs de leads inválida ou vazia' });
     }
 
-    console.log(`[leadController] deleteLeadsBulk - Attempting to delete ${leadIds.length} leads`);
-    console.log('[leadController] leadIds sample:', leadIds.slice(0, 5));
-    console.log('[leadController] organizationId:', req.organizationId);
-
     const orgId = isSuperAdmin(req.userRole!) ? undefined : req.organizationId;
     const result = await leadService.deleteLeadsBulk(orgId, req.userId!, leadIds);
-    
-    console.log(`[leadController] deleteLeadsBulk - Success: ${result.count} leads deleted`);
-    
-    return res.status(200).json({ 
-      count: result.count,
-      _debug: result.count === 0 ? result.diagnostic : undefined,
-      _v: 'v13_debug'
-    });
+
+    return res.status(200).json({ count: result.count });
   } catch (error: any) {
     console.error('[leadController] deleteLeadsBulk error:', error);
     return res.status(400).json({ error: error.message });

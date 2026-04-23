@@ -43,7 +43,7 @@ app.get('/api/health', async (_req: Request, res: Response) => {
   try {
     // Test database connection
     await prisma.$connect();
-    res.json({ status: 'ok', timestamp: new Date().toISOString(), version: 'v13' });
+    res.json({ status: 'ok', timestamp: new Date().toISOString(), version: 'v1' });
   } catch (err: any) {
     console.error('Health check error:', err);
     res.status(500).json({ error: err.message || 'Internal server error' });

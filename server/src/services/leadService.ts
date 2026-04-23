@@ -198,39 +198,13 @@ export async function deleteLeadsBulk(organizationId: string | undefined, _userI
     throw new Error('Lista de leads inválida ou vazia');
   }
 
-  // DIAGNÓSTICO: Verificar se esses IDs existem no banco antes de deletar
-  const existingCount = await prisma.lead.count({
-    where: { id: { in: cleanIds } }
-  });
-  console.log(`[leadService] deleteLeadsBulk - Diagnostic: Found ${existingCount} leads by ID total (ignoring org)`);
-
   const where: any = { id: { in: cleanIds } };
   if (cleanOrgId) {
     where.organizationId = cleanOrgId;
-    const existingInOrg = await prisma.lead.count({ where });
-    console.log(`[leadService] deleteLeadsBulk - Diagnostic: Found ${existingInOrg} leads in org ${cleanOrgId}`);
   }
 
-  console.log('[leadService] deleteLeadsBulk - Prisma where clause:', JSON.stringify(where));
-
-  try {
-    const result = await prisma.lead.deleteMany({ where });
-    console.log('[leadService] deleteLeadsBulk - Prisma result:', result);
-    
-    // Retornar objeto com metadados para depuração
-    return { 
-      count: result.count,
-      diagnostic: {
-        totalFoundById: existingCount,
-        foundInOrg: cleanOrgId ? (await prisma.lead.count({ where })) : existingCount,
-        orgIdUsed: cleanOrgId,
-        idsRequested: cleanIds.length
-      }
-    };
-  } catch (err: any) {
-    console.error('[leadService] deleteLeadsBulk - Prisma error:', err);
-    throw new Error(`Erro ao eliminar leads no banco de dados: ${err.message}`);
-  }
+  const result = await prisma.lead.deleteMany({ where });
+  return { count: result.count };
 }
 
 export async function moveLeadPipeline(organizationId: string, leadId: string, stage: string) {

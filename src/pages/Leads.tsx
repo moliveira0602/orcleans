@@ -60,13 +60,9 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
         return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
     }, []);
 
-    // Sync external search query
+    // Refresh leads on mount
     useEffect(() => {
         refreshLeads();
-        // Diagnóstico de sessão para depurar erro de exclusão
-        api.get('/leads/debug')
-            .then(res => console.log('[Leads] Session Debug:', res))
-            .catch(err => console.warn('[Leads] Session Debug failed:', err));
     }, [refreshLeads]);
 
     useEffect(() => {
@@ -147,47 +143,26 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
         if (selectedLeads.size === 0) return;
         if (!confirm(`Eliminar ${selectedLeads.size} lead(s)?`)) return;
         setIsDeleting(true);
-        console.log(`[Leads] Starting bulk delete for ${selectedLeads.size} leads...`);
-
         try {
             const ids = Array.from(selectedLeads);
-            console.log('[Leads] IDs to delete:', ids);
-            const leadDetails = leads.filter(l => selectedLeads.has(l.id));
-            console.log('[Leads] Lead details to delete:', leadDetails);
-            
-            // 1. Chamar API e aguardar confirmação real
-            let result;
-            try {
-                result = await deleteLeadsBulk(ids);
-                console.log('[Leads] API response:', result);
-            } catch (apiError) {
-                console.error('[Leads] Delete API failed:', apiError);
-                throw new Error('Erro de conexão: Não foi possível comunicar com o servidor.');
-            }
-            
-            // 2. Verificar se algo foi realmente deletado
+            const result = await deleteLeadsBulk(ids);
             const deletedCount = result?.count ?? 0;
 
             if (deletedCount <= 0) {
-                console.warn('[Leads] Server reported 0 leads deleted. IDs might be out of sync.');
-                await refreshLeads(); // Sincroniza estado real
-                throw new Error('O servidor não encontrou os leads selecionados para exclusão. A lista foi atualizada.');
+                await refreshLeads();
+                throw new Error('Nenhum lead foi eliminado. A lista foi actualizada.');
             }
-            
-            console.log(`[Leads] ${deletedCount} leads confirmed deleted on server.`);
-            
-            // 3. Só agora atualiza o estado local (Store)
+
             const idsToDelete = new Set(ids);
             dispatch({ 
                 type: 'SET_LEADS', 
                 payload: leads.filter((l) => !idsToDelete.has(l.id)) 
             });
-            
+
             toast(`${deletedCount} lead(s) eliminado(s) com sucesso.`, 'success');
             setSelectedLeads(new Set());
         } catch (err) {
-            const message = err instanceof Error ? err.message : 'Erro inesperado ao eliminar leads.';
-            console.error('[Leads] handleBulkDelete catch:', err);
+            const message = err instanceof Error ? err.message : 'Erro ao eliminar leads.';
             toast(message, 'error');
         } finally {
             setIsDeleting(false);
