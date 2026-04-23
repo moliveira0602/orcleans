@@ -11,22 +11,32 @@ export default function SettingsPage() {
     const dispatch = useAppDispatch();
     const toast = useToast();
     const confirm = useConfirm();
-    const [savingProfile, setSavingProfile] = useState(false);
-    const { refreshProfile } = useAuth();
+    const [isExporting, setIsExporting] = useState(false);
+    const [isClearing, setIsClearing] = useState(false);
 
-    const updateSetting = (key: string, value: string | number) => {
+    const updateSetting = (key: string, value: any) => {
         dispatch({ type: 'UPDATE_SETTINGS', payload: { [key]: value } });
+        // Persist local settings (thresholds and notifications)
+        if (['hotThreshold', 'warmThreshold', 'notifHot', 'notifDaily'].includes(key)) {
+            const current = JSON.parse(localStorage.getItem('orca_settings') || '{}');
+            localStorage.setItem('orca_settings', JSON.stringify({ ...current, [key]: value }));
+        }
     };
 
     const handleSaveProfile = async () => {
         setSavingProfile(true);
         try {
-            const result = await api.patch<{ name: string; email: string; company: string }>('/auth/me', {
+            const result = await api.patch<any>('/auth/me', {
                 name: settings.name,
                 email: settings.email,
                 company: settings.company,
             });
-            dispatch({ type: 'UPDATE_SETTINGS', payload: { name: result.name, email: result.email, company: result.company } });
+            // Update both store and auth context
+            dispatch({ type: 'UPDATE_SETTINGS', payload: { 
+                name: result.name, 
+                email: result.email, 
+                company: result.company || result.organizationName || '' 
+            } });
             await refreshProfile();
             toast('Perfil atualizado com sucesso.', 'success');
         } catch (err: any) {
@@ -44,14 +54,26 @@ export default function SettingsPage() {
             variant: 'danger',
         });
         if (!ok) return;
-        dispatch({ type: 'CLEAR_ALL' });
-        toast('Todos os dados foram removidos.', 'info');
+        
+        setIsClearing(true);
+        try {
+            dispatch({ type: 'CLEAR_ALL' });
+            toast('Todos os dados foram removidos.', 'info');
+        } finally {
+            setIsClearing(false);
+        }
     };
 
-    const handleExport = () => {
+    const handleExport = async () => {
         if (!leads.length) { toast('Nenhum lead para exportar.', 'info'); return; }
-        exportLeadsCsv(leads);
-        toast('CSV exportado com sucesso.', 'success');
+        setIsExporting(true);
+        try {
+            await new Promise(resolve => setTimeout(resolve, 800)); // Visual feedback
+            exportLeadsCsv(leads);
+            toast('CSV exportado com sucesso.', 'success');
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     return (
@@ -72,8 +94,8 @@ export default function SettingsPage() {
                             <label className="form-label">Empresa</label>
                             <input className="input" type="text" placeholder="Nome da empresa" value={settings.company} onChange={(e) => updateSetting('company', e.target.value)} />
                         </div>
-                        <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={handleSaveProfile} disabled={savingProfile}>
-                            {savingProfile ? 'A guardar...' : 'Guardar alterações'}
+                        <button className="btn btn-primary" style={{ marginTop: 12, width: '100%' }} onClick={handleSaveProfile} disabled={savingProfile}>
+                            {savingProfile ? 'A guardar...' : 'Guardar perfil'}
                         </button>
                     </div>
 
@@ -82,16 +104,16 @@ export default function SettingsPage() {
                         <div className="settings-row">
                             <div>
                                 <div className="settings-label">Threshold lead quente</div>
-                                <div className="settings-sub">Score mínimo para classificar como quente</div>
+                                <div className="settings-sub">Score mínimo para classificar como quente (0-10)</div>
                             </div>
-                            <input className="input" type="number" min={1} max={10} value={settings.hotThreshold} style={{ width: 70 }} onChange={(e) => updateSetting('hotThreshold', +e.target.value)} />
+                            <input className="input" type="number" min={1} max={10} value={settings.hotThreshold} style={{ width: 70, textAlign: 'center' }} onChange={(e) => updateSetting('hotThreshold', +e.target.value)} />
                         </div>
                         <div className="settings-row">
                             <div>
                                 <div className="settings-label">Threshold lead morno</div>
-                                <div className="settings-sub">Score mínimo para classificar como morno</div>
+                                <div className="settings-sub">Score mínimo para classificar como morno (0-10)</div>
                             </div>
-                            <input className="input" type="number" min={1} max={10} value={settings.warmThreshold} style={{ width: 70 }} onChange={(e) => updateSetting('warmThreshold', +e.target.value)} />
+                            <input className="input" type="number" min={1} max={10} value={settings.warmThreshold} style={{ width: 70, textAlign: 'center' }} onChange={(e) => updateSetting('warmThreshold', +e.target.value)} />
                         </div>
                     </div>
                 </div>
@@ -105,7 +127,11 @@ export default function SettingsPage() {
                                 <div className="settings-sub">Alertar quando score ≥ threshold</div>
                             </div>
                             <label className="toggle">
-                                <input type="checkbox" defaultChecked />
+                                <input 
+                                    type="checkbox" 
+                                    checked={!!settings.notifHot} 
+                                    onChange={(e) => updateSetting('notifHot', e.target.checked)} 
+                                />
                                 <div className="toggle-track" />
                                 <div className="toggle-thumb" />
                             </label>
@@ -116,7 +142,11 @@ export default function SettingsPage() {
                                 <div className="settings-sub">Email com métricas do dia</div>
                             </div>
                             <label className="toggle">
-                                <input type="checkbox" />
+                                <input 
+                                    type="checkbox" 
+                                    checked={!!settings.notifDaily} 
+                                    onChange={(e) => updateSetting('notifDaily', e.target.checked)} 
+                                />
                                 <div className="toggle-track" />
                                 <div className="toggle-thumb" />
                             </label>
@@ -124,7 +154,7 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="card" style={{ marginTop: 16 }}>
-                        <div className="settings-title">Dados</div>
+                        <div className="settings-title">Dados e Exportação</div>
                         <div className="settings-row">
                             <div>
                                 <div className="settings-label">Total de leads</div>
@@ -137,8 +167,22 @@ export default function SettingsPage() {
                             <span style={{ fontFamily: 'var(--font-d)', fontSize: 18, fontWeight: 700 }}>{imports.length}</span>
                         </div>
                         <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-                            <button className="btn btn-ghost btn-sm" onClick={handleExport}>↓ Exportar tudo</button>
-                            <button className="btn btn-danger btn-sm" onClick={clearAll}>⚠ Limpar dados</button>
+                            <button 
+                                className="btn btn-ghost btn-sm" 
+                                style={{ flex: 1 }} 
+                                onClick={handleExport} 
+                                disabled={isExporting}
+                            >
+                                {isExporting ? 'A exportar...' : '↓ Exportar CSV'}
+                            </button>
+                            <button 
+                                className="btn btn-danger btn-sm" 
+                                style={{ flex: 1 }} 
+                                onClick={clearAll} 
+                                disabled={isClearing}
+                            >
+                                {isClearing ? 'A limpar...' : '⚠ Limpar base'}
+                            </button>
                         </div>
                     </div>
                 </div>

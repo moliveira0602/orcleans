@@ -5,11 +5,13 @@ import * as leadApi from './services/leads';
 import { api } from './services/api';
 
 
+const savedSettings = JSON.parse(localStorage.getItem('orca_settings') || '{}');
+
 const initialState: AppState = {
     leads: [],
     imports: [],
     pipeline: { novo: [], qualificado: [], proposta: [], negociacao: [], ganho: [], perdido: [] },
-    settings: { ...DEFAULT_SETTINGS },
+    settings: { ...DEFAULT_SETTINGS, ...savedSettings },
     activities: [],
     isLoading: true,
 };

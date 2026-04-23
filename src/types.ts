@@ -91,6 +91,8 @@ export interface AppSettings {
     company: string;
     hotThreshold: number;
     warmThreshold: number;
+    notifHot?: boolean;
+    notifDaily?: boolean;
 }
 
 export interface PipelineMap {
@@ -152,4 +154,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
     company: '',
     hotThreshold: 7,
     warmThreshold: 4,
+    notifHot: true,
+    notifDaily: false,
 };

@@ -1516,26 +1516,27 @@ select.input {
   width: 40px;
   height: 22px;
   cursor: pointer;
-  display: inline-block
+  display: inline-block;
 }
 
 .toggle input {
   opacity: 0;
   width: 0;
   height: 0;
-  position: absolute
+  position: absolute;
 }
 
 .toggle-track {
   position: absolute;
   inset: 0;
   border-radius: 11px;
-  background: var(--bg5);
+  background: rgba(255, 255, 255, 0.1);
   transition: background var(--transition);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.toggle input:checked~.toggle-track {
-  background: var(--blue)
+.toggle input:checked ~ .toggle-track {
+  background: #FFFFFF;
 }
 
 .toggle-thumb {
@@ -1545,13 +1546,15 @@ select.input {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #fff;
-  transition: transform var(--transition);
+  background: #FFFFFF;
+  transition: all var(--transition);
   pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
 
-.toggle input:checked~.toggle-track~.toggle-thumb {
-  transform: translateX(18px)
+.toggle input:checked ~ .toggle-thumb {
+  transform: translateX(18px);
+  background: #0A0A0A;
 }
 
 /* ── ONBOARDING ── */
