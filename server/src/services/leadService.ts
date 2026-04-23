@@ -198,9 +198,17 @@ export async function deleteLeadsBulk(organizationId: string | undefined, _userI
     throw new Error('Lista de leads inválida ou vazia');
   }
 
+  // DIAGNÓSTICO: Verificar se esses IDs existem no banco antes de deletar
+  const existingCount = await prisma.lead.count({
+    where: { id: { in: cleanIds } }
+  });
+  console.log(`[leadService] deleteLeadsBulk - Diagnostic: Found ${existingCount} leads by ID total (ignoring org)`);
+
   const where: any = { id: { in: cleanIds } };
   if (cleanOrgId) {
     where.organizationId = cleanOrgId;
+    const existingInOrg = await prisma.lead.count({ where });
+    console.log(`[leadService] deleteLeadsBulk - Diagnostic: Found ${existingInOrg} leads in org ${cleanOrgId}`);
   }
 
   console.log('[leadService] deleteLeadsBulk - Prisma where clause:', JSON.stringify(where));
