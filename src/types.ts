@@ -35,9 +35,10 @@ export interface LeadInsight {
 export interface Lead {
     // --- Platform internal ---
     id: string;
-    _score: number;
-    _pipeline: PipelineStage;
-    _importedAt: number;
+    _insight?: LeadInsight;
+    _score?: number;
+    _pipeline?: PipelineStage;
+    _importedAt?: number;
     _importFile?: string;
     _importDate?: string;
     _importId?: string;
@@ -46,7 +47,31 @@ export interface Lead {
     _lat?: number;
     _lng?: number;
     _geocodeStatus?: 'pending' | 'ok' | 'failed';
-    _insight?: LeadInsight;
+    
+    // New functional fields
+    outcomeScore?: number;
+    lastOutcome?: string;
+    presenca?: {
+        hasInstagram: boolean;
+        hasFacebook: boolean;
+        hasPixel: boolean;
+        instagramUrl?: string;
+        facebookUrl?: string;
+    };
+    
+    // Canonical backend fields
+    score?: number;
+    pipelineStage?: PipelineStage;
+    importFile?: string;
+    importDate?: string;
+    importId?: string;
+    notes?: NoteEntry[];
+    raw?: Record<string, any>;
+    lastContact?: string;
+    lat?: number;
+    lng?: number;
+    geocodeStatus?: 'pending' | 'ok' | 'failed';
+    insight?: LeadInsight;
 
     // --- FIXED display columns (always shown, always in Portuguese) ---
     nome: string;           // Business/person name

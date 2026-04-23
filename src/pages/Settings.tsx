@@ -301,8 +301,6 @@ export default function SettingsPage() {
                     </div>
                 </div>
             </div>
-                </div>
-            </div>
 
             <div className="card settings-section" style={{ marginTop: 24 }}>
                 <div className="settings-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
