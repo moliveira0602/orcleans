@@ -129,7 +129,7 @@ const LoadingRadar: React.FC<LoadingRadarProps> = ({ size = 200, className }) =>
       <div style={{ position: 'absolute', top: '50%', left: 0, width: '100%', height: '1px', background: 'rgba(255, 255, 255, 0.02)' }} />
       <div style={{ position: 'absolute', left: '50%', top: 0, width: '1px', height: '100%', background: 'rgba(255, 255, 255, 0.02)' }} />
 
-      {/* The Sweep - High contrast and glow */}
+      {/* The Sweep - Refined trail */}
       <div 
         style={{ 
           position: 'absolute',
@@ -137,26 +137,26 @@ const LoadingRadar: React.FC<LoadingRadarProps> = ({ size = 200, className }) =>
           left: '50%',
           width: '50%',
           height: '50%',
-          background: 'conic-gradient(from 0deg, rgba(255, 255, 255, 0.25) 0deg, rgba(255, 255, 255, 0.1) 40deg, transparent 120deg)',
+          background: 'conic-gradient(from 0deg, rgba(255, 255, 255, 0.12) 0deg, rgba(255, 255, 255, 0.04) 20deg, transparent 90deg)',
           transformOrigin: '0 0',
           transform: `rotate(${rotation - 90}deg)`,
-          filter: 'blur(1px)',
           zIndex: 2
         }}
       />
       
-      {/* Leading Edge Glow */}
+      {/* Leading Edge - Sharp and technical */}
       <div 
         style={{ 
           position: 'absolute',
           top: '50%',
           left: '50%',
           width: '50%',
-          height: '2px',
-          background: 'linear-gradient(to right, rgba(255, 255, 255, 0.6), transparent)',
+          height: '1.5px',
+          background: 'linear-gradient(to right, rgba(255, 255, 255, 0.4), transparent)',
           transformOrigin: '0 50%',
           transform: `rotate(${rotation - 90}deg)`,
-          zIndex: 3
+          zIndex: 3,
+          boxShadow: '0 0 4px rgba(255, 255, 255, 0.2)'
         }}
       />
 
