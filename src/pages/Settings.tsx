@@ -11,8 +11,10 @@ export default function SettingsPage() {
     const dispatch = useAppDispatch();
     const toast = useToast();
     const confirm = useConfirm();
+    const { refreshProfile } = useAuth();
     const [isExporting, setIsExporting] = useState(false);
     const [isClearing, setIsClearing] = useState(false);
+    const [savingProfile, setSavingProfile] = useState(false);
 
     const updateSetting = (key: string, value: any) => {
         dispatch({ type: 'UPDATE_SETTINGS', payload: { [key]: value } });
