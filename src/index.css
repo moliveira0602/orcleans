@@ -267,7 +267,7 @@ body {
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
-  margin: 2px 8px;
+  margin: 4px 10px;
   border-radius: 8px;
   cursor: pointer;
   transition: all var(--transition);
@@ -279,7 +279,8 @@ body {
   text-align: left;
   font-family: var(--font-b);
   position: relative;
-  width: auto;
+  align-self: stretch;
+  box-sizing: border-box;
 }
 
 .nav-item:hover {
@@ -297,7 +298,7 @@ body {
 .nav-item.active::before {
   content: '';
   position: absolute;
-  left: -8px;
+  left: -10px;
   top: 15%;
   height: 70%;
   width: 3px;
