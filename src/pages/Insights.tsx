@@ -598,7 +598,6 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
         return '#404040'; // Dark Graphite
     };
 
-    const scanStatus = { hasCache: false }; // Placeholder or derive from logic if needed
 
     const getMarkerColorClass = (score: number) => {
         if (score >= settings.hotThreshold) return 'green';
@@ -993,7 +992,6 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                     A varredura pode levar alguns minutos
                 </div>
             </div>
-        </div>
 
             <style>{`
                 .leaflet-container {
