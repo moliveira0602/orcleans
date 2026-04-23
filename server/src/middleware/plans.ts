@@ -37,14 +37,24 @@ export async function checkPlanLimits(req: AuthRequest, res: Response, next: Nex
       });
     }
 
-    // 2. Check Lead Consumption Limit
-    if (org.leadsConsumed >= org.maxLeads) {
+    // 2. Determine max leads based on plan if not explicitly set
+    const PLAN_LIMITS: Record<string, number> = {
+      'trial': 50,
+      'starter': 500,
+      'pro': 2000,
+      'enterprise': 10000
+    };
+
+    const effectiveMaxLeads = org.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[org.plan.toLowerCase()] || 50);
+
+    // 3. Check Lead Consumption Limit
+    if (org.leadsConsumed >= effectiveMaxLeads) {
       return res.status(403).json({ 
         error: 'Você atingiu o limite de leads do seu plano atual.',
         code: 'LIMIT_REACHED',
         upgradeRequired: true,
         currentUsage: org.leadsConsumed,
-        maxLimit: org.maxLeads
+        maxLimit: effectiveMaxLeads
       });
     }
 
