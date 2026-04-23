@@ -415,14 +415,18 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                     />
                     <div style={{
                         background: 'radial-gradient(circle at 50% 40%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 60%, transparent 100%)',
-                        padding: 24,
+                        width: 72,
+                        height: 72,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         borderRadius: '50%',
                         border: '1px solid rgba(255,255,255,0.12)',
-                        marginBottom: 24,
+                        marginBottom: 20,
                         boxShadow: '0 0 30px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.15)',
-                        position: 'relative',
+                        margin: '0 auto 20px'
                     }}>
-                        <UploadCloud size={40} color="rgba(255,255,255,0.7)" />
+                        <UploadCloud size={32} color="rgba(255,255,255,0.8)" />
                     </div>
                     <div className="upload-title" style={{ fontSize: 18, fontWeight: 700, color: '#FFF' }}>Solte seu arquivo aqui</div>
                     <div className="upload-sub" style={{ fontSize: 13, color: '#888', maxWidth: 400 }}>
