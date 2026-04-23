@@ -667,6 +667,7 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                         zoom={mapZoom}
                         style={{ height: '100%', width: '100%', background: '#0a0b10' }}
                         zoomControl={false}
+                        attributionControl={false}
                     >
                         <TileLayer
                             url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"

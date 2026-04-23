@@ -139,37 +139,44 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
         if (selectedLeads.size === 0) return;
         if (!confirm(`Eliminar ${selectedLeads.size} lead(s)?`)) return;
         setIsDeleting(true);
+        console.log(`[Leads] Starting bulk delete for ${selectedLeads.size} leads...`);
+
         try {
             const ids = Array.from(selectedLeads);
             
-            // Primeiro: deletar no servidor e AGUARDAR resposta
+            // 1. Chamar API e aguardar confirmação real
             let result;
             try {
                 result = await deleteLeadsBulk(ids);
+                console.log('[Leads] API response:', result);
             } catch (apiError) {
-                // Se falhar a chamada API, mostra erro e NÃO atualiza localmente
                 console.error('[Leads] Delete API failed:', apiError);
-                throw new Error('Falha ao conectar com o servidor para eliminar.');
+                throw new Error('Erro de conexão: Não foi possível comunicar com o servidor.');
             }
             
-            // Verifica se o servidor confirmou a exclusão
-            if (!result?.count || result.count <= 0) {
-                console.warn('[Leads] Delete returned 0 count, re-fetching from server...');
-                // Recarrega do servidor para verificar estado real
-                await refreshLeads();
-                throw new Error('Nenhum lead foi eliminado no servidor. Lista recarregada.');
+            // 2. Verificar se algo foi realmente deletado
+            const deletedCount = result?.count ?? 0;
+
+            if (deletedCount <= 0) {
+                console.warn('[Leads] Server reported 0 leads deleted. IDs might be out of sync.');
+                await refreshLeads(); // Sincroniza estado real
+                throw new Error('O servidor não encontrou os leads selecionados para exclusão. A lista foi atualizada.');
             }
             
-            console.log(`[Leads] Successfully deleted ${result.count} leads on server. Updating local state...`);
+            console.log(`[Leads] ${deletedCount} leads confirmed deleted on server.`);
             
-            // Apenas se o servidor confirmar, atualiza localmente
+            // 3. Só agora atualiza o estado local (Store)
             const idsToDelete = new Set(ids);
-            dispatch({ type: 'SET_LEADS', payload: leads.filter((l) => !idsToDelete.has(l.id)) });
+            dispatch({ 
+                type: 'SET_LEADS', 
+                payload: leads.filter((l) => !idsToDelete.has(l.id)) 
+            });
             
-            toast(`${result.count} lead(s) eliminado(s).`, 'success');
+            toast(`${deletedCount} lead(s) eliminado(s) com sucesso.`, 'success');
             setSelectedLeads(new Set());
         } catch (err) {
-            const message = err instanceof Error ? err.message : 'Erro ao eliminar leads.';
+            const message = err instanceof Error ? err.message : 'Erro inesperado ao eliminar leads.';
+            console.error('[Leads] handleBulkDelete catch:', err);
             toast(message, 'error');
         } finally {
             setIsDeleting(false);

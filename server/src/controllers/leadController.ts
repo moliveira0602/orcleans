@@ -121,14 +121,21 @@ export async function deleteLead(req: AuthRequest, res: Response) {
 export async function deleteLeadsBulk(req: AuthRequest, res: Response) {
   try {
     const { leadIds } = req.body;
-    console.log('[leadController] deleteLeadsBulk - body:', req.body);
-    console.log('[leadController] deleteLeadsBulk - leadIds:', leadIds);
-    console.log('[leadController] deleteLeadsBulk - organizationId:', req.organizationId);
-    console.log('[leadController] deleteLeadsBulk - isSuperAdmin:', isSuperAdmin(req.userRole!));
+    
+    if (!leadIds || !Array.isArray(leadIds) || leadIds.length === 0) {
+      console.warn('[leadController] deleteLeadsBulk - Invalid or empty leadIds array');
+      return res.status(400).json({ error: 'Lista de IDs de leads inválida ou vazia' });
+    }
+
+    console.log(`[leadController] deleteLeadsBulk - Attempting to delete ${leadIds.length} leads`);
+    console.log('[leadController] leadIds sample:', leadIds.slice(0, 5));
+    console.log('[leadController] organizationId:', req.organizationId);
 
     const orgId = isSuperAdmin(req.userRole!) ? undefined : req.organizationId;
-    const result = await leadService.deleteLeadsBulk(orgId!, req.userId!, leadIds);
-    console.log('[leadController] deleteLeadsBulk - result:', result);
+    const result = await leadService.deleteLeadsBulk(orgId, req.userId!, leadIds);
+    
+    console.log(`[leadController] deleteLeadsBulk - Success: ${result.count} leads deleted`);
+    
     return res.status(200).json({ count: result.count });
   } catch (error: any) {
     console.error('[leadController] deleteLeadsBulk error:', error);

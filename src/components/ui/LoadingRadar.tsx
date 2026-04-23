@@ -199,7 +199,7 @@ const LoadingRadar: React.FC<LoadingRadarProps> = ({ size = 200, className }) =>
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: 'url("https://grainy-gradients.vercel.app/noise.svg")',
+        background: 'url("/noise.svg")',
         opacity: 0.05,
         pointerEvents: 'none',
         zIndex: 1

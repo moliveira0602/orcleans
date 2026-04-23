@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const API_BASE = (import.meta.env.VITE_API_URL || '/api').trim();
 console.log('[API] Base URL:', API_BASE);
 
 interface ApiOptions extends RequestInit {

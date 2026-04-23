@@ -191,17 +191,28 @@ export async function deleteLead(organizationId: string, userId: string, leadId:
 }
 
 export async function deleteLeadsBulk(organizationId: string | undefined, _userId: string, leadIds: string[]) {
-  if (!Array.isArray(leadIds) || leadIds.length === 0) {
-    throw new Error('Lista de leads inválida');
+  const cleanOrgId = organizationId?.trim();
+  const cleanIds = leadIds.map(id => id.trim()).filter(Boolean);
+
+  if (cleanIds.length === 0) {
+    throw new Error('Lista de leads inválida ou vazia');
   }
 
-  const where: Record<string, unknown> = { id: { in: leadIds } };
-  if (organizationId) {
-    where.organizationId = organizationId;
+  const where: any = { id: { in: cleanIds } };
+  if (cleanOrgId) {
+    where.organizationId = cleanOrgId;
   }
 
-  const result = await prisma.lead.deleteMany({ where });
-  return result;
+  console.log('[leadService] deleteLeadsBulk - Prisma where clause:', JSON.stringify(where));
+
+  try {
+    const result = await prisma.lead.deleteMany({ where });
+    console.log('[leadService] deleteLeadsBulk - Prisma result:', result);
+    return result;
+  } catch (err: any) {
+    console.error('[leadService] deleteLeadsBulk - Prisma error:', err);
+    throw new Error(`Erro ao eliminar leads no banco de dados: ${err.message}`);
+  }
 }
 
 export async function moveLeadPipeline(organizationId: string, leadId: string, stage: string) {
