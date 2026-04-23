@@ -57,7 +57,7 @@ export function Topbar({ currentPage, onNavigate, onSearch, onMobileMenuToggle }
                     onClick={onMobileMenuToggle}
                     title="Menu"
                 >
-                    <Menu size={20} strokeWidth={1.5} />
+                    <Menu size={20} strokeWidth={1.75} />
                 </button>
                 <div>
                     <div className="topbar-title" style={{ fontFamily: 'Satoshi, sans-serif', fontWeight: 700, letterSpacing: '0.08em', fontSize: '16px' }}>
@@ -68,7 +68,7 @@ export function Topbar({ currentPage, onNavigate, onSearch, onMobileMenuToggle }
             </div>
             <div className="topbar-right">
                 <div className="search-wrap">
-                    <span className="search-icon"><Search size={16} strokeWidth={1.5} /></span>
+                    <span className="search-icon"><Search size={18} strokeWidth={1.75} /></span>
                     <input
                         className="input"
                         type="text"
@@ -84,11 +84,10 @@ export function Topbar({ currentPage, onNavigate, onSearch, onMobileMenuToggle }
                 >
                     ↑ Importar
                 </button>
-                <button className="btn-icon" onClick={showNotif}>
-                    <Bell size={18} strokeWidth={1.5} />
+                    <Bell size={20} strokeWidth={1.75} />
                 </button>
                 <button className="btn-icon" onClick={logout} title="Sair">
-                    <LogOut size={18} strokeWidth={1.5} />
+                    <LogOut size={20} strokeWidth={1.75} />
                 </button>
             </div>
         </div>

@@ -1,69 +1,162 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 interface LoadingRadarProps {
   size?: number;
+  className?: string;
 }
 
-const LoadingRadar: React.FC<LoadingRadarProps> = ({ size = 200 }) => {
-  const [blips, setBlips] = useState<{ id: number; x: number; y: number; opacity: number }[]>([]);
+interface Blip {
+  id: number;
+  x: number;
+  y: number;
+  angle: number;
+  distance: number;
+  opacity: number;
+  createdAt: number;
+}
 
+const LoadingRadar: React.FC<LoadingRadarProps> = ({ size = 200, className }) => {
+  const [blips, setBlips] = useState<Blip[]>([]);
+  const radarRef = useRef<HTMLDivElement>(null);
+  const [rotation, setRotation] = useState(0);
+
+  // Animation loop for rotation and blip triggering
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (Math.random() > 0.7) {
+    let animationFrameId: number;
+    let lastTime = performance.now();
+
+    const animate = (time: number) => {
+      const delta = time - lastTime;
+      lastTime = time;
+
+      // Update rotation (360 degrees in 4 seconds)
+      const newRotation = (rotation + (delta * 360) / 4000) % 360;
+      setRotation(newRotation);
+
+      // Chance to spawn a blip ahead of the sweep
+      if (Math.random() > 0.96) {
         const id = Date.now();
-        const angle = Math.random() * Math.PI * 2;
-        const dist = Math.random() * (size / 2 - 10);
-        setBlips(prev => [...prev.slice(-4), {
+        // Spawn blip in the quadrant the sweep is heading towards
+        const spawnAngle = (newRotation + 20 + Math.random() * 40) % 360;
+        const distancePercent = 0.2 + Math.random() * 0.7;
+        const dist = (size / 2) * distancePercent;
+        
+        const rad = (spawnAngle - 90) * (Math.PI / 180);
+        const x = size / 2 + Math.cos(rad) * dist;
+        const y = size / 2 + Math.sin(rad) * dist;
+
+        setBlips(prev => [...prev.slice(-8), {
           id,
-          x: size / 2 + Math.cos(angle) * dist,
-          y: size / 2 + Math.sin(angle) * dist,
-          opacity: 1
+          x,
+          y,
+          angle: spawnAngle,
+          distance: distancePercent,
+          opacity: 0,
+          createdAt: time
         }]);
-
-        setTimeout(() => {
-          setBlips(prev => prev.filter(b => b.id !== id));
-        }, 2000);
       }
-    }, 500);
 
-    return () => clearInterval(interval);
-  }, [size]);
+      // Update blip opacities based on proximity to sweep
+      setBlips(prev => prev.map(blip => {
+        // Calculate angular distance between sweep and blip
+        let diff = (newRotation - blip.angle + 360) % 360;
+        
+        let newOpacity = 0;
+        if (diff < 10) {
+          // Pulse on hit
+          newOpacity = 1;
+        } else if (diff < 120) {
+          // Trail fade
+          newOpacity = 1 - (diff / 120);
+        }
+
+        return { ...blip, opacity: Math.max(blip.opacity * 0.95, newOpacity) };
+      }).filter(b => b.opacity > 0.01 || (time - b.createdAt < 2000)));
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [rotation, size]);
 
   return (
     <div 
-      className="radar-container"
+      ref={radarRef}
+      className={`radar-container ${className || ""}`}
       style={{ 
         width: size, 
         height: size,
         position: 'relative',
-        background: '#0A0A0A',
+        background: 'radial-gradient(circle at center, #111111 0%, #0A0A0A 100%)',
         borderRadius: '50%',
-        border: '1px solid #333333',
-        overflow: 'hidden'
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        overflow: 'hidden',
+        boxShadow: 'inset 0 0 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.02)'
       }}
     >
-      {/* Grid Rings */}
-      <div className="radar-ring" style={{ width: '100%', height: '100%', border: '1px solid rgba(255, 255, 255, 0.05)' }} />
-      <div className="radar-ring" style={{ width: '66%', height: '66%', top: '17%', left: '17%', border: '1px solid rgba(255, 255, 255, 0.05)' }} />
-      <div className="radar-ring" style={{ width: '33%', height: '33%', top: '33.5%', left: '33.5%', border: '1px solid rgba(255, 255, 255, 0.05)' }} />
+      {/* Grid Rings with distance markers */}
+      {[0.25, 0.5, 0.75, 1.0].map((scale, i) => (
+        <div 
+          key={i}
+          style={{ 
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            width: `${scale * 100}%`,
+            height: `${scale * 100}%`,
+            transform: 'translate(-50%, -50%)',
+            border: '1px solid rgba(255, 255, 255, 0.03)',
+            borderRadius: '50%',
+            pointerEvents: 'none'
+          }}
+        >
+          {scale === 1.0 && (
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              right: '4px',
+              transform: 'translateY(-50%)',
+              fontSize: '8px',
+              color: 'rgba(255, 255, 255, 0.2)',
+              fontFamily: 'monospace'
+            }}>5km</div>
+          )}
+        </div>
+      ))}
       
-      {/* Crosshair */}
-      <div style={{ position: 'absolute', top: '50%', left: 0, width: '100%', height: '1px', background: 'rgba(255, 255, 255, 0.05)' }} />
-      <div style={{ position: 'absolute', left: '50%', top: 0, width: '1px', height: '100%', background: 'rgba(255, 255, 255, 0.05)' }} />
+      {/* Dynamic Scan Line / Crosshair */}
+      <div style={{ position: 'absolute', top: '50%', left: 0, width: '100%', height: '1px', background: 'rgba(255, 255, 255, 0.02)' }} />
+      <div style={{ position: 'absolute', left: '50%', top: 0, width: '1px', height: '100%', background: 'rgba(255, 255, 255, 0.02)' }} />
 
-      {/* Sweep */}
+      {/* The Sweep - High contrast and glow */}
       <div 
-        className="radar-sweep"
         style={{ 
           position: 'absolute',
           top: '50%',
           left: '50%',
           width: '50%',
           height: '50%',
-          background: 'conic-gradient(from 0deg, rgba(255, 255, 255, 0.15) 0deg, transparent 90deg)',
+          background: 'conic-gradient(from 0deg, rgba(255, 255, 255, 0.25) 0deg, rgba(255, 255, 255, 0.1) 40deg, transparent 120deg)',
           transformOrigin: '0 0',
-          animation: 'radar-sweep 4s linear infinite',
-          filter: 'blur(2px)'
+          transform: `rotate(${rotation - 90}deg)`,
+          filter: 'blur(1px)',
+          zIndex: 2
+        }}
+      />
+      
+      {/* Leading Edge Glow */}
+      <div 
+        style={{ 
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          width: '50%',
+          height: '2px',
+          background: 'linear-gradient(to right, rgba(255, 255, 255, 0.6), transparent)',
+          transformOrigin: '0 50%',
+          transform: `rotate(${rotation - 90}deg)`,
+          zIndex: 3
         }}
       />
 
@@ -71,35 +164,51 @@ const LoadingRadar: React.FC<LoadingRadarProps> = ({ size = 200 }) => {
       {blips.map(blip => (
         <div 
           key={blip.id}
-          className="radar-blip"
           style={{
             position: 'absolute',
-            left: blip.x,
-            top: blip.y,
+            left: blip.x - 2,
+            top: blip.y - 2,
             width: '4px',
             height: '4px',
             background: '#FFFFFF',
             borderRadius: '50%',
-            boxShadow: '0 0 8px #FFFFFF',
-            animation: 'radar-blip-fade 2s ease-out forwards'
+            opacity: blip.opacity,
+            boxShadow: `0 0 ${8 * blip.opacity}px rgba(255, 255, 255, 0.8)`,
+            transform: `scale(${0.5 + blip.opacity * 0.5})`,
+            transition: 'opacity 0.1s linear',
+            zIndex: 4
           }}
         />
       ))}
 
+      {/* Central Hub */}
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        width: '6px',
+        height: '6px',
+        background: '#FFFFFF',
+        borderRadius: '50%',
+        transform: 'translate(-50%, -50%)',
+        boxShadow: '0 0 10px rgba(255, 255, 255, 0.5)',
+        zIndex: 5
+      }} />
+
+      {/* Scanning Noise Overlay */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'url("https://grainy-gradients.vercel.app/noise.svg")',
+        opacity: 0.05,
+        pointerEvents: 'none',
+        zIndex: 1
+      }} />
+
       <style>{`
-        .radar-ring {
-          position: absolute;
-          border-radius: 50%;
-          box-sizing: border-box;
-        }
-        @keyframes radar-sweep {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes radar-blip-fade {
-          0% { opacity: 0; transform: scale(0); }
-          10% { opacity: 1; transform: scale(1.2); }
-          100% { opacity: 0; transform: scale(0.8); }
+        @keyframes radar-pulse {
+          0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+          100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
         }
       `}</style>
     </div>

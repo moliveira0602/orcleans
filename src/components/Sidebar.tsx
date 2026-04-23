@@ -4,7 +4,7 @@ import {
     LayoutDashboard,
     Users,
     Columns3,
-    Sparkles,
+    Radar,
     Upload,
     Grid3X3,
     Settings,
@@ -31,29 +31,29 @@ function buildNavItems(isSuperAdmin: boolean): { section: string; items: { id: P
         {
             section: 'PRINCIPAL',
             items: [
-                { id: 'dashboard', label: 'Centro de Comando', icon: <LayoutDashboard size={18} strokeWidth={1.5} /> },
-                { id: 'leads', label: 'Alvos', icon: <Users size={18} strokeWidth={1.5} /> },
-                { id: 'pipeline', label: 'Corrente', icon: <Columns3 size={18} strokeWidth={1.5} /> },
-                { id: 'insights', label: 'Sonar', icon: <Sparkles size={18} strokeWidth={1.5} /> },
+                { id: 'dashboard', label: 'Centro de Comando', icon: <LayoutDashboard size={20} strokeWidth={1.75} /> },
+                { id: 'leads', label: 'Alvos', icon: <Users size={20} strokeWidth={1.75} /> },
+                { id: 'pipeline', label: 'Corrente', icon: <Columns3 size={20} strokeWidth={1.75} /> },
+                { id: 'insights', label: 'Sonar', icon: <Radar size={20} strokeWidth={1.75} /> },
             ],
         },
         {
             section: 'DADOS',
             items: [
-                { id: 'import', label: 'Captura', icon: <Upload size={18} strokeWidth={1.5} /> },
-                { id: 'segments', label: 'Cardumes', icon: <Grid3X3 size={18} strokeWidth={1.5} /> },
+                { id: 'import', label: 'Captura', icon: <Upload size={20} strokeWidth={1.75} /> },
+                { id: 'segments', label: 'Cardumes', icon: <Grid3X3 size={20} strokeWidth={1.75} /> },
             ],
         },
         {
             section: 'CONTA',
             items: [
-                { id: 'settings', label: 'Navegação', icon: <Settings size={18} strokeWidth={1.5} /> },
+                { id: 'settings', label: 'Navegação', icon: <Settings size={20} strokeWidth={1.75} /> },
             ],
         },
     ];
 
     if (isSuperAdmin) {
-        items[2].items.push({ id: 'admin', label: 'Admin', icon: <Shield size={18} strokeWidth={1.5} /> });
+        items[2].items.push({ id: 'admin', label: 'Admin', icon: <Shield size={20} strokeWidth={1.75} /> });
     }
 
     return items;

@@ -84,7 +84,7 @@
   --font-b: 'Satoshi', sans-serif;
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
-  --transition: 200ms cubic-bezier(.4, 0, .2, 1);
+  --transition: 150ms cubic-bezier(.4, 0, .2, 1);
   --transition-slow: 300ms cubic-bezier(.4, 0, .2, 1);
 }
 
@@ -265,44 +265,65 @@ body {
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 10px;
+  gap: 12px;
+  padding: 10px 16px;
+  margin: 2px 8px;
   border-radius: 8px;
   cursor: pointer;
   transition: all var(--transition);
-  color: var(--t3);
+  color: var(--orca-text-dim);
   font-size: 13px;
   font-weight: 500;
   border: none;
   background: none;
-  width: 100%;
   text-align: left;
   font-family: var(--font-b);
+  position: relative;
+  width: auto;
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--orca-text);
+  background: rgba(255, 255, 255, 0.06);
+  color: #FFFFFF;
 }
 
 .nav-item.active {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
   color: #FFFFFF;
   font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 15%;
+  height: 70%;
+  width: 3px;
+  background: #FFFFFF;
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
 .nav-item.active .nav-icon {
   color: #FFFFFF;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
 }
 
 .nav-icon {
-  font-size: 15px;
-  width: 18px;
+  font-size: 16px;
+  width: 20px;
   text-align: center;
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: center
+  justify-content: center;
+  transition: transform var(--transition);
+}
+
+.nav-item:hover .nav-icon {
+  transform: scale(1.1);
 }
 
 .nav-badge {

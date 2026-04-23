@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { Radar } from 'lucide-react';
 import { useAppState, useAppDispatch } from '../store';
 import { getLeadName, getLeadCategory, detectAddressCol, getLeadAddress, detectPostalCol, getLeadPostal, detectLatCol, detectLngCol, getRawCoord } from '../utils/detect';
 import { scoreClass } from '../utils/scoring';
@@ -675,7 +676,7 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                             color: '#FFFFFF'
                         }}
                     >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                        <Radar size={18} strokeWidth={1.75} />
                         Iniciar Varredura
                     </button>
                     {scanStatus?.hasCache && (
