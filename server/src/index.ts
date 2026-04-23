@@ -1,5 +1,6 @@
 import express, { type Request, type Response, type NextFunction } from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 
 // Load environment variables
 import './config/env';
@@ -39,11 +40,36 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// ── RATE LIMITING ─────────────────────────────────────────────────────────────
+// Auth endpoints: 20 attempts per 15 min per IP — brute force protection
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas tentativas. Tente novamente em 15 minutos.' },
+  skip: (req) => req.method === 'OPTIONS',
+});
+
+// API general: 300 requests per minute per IP
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Limite de pedidos atingido. Tente novamente em breve.' },
+  skip: (req) => req.method === 'OPTIONS',
+});
+
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api', apiLimiter);
+// ─────────────────────────────────────────────────────────────────────────────
+
 app.get('/api/health', async (_req: Request, res: Response) => {
   try {
-    // Test database connection
     await prisma.$connect();
-    res.json({ status: 'ok', timestamp: new Date().toISOString(), version: 'v1' });
+    res.json({ status: 'ok', timestamp: new Date().toISOString(), version: 'v2' });
   } catch (err: any) {
     console.error('Health check error:', err);
     res.status(500).json({ error: err.message || 'Internal server error' });
