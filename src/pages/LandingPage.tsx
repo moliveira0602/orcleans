@@ -109,48 +109,48 @@ const clientLogos = [
 const pricingPlans = [
     {
         name: "Starter",
-        description: "Para equipes pequenas que estão começando",
+        description: "Para pequenos negócios que precisam prospectar",
         monthlyPrice: 49,
         annualPrice: 39,
         features: [
-            "Até 500 leads",
+            "Até 500 leads / mês",
             "Score automático básico",
             "Pipeline visual",
             "Importação CSV/Excel",
             "Suporte por email",
             "1 utilizador"
         ],
-        cta: "Ver minha lista grátis",
+        cta: "Começar agora",
         highlighted: false,
         badge: null
     },
     {
-        name: "Growth",
+        name: "Pro",
         description: "Para equipes em crescimento acelerado",
-        monthlyPrice: 129,
-        annualPrice: 103,
+        monthlyPrice: 99,
+        annualPrice: 79,
         features: [
-            "Até 5.000 leads",
+            "Até 2.000 leads / mês",
             "Score avançado com IA",
-            "Sonar de mercado",
+            "Sonar de mercado completo",
             "Segmentação inteligente",
-            "Integração CRM",
-            "Relatórios avançados",
-            "Até 10 utilizadores",
+            "Integração CRM (Beta)",
+            "Relatórios de performance",
+            "Até 5 utilizadores",
             "Suporte prioritário"
         ],
-        cta: "Experimentar 7 Dias",
+        cta: "Experimentar 7 Dias Grátis",
         highlighted: true,
-        badge: "Mais escolhido por times de 5–15 pessoas"
+        badge: "Mais escolhido por times de vendas"
     },
     {
         name: "Enterprise",
         description: "Para grandes operações comerciais",
-        monthlyPrice: 299,
-        annualPrice: 239,
+        monthlyPrice: 249,
+        annualPrice: 199,
         features: [
-            "Leads ilimitados",
-            "IA personalizada",
+            "Até 10.000 leads / mês",
+            "IA de abordagem personalizada",
             "API dedicada",
             "Single Sign-On (SSO)",
             "Relatórios white-label",
@@ -158,7 +158,7 @@ const pricingPlans = [
             "Utilizadores ilimitados",
             "Suporte 24/7"
         ],
-        cta: "Falar com Vendas",
+        cta: "Falar com Especialista",
         highlighted: false,
         badge: null
     }
