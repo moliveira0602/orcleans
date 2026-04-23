@@ -1,39 +1,6 @@
 import { api } from './api';
 
-export interface Lead {
-  id: string;
-  nome: string;
-  segmento: string;
-  avaliacao: number | null;
-  reviews: number | null;
-  preco: string;
-  endereco: string;
-  cidade: string;
-  status: string;
-  horario: string;
-  telefone: string;
-  website: string;
-  email: string;
-  servicos: string[];
-  foto: string;
-  fotos: string[];
-  linkOrigem: string;
-  linkPedido: string;
-  observacoes: string;
-  score: number;
-  pipelineStage: string;
-  lat: number | null;
-  lng: number | null;
-  geocodeStatus: string;
-  insight: any;
-  notes: any;
-  raw: any;
-  importFile: string | null;
-  importDate: string | null;
-  importId: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Lead } from '../types';
 
 export interface LeadsResponse {
   leads: Lead[];

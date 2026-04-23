@@ -36,9 +36,9 @@ export interface Lead {
     // --- Platform internal ---
     id: string;
     _insight?: LeadInsight;
-    _score?: number;
-    _pipeline?: PipelineStage;
-    _importedAt?: number;
+    _score: number;
+    _pipeline: PipelineStage;
+    _importedAt: number;
     _importFile?: string;
     _importDate?: string;
     _importId?: string;
@@ -72,6 +72,8 @@ export interface Lead {
     lng?: number;
     geocodeStatus?: 'pending' | 'ok' | 'failed';
     insight?: LeadInsight;
+    createdAt?: string;
+    updatedAt?: string;
 
     // --- FIXED display columns (always shown, always in Portuguese) ---
     nome: string;           // Business/person name

@@ -19,9 +19,8 @@ import {
     Target,
     ShieldCheck,
     Globe,
-    Instagram,
-    Facebook,
-    Code
+    Code,
+    Share2
 } from 'lucide-react';
 import { useAppState, useAppDispatch } from '../store';
 import { useToast } from './Toast';
@@ -105,8 +104,8 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
             dispatch({ type: 'UPDATE_LEAD', payload: { id: lead.id, fields: { 
                 _pipeline: updatedLead.pipelineStage,
                 _lastContact: new Date().toISOString(),
-                outcomeScore: updatedLead.outcomeScore,
-                lastOutcome: updatedLead.lastOutcome
+                outcomeScore: updatedLead.outcomeScore || 0,
+                lastOutcome: updatedLead.lastOutcome || ''
             } } });
             
             refreshHistory();
@@ -177,7 +176,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
         toast(`Lead movido para "${label}"`, 'success');
         dispatch({
             type: 'ADD_ACTIVITY',
-            payload: { title: `Funil: ${name}`, sub: `Movido para ${label}`, icon: <Layout size={14} />, time: new Date().toISOString() },
+            payload: { title: `Funil: ${name}`, sub: `Movido para ${label}`, icon: 'pipeline', time: new Date().toISOString() },
         });
     };
 
@@ -332,7 +331,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                         </div>
                                         <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{scoreReason(lead)}</div>
                                     </div>
-                                    {lead.outcomeScore !== 0 && (
+                                    {typeof lead.outcomeScore === 'number' && lead.outcomeScore !== 0 && (
                                         <div style={{ padding: '4px 8px', background: 'var(--blue-dim)', border: '1px solid var(--blue)', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                                             <Target size={12} color="var(--blue)" />
                                             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--blue)' }}>IQ {lead.outcomeScore > 0 ? '+' : ''}{lead.outcomeScore}</span>
@@ -350,10 +349,10 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                             <Globe size={12} /> Website {enrichment.presence.hasWebsite ? <ShieldCheck size={10} /> : ''}
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: enrichment.presence.hasInstagram ? 'var(--blue)' : 'var(--t3)' }}>
-                                            <Instagram size={12} /> Instagram {enrichment.presence.hasInstagram ? <ShieldCheck size={10} /> : ''}
+                                            <Share2 size={12} /> Instagram {enrichment.presence.hasInstagram ? <ShieldCheck size={10} /> : ''}
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: enrichment.presence.hasFacebook ? 'var(--blue)' : 'var(--t3)' }}>
-                                            <Facebook size={12} /> Facebook {enrichment.presence.hasFacebook ? <ShieldCheck size={10} /> : ''}
+                                            <Share2 size={12} /> Facebook {enrichment.presence.hasFacebook ? <ShieldCheck size={10} /> : ''}
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: enrichment.presence.hasPixel ? 'var(--amber)' : 'var(--t3)' }}>
                                             <Code size={12} /> Pixel Ads {enrichment.presence.hasPixel ? <ShieldCheck size={10} /> : ''}

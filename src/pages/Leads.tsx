@@ -6,7 +6,7 @@ import ScoreRing from '../components/ScoreRing';
 import { exportLeadsCsv } from '../utils/export';
 import { useToast } from '../components/Toast';
 import { deleteLeadsBulk } from '../services/leads';
-import type { Lead } from '../types';
+import type { Lead, PipelineStage } from '../types';
 
 interface LeadsProps {
     searchQuery?: string;
@@ -34,7 +34,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
     const [scrollLeft, setScrollLeft] = useState(0);
     const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
     const [isDeleting, setIsDeleting] = useState(false);
-    const [bulkPipelineStage, setBulkPipelineStage] = useState('');
+    const [bulkPipelineStage, setBulkPipelineStage] = useState<PipelineStage | ''>('');
     const perPage = 25;
 
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -257,7 +257,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                                 className="input" 
                                 style={{ width: 140 }} 
                                 value={bulkPipelineStage} 
-                                onChange={(e) => setBulkPipelineStage(e.target.value)}
+                                onChange={(e) => setBulkPipelineStage(e.target.value as PipelineStage | '')}
                             >
                                 <option value="">Mover para...</option>
                                 <option value="novo">Novo</option>

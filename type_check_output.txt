@@ -1,0 +1,29 @@
+
+> orcalens@0.0.0 type-check
+> tsc
+
+src/components/AddLeadModal.tsx(54,42): error TS2322: Type '{ id: string; _score: number; _pipeline: "novo" | "qualificado" | "proposta" | "negociacao" | "ganho" | "perdido"; _importedAt: number; _importFile: string; _importDate: string; _notes: never[]; ... 31 more ...; updatedAt: string; }' is not assignable to type 'Lead'.
+  Types of property 'pipelineStage' are incompatible.
+    Type 'string' is not assignable to type 'PipelineStage | undefined'.
+src/components/LeadDetail.tsx(106,43): error TS2339: Property 'outcomeScore' does not exist on type 'Lead'.
+src/components/LeadDetail.tsx(107,42): error TS2339: Property 'lastOutcome' does not exist on type 'Lead'.
+src/components/LeadDetail.tsx(178,78): error TS2322: Type 'Element' is not assignable to type 'string'.
+src/components/LeadDetail.tsx(336,119): error TS18048: 'lead.outcomeScore' is possibly 'undefined'.
+src/components/LeadDetail.tsx(351,46): error TS2304: Cannot find name 'Instagram'.
+src/components/LeadDetail.tsx(354,46): error TS2304: Cannot find name 'Facebook'.
+src/pages/Insights.tsx(594,63): error TS2304: Cannot find name 'useDemoMode'.
+src/pages/Insights.tsx(597,17): error TS2304: Cannot find name 'setScanModalOpen'.
+src/pages/Insights.tsx(898,138): error TS2304: Cannot find name 'Users'.
+src/pages/Insights.tsx(899,138): error TS2304: Cannot find name 'Target'.
+src/pages/Leads.tsx(177,79): error TS2322: Type 'string' is not assignable to type 'PipelineStage'.
+src/services/leads.ts(120,31): error TS2551: Property '_score' does not exist on type 'Partial<Lead>'. Did you mean 'score'?
+src/services/leads.ts(121,47): error TS2339: Property '_pipeline' does not exist on type 'Partial<Lead>'.
+src/services/leads.ts(122,27): error TS2551: Property '_lat' does not exist on type 'Partial<Lead>'. Did you mean 'lat'?
+src/services/leads.ts(123,27): error TS2551: Property '_lng' does not exist on type 'Partial<Lead>'. Did you mean 'lng'?
+src/services/leads.ts(124,47): error TS2551: Property '_geocodeStatus' does not exist on type 'Partial<Lead>'. Did you mean 'geocodeStatus'?
+src/services/leads.ts(125,35): error TS2551: Property '_insight' does not exist on type 'Partial<Lead>'. Did you mean 'insight'?
+src/services/leads.ts(126,31): error TS2551: Property '_notes' does not exist on type 'Partial<Lead>'. Did you mean 'notes'?
+src/services/leads.ts(127,27): error TS2551: Property '_raw' does not exist on type 'Partial<Lead>'. Did you mean 'raw'?
+src/services/leads.ts(128,41): error TS2551: Property '_importFile' does not exist on type 'Partial<Lead>'. Did you mean 'importFile'?
+src/services/leads.ts(129,41): error TS2551: Property '_importDate' does not exist on type 'Partial<Lead>'. Did you mean 'importDate'?
+src/services/leads.ts(130,37): error TS2551: Property '_importId' does not exist on type 'Partial<Lead>'. Did you mean 'importId'?

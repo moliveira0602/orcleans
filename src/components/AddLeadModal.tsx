@@ -3,6 +3,7 @@ import { useAppDispatch, useAppState } from '../store';
 import { useToast } from './Toast';
 import { computeScore } from '../utils/scoring';
 import * as leadApi from '../services/leads';
+import type { Lead, PipelineStage } from '../types';
 
 interface AddLeadModalProps {
     open: boolean;
@@ -40,11 +41,12 @@ export default function AddLeadModal({ open, onClose }: AddLeadModalProps) {
                 score: Math.round(score),
                 pipelineStage: 'novo',
             });
-            const lead = {
+            const lead: Lead = {
                 ...serverLead,
                 id: serverLead.id,
-                _score: serverLead.score,
-                _pipeline: serverLead.pipelineStage as 'novo' | 'qualificado' | 'proposta' | 'negociacao' | 'ganho' | 'perdido',
+                _score: serverLead.score || 0,
+                _pipeline: (serverLead.pipelineStage as PipelineStage) || 'novo',
+                pipelineStage: (serverLead.pipelineStage as PipelineStage) || 'novo',
                 _importedAt: Date.now(),
                 _importFile: 'Manual',
                 _importDate: new Date().toISOString(),

@@ -3,7 +3,7 @@ import {
     Radar, Search, MapPin, Activity, Phone, Mail, 
     Share2, Star, Check, Trash2, FolderPlus, 
     ChevronRight, Info, AlertTriangle, Crosshair,
-    RotateCw, RefreshCw
+    RotateCw, RefreshCw, Users, Target
 } from 'lucide-react';
 import { useAppState, useAppDispatch } from '../store';
 import { getLeadName, getLeadCategory, detectAddressCol, getLeadAddress, detectPostalCol, getLeadPostal, detectLatCol, detectLngCol, getRawCoord } from '../utils/detect';
@@ -591,10 +591,9 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                     },
                 });
 
-                localStorage.setItem('orca_scan_demo', String(useDemoMode));
+                localStorage.setItem('orca_scan_demo', String(scanSource === 'demo'));
 
                 toast(`${result.imported} leads importados do scan!`, 'success');
-                setScanModalOpen(false);
             } else if (result.success) {
                 toast('Nenhum lead novo encontrado.', 'info');
             } else {
