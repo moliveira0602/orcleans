@@ -909,9 +909,9 @@ export default function LandingPage() {
                                         <li key={idx}><span className="feature-check"><Check size={14} /></span>{feature}</li>
                                     ))}
                                 </ul>
-                                <button className={`btn ${plan.highlighted ? 'btn-primary' : 'btn-ghost'} pricing-cta`}>
+                                <a href="/login" className={`btn ${plan.highlighted ? 'btn-primary' : 'btn-ghost'} pricing-cta`} style={{ textAlign: 'center', display: 'block', textDecoration: 'none' }}>
                                     {plan.cta}
-                                </button>
+                                </a>
                                 <p className="pricing-guarantee">Garantia de 7 dias ou seu dinheiro de volta</p>
                             </div>
                         ))}

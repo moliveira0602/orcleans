@@ -5,7 +5,8 @@ import { exportLeadsCsv } from '../utils/export';
 import { api } from '../services/api';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../services/auth';
-import { Code, RefreshCw } from 'lucide-react';
+import { Code, RefreshCw, Zap } from 'lucide-react';
+import { billingApi } from '../services/billing';
 
 export default function SettingsPage() {
     const { settings, leads, imports } = useAppState();
@@ -130,6 +131,21 @@ export default function SettingsPage() {
         }
     };
 
+    const handleUpgrade = async (planName: string) => {
+        if (planName.toLowerCase() === 'enterprise') {
+            toast('Para o plano Enterprise, por favor contacte o nosso suporte.', 'info');
+            return;
+        }
+
+        try {
+            toast(`A preparar checkout para o plano ${planName}...`, 'info');
+            const { url } = await billingApi.createCheckoutSession(planName.toLowerCase());
+            window.location.href = url; // Redirect to Stripe
+        } catch (err: any) {
+            toast(err.message || 'Erro ao iniciar checkout', 'error');
+        }
+    };
+
     return (
         <>
             <div className="grid-2">
@@ -215,7 +231,7 @@ export default function SettingsPage() {
                                 <div>
                                     <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase' }}>Plano Atual</div>
                                     <div style={{ fontSize: 18, fontWeight: 800, color: '#FFF', textTransform: 'capitalize' }}>
-                                        {loadingOrg ? '...' : org?.plan || 'Free'}
+                                        {loadingOrg ? '...' : (org?.plan === 'trial' ? 'Teste Grátis (7 dias)' : org?.plan || 'Free')}
                                     </div>
                                 </div>
                                 {org?.plan === 'trial' && org?.trialExpiresAt && (
@@ -228,18 +244,33 @@ export default function SettingsPage() {
                                 )}
                             </div>
 
-                            <div style={{ marginBottom: 6, display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600 }}>
-                                <span style={{ color: 'var(--t2)' }}>Consumo de Leads</span>
-                                <span style={{ color: '#FFF' }}>{org?.leadsConsumed || 0} / {org?.maxLeads || 0}</span>
-                            </div>
-                            <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 3, overflow: 'hidden' }}>
-                                <div style={{ 
-                                    height: '100%', 
-                                    background: '#FFF', 
-                                    width: `${Math.min(100, ((org?.leadsConsumed || 0) / (org?.maxLeads || 1)) * 100)}%`,
-                                    transition: 'width 0.5s ease'
-                                }} />
-                            </div>
+                            {(() => {
+                                const PLAN_LIMITS: Record<string, number> = {
+                                    'trial': 50,
+                                    'starter': 500,
+                                    'pro': 2000,
+                                    'enterprise': 10000
+                                };
+                                const effectiveMax = org?.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[org?.plan?.toLowerCase()] || 50);
+                                const consumption = org?.leadsConsumed || 0;
+                                
+                                return (
+                                    <>
+                                        <div style={{ marginBottom: 6, display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600 }}>
+                                            <span style={{ color: 'var(--t2)' }}>Consumo de Leads</span>
+                                            <span style={{ color: '#FFF' }}>{consumption} / {effectiveMax}</span>
+                                        </div>
+                                        <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 3, overflow: 'hidden' }}>
+                                            <div style={{ 
+                                                height: '100%', 
+                                                background: '#FFF', 
+                                                width: `${Math.min(100, (consumption / effectiveMax) * 100)}%`,
+                                                transition: 'width 0.5s ease'
+                                            }} />
+                                        </div>
+                                    </>
+                                );
+                            })()}
                         </div>
 
                         <div className="settings-row" style={{ border: 'none', padding: 0 }}>
@@ -247,9 +278,9 @@ export default function SettingsPage() {
                                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', marginBottom: 12 }}>Próximos Níveis</div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                     {[
-                                        { name: 'Starter', price: '149', leads: '500' },
-                                        { name: 'Performance', price: '349', leads: '2.500', hot: true },
-                                        { name: 'Enterprise', price: 'Sob consulta', leads: 'Ilimitado' },
+                                        { id: 'starter', name: 'Starter', price: '49', leads: '500' },
+                                        { id: 'pro', name: 'Pro', price: '99', leads: '2.000', hot: true },
+                                        { id: 'enterprise', name: 'Enterprise', price: '249', leads: '10.000' },
                                     ].map(p => (
                                         <div key={p.name} style={{ 
                                             display: 'flex', 
@@ -260,20 +291,28 @@ export default function SettingsPage() {
                                             background: p.hot ? 'rgba(255,255,255,0.05)' : 'transparent',
                                             border: p.hot ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent'
                                         }}>
-                                            <div>
+                                            <div style={{ flex: 1 }}>
                                                 <div style={{ fontSize: 12, fontWeight: 700, color: '#FFF' }}>{p.name}</div>
                                                 <div style={{ fontSize: 10, color: 'var(--t3)' }}>{p.leads} leads / mês</div>
                                             </div>
-                                            <div style={{ textAlign: 'right' }}>
-                                                <div style={{ fontSize: 12, fontWeight: 800, color: '#FFF' }}>{p.price !== 'Sob consulta' ? `R$ ${p.price}` : p.price}</div>
-                                                <div style={{ fontSize: 9, color: 'var(--t3)', textTransform: 'uppercase' }}>{p.price !== 'Sob consulta' ? '/ mês' : ''}</div>
+                                            <div style={{ textAlign: 'right', marginRight: 12 }}>
+                                                <div style={{ fontSize: 12, fontWeight: 800, color: '#FFF' }}>€ {p.price}</div>
+                                                <div style={{ fontSize: 9, color: 'var(--t3)', textTransform: 'uppercase' }}>/ mês</div>
                                             </div>
+                                            <button 
+                                                className={`btn ${p.hot ? 'btn-primary' : 'btn-ghost'} btn-sm`} 
+                                                style={{ padding: '4px 10px', height: 'auto', minHeight: 'unset', fontSize: 10 }}
+                                                onClick={() => handleUpgrade(p.id)}
+                                            >
+                                                {org?.plan === p.id ? 'Atual' : 'Assinar'}
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
-                                <button className="btn btn-primary" style={{ width: '100%', marginTop: 16 }}>
-                                    Fazer Upgrade
-                                </button>
+                                <div style={{ marginTop: 12, fontSize: 10, color: 'var(--t3)', textAlign: 'center' }}>
+                                    <Zap size={10} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                                    Pagamento seguro processado pelo Stripe
+                                </div>
                             </div>
                         </div>
                     </div>

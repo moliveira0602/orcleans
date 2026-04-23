@@ -12,6 +12,7 @@ import leadRoutes from './routes/leads';
 import adminRoutes from './routes/admin';
 import scanRoutes from './routes/scan';
 import organizationRoutes from './routes/organizations';
+import billingRoutes from './routes/billing';
 
 const app = express();
 
@@ -38,7 +39,12 @@ const corsOptions: cors.CorsOptions = {
 app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
 
-app.use(express.json({ limit: '5mb' }));
+app.use(express.json({ 
+  limit: '5mb',
+  verify: (req, res, buf) => {
+    (req as any).rawBody = buf;
+  }
+}));
 app.use(express.urlencoded({ extended: true }));
 
 // ── RATE LIMITING ─────────────────────────────────────────────────────────────
@@ -112,6 +118,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/scan', scanRoutes);
 app.use('/api/organizations', organizationRoutes);
+app.use('/api/billing', billingRoutes);
 
 const PORT = Number(process.env.PORT || env.PORT || 3333);
 

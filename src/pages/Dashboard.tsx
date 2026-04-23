@@ -24,7 +24,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
     const { leads, settings, activities } = useAppState();
     const dispatch = useAppDispatch();
     const toast = useToast();
-    const { user } = useAuth();
+    const { user, refreshProfile } = useAuth();
     const [scanModalOpen, setScanModalOpen] = useState(false);
     const [scanLoading, setScanLoading] = useState(false);
     const [scanProgress, setScanProgress] = useState('');
@@ -82,6 +82,8 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 // Sync to backend
                 try {
                     await createLeadsBulk(result.leads);
+                    // Refresh profile to update lead consumption counter
+                    await refreshProfile();
                 } catch (err) {
                     console.error('[Dashboard] Failed to sync leads to backend:', err);
                 }

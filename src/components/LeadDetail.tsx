@@ -283,89 +283,153 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     return (
         <>
             <div className={`detail-overlay ${leadId ? 'open' : ''}`} onClick={onClose} />
-            <div className={`detail-panel${leadId ? ' open' : ''}`}>
-                <div className="detail-header">
-                    <div>
-                        <div style={{ fontFamily: 'var(--font-d)', fontSize: 16, fontWeight: 700 }}>{name}</div>
-                        <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2 }}>{cat || 'Sem categoria'}</div>
+            <div className={`detail-panel${leadId ? ' open' : ''}`} style={{ 
+                background: 'rgba(10, 11, 16, 0.95)', 
+                backdropFilter: 'blur(20px)',
+                borderLeft: '1px solid rgba(255, 255, 255, 0.08)',
+                boxShadow: '-10px 0 30px rgba(0,0,0,0.5)'
+            }}>
+                <div className="detail-header" style={{ 
+                    padding: '24px 20px', 
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                    background: 'linear-gradient(to bottom, rgba(255,255,255,0.02), transparent)' 
+                }}>
+                    <div style={{ flex: 1 }}>
+                        <h2 style={{ 
+                            fontFamily: 'var(--font-d)', 
+                            fontSize: '20px', 
+                            fontWeight: 800, 
+                            color: '#FFF', 
+                            letterSpacing: '-0.02em',
+                            margin: 0
+                        }}>
+                            {name}
+                        </h2>
+                        <div style={{ 
+                            fontSize: '12px', 
+                            fontWeight: 600,
+                            color: 'var(--blue)', 
+                            marginTop: 4,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            opacity: 0.8
+                        }}>
+                            {cat || 'Sem categoria'}
+                        </div>
                     </div>
-                    <button className="btn-icon" onClick={onClose}><X size={20} /></button>
+                    <button className="btn-icon" onClick={onClose} style={{ 
+                        background: 'rgba(255,255,255,0.05)', 
+                        borderRadius: '12px',
+                        padding: '8px',
+                        transition: 'all 0.2s ease'
+                    }}>
+                        <X size={20} color="rgba(255,255,255,0.6)" />
+                    </button>
                 </div>
 
-                <div className="detail-tabs">
+                <div className="detail-tabs" style={{ 
+                    padding: '12px 20px', 
+                    background: 'rgba(0,0,0,0.2)',
+                    display: 'flex',
+                    gap: '8px'
+                }}>
                     {(['info', 'intel', 'notes'] as const).map((t) => (
-                        <button key={t} className={`detail-tab ${activeTab === t ? 'active' : ''}`} onClick={() => setActiveTab(t)}>
-                            {t === 'info' && <Database size={12} />}
-                            {t === 'intel' && <Zap size={12} />}
-                            {t === 'notes' && <FileText size={12} />}
-                            {t === 'info' ? 'Dados' : t === 'intel' ? 'Intel' : 'Notas'}
+                        <button 
+                            key={t} 
+                            className={`detail-tab ${activeTab === t ? 'active' : ''}`} 
+                            onClick={() => setActiveTab(t)}
+                            style={{
+                                flex: 1,
+                                padding: '10px 0',
+                                borderRadius: '10px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                background: activeTab === t ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                                border: activeTab === t ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid transparent',
+                                color: activeTab === t ? '#FFF' : 'rgba(255,255,255,0.4)',
+                                boxShadow: activeTab === t ? '0 4px 12px rgba(0,0,0,0.2)' : 'none'
+                            }}
+                        >
+                            {t === 'info' && <Database size={14} />}
+                            {t === 'intel' && <Zap size={14} />}
+                            {t === 'notes' && <FileText size={14} />}
+                            {t === 'info' ? 'DADOS' : t === 'intel' ? 'INTEL' : 'NOTAS'}
                         </button>
                     ))}
                 </div>
 
-                <div className="detail-body">
+                <div className="detail-body" style={{ padding: '20px' }}>
                     {activeTab === 'info' && (
                         <>
-                            {/* Score & Adaptive IQ */}
-                            <div className="detail-section">
-                                <div className="detail-section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span>Análise de Performance</span>
+                            {/* Performance Card */}
+                            <div className="detail-section" style={{ 
+                                background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
+                                padding: '20px',
+                                borderRadius: '16px',
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                marginBottom: '20px'
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                                    <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Análise de Performance</span>
                                     <button 
                                         className={`btn btn-ghost btn-sm ${enriching ? 'loading' : ''}`}
                                         onClick={handleEnrich}
                                         disabled={enriching}
-                                        style={{ fontSize: 10, padding: '2px 8px', gap: 4 }}
+                                        style={{ 
+                                            fontSize: '10px', 
+                                            background: 'rgba(255,255,255,0.05)', 
+                                            borderRadius: '8px',
+                                            height: '24px',
+                                            border: '1px solid rgba(255,255,255,0.1)'
+                                        }}
                                     >
-                                        <RotateCw size={10} className={enriching ? 'loading-spinner-fast' : ''} />
+                                        <RotateCw size={12} className={enriching ? 'loading-spinner-fast' : ''} />
                                         {enriching ? 'Scouting...' : 'Enriquecer'}
                                     </button>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
-                                    <div className={`score-ring score-${cls}`} style={{ width: 56, height: 56, fontSize: 20 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                    <div className={`score-ring score-${cls}`} style={{ 
+                                        width: 64, 
+                                        height: 64, 
+                                        fontSize: 22,
+                                        fontWeight: 800,
+                                        background: 'rgba(0,0,0,0.3)',
+                                        boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)'
+                                    }}>
                                         {lead._score.toFixed(1)}
                                     </div>
                                     <div style={{ flex: 1 }}>
-                                        <div style={{ fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            {cls === 'hot' ? <Flame size={14} color="var(--green)" /> : cls === 'warm' ? <Thermometer size={14} color="var(--amber)" /> : <Snowflake size={14} color="var(--t3)" />}
+                                        <div style={{ fontSize: 14, fontWeight: 700, color: '#FFF', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            {cls === 'hot' ? <Flame size={16} color="#4ADE80" /> : cls === 'warm' ? <Thermometer size={16} color="#FBBF24" /> : <Snowflake size={16} color="rgba(255,255,255,0.4)" />}
                                             {scoreLabel(lead._score, settings.hotThreshold, settings.warmThreshold)}
                                         </div>
-                                        <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{scoreReason(lead)}</div>
+                                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 4, lineHeight: 1.4 }}>{scoreReason(lead)}</div>
                                     </div>
-                                    {typeof lead.outcomeScore === 'number' && lead.outcomeScore !== 0 && (
-                                        <div style={{ padding: '4px 8px', background: 'var(--blue-dim)', border: '1px solid var(--blue)', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            <Target size={12} color="var(--blue)" />
-                                            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--blue)' }}>IQ {lead.outcomeScore > 0 ? '+' : ''}{lead.outcomeScore}</span>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
 
-                            {/* Digital Presence (Enrichment) */}
-                            {enrichment && (
-                                <div className="detail-section" style={{ background: 'var(--card2)', padding: 12, borderRadius: 12, border: '1px solid var(--border)', marginBottom: 20 }}>
-                                    <div className="detail-section-title" style={{ fontSize: 10, opacity: 0.6 }}>Presença Digital Detetada</div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: enrichment.presence.hasWebsite ? 'var(--green)' : 'var(--t3)' }}>
-                                            <Globe size={12} /> Website {enrichment.presence.hasWebsite ? <ShieldCheck size={10} /> : ''}
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: enrichment.presence.hasInstagram ? 'var(--blue)' : 'var(--t3)' }}>
-                                            <Share2 size={12} /> Instagram {enrichment.presence.hasInstagram ? <ShieldCheck size={10} /> : ''}
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: enrichment.presence.hasFacebook ? 'var(--blue)' : 'var(--t3)' }}>
-                                            <Share2 size={12} /> Facebook {enrichment.presence.hasFacebook ? <ShieldCheck size={10} /> : ''}
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: enrichment.presence.hasPixel ? 'var(--amber)' : 'var(--t3)' }}>
-                                            <Code size={12} /> Pixel Ads {enrichment.presence.hasPixel ? <ShieldCheck size={10} /> : ''}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
                             {/* Funil & Desfecho */}
-                            <div className="detail-section" style={{ background: 'var(--card2)', padding: 12, borderRadius: 12, border: '1px solid var(--border)' }}>
-                                <div className="detail-section-title">Estado no Funil</div>
-                                <div style={{ display: 'flex', gap: 8 }}>
-                                    <select className="input" style={{ flex: 1 }} value={lead._pipeline || 'novo'} onChange={(e) => movePipeline(e.target.value as PipelineStage)}>
+                            <div className="detail-section" style={{ 
+                                background: 'rgba(255,255,255,0.02)',
+                                padding: '16px',
+                                borderRadius: '16px',
+                                border: '1px dashed rgba(255,255,255,0.1)',
+                                marginBottom: '24px'
+                            }}>
+                                <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Estado no Funil</div>
+                                <div style={{ display: 'flex', gap: 10 }}>
+                                    <select className="input" style={{ 
+                                        flex: 1, 
+                                        background: 'rgba(0,0,0,0.3)', 
+                                        borderColor: 'rgba(255,255,255,0.1)',
+                                        height: '36px',
+                                        fontSize: '13px'
+                                    }} value={lead._pipeline || 'novo'} onChange={(e) => movePipeline(e.target.value as PipelineStage)}>
                                         <option value="novo">Novo</option>
                                         <option value="qualificado">Qualificado</option>
                                         <option value="proposta">Proposta</option>
@@ -375,7 +439,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                     </select>
                                     <button 
                                         className="btn btn-primary btn-sm" 
-                                        style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                                        style={{ height: '36px', padding: '0 16px' }}
                                         onClick={() => setOutcomeModalOpen(true)}
                                     >
                                         <Target size={14} /> Desfecho
@@ -383,41 +447,81 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                 </div>
                             </div>
 
-                            <div className="detail-section" style={{ marginTop: 20 }}>
-                                <div className="detail-section-title">Dados Gerais</div>
-                                {fields.map(([k, v]) => {
-                                    const vs = String(v || '');
-                                    const isEditing = editingField === k;
-                                    return (
-                                        <div className="detail-field" key={k}>
-                                            <span className="detail-field-label">{fieldLabel(k)}</span>
-                                            {isEditing ? (
-                                                <div style={{ display: 'flex', gap: 4, alignItems: 'center', flex: 1 }}>
-                                                    <input className="input" style={{ flex: 1, padding: '4px 8px', fontSize: 12 }} value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }} autoFocus />
-                                                    <button className="btn btn-primary btn-sm" onClick={saveEdit}><Check size={14} /></button>
-                                                </div>
-                                            ) : (
-                                                <span className="detail-field-value" onClick={() => startEdit(k, vs)} style={{ flex: 1, textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                    {vs.startsWith('http') ? <a href={vs} target="_blank" rel="noreferrer" style={{ color: 'var(--blue3)' }}><ExternalLink size={12} /> abrir</a> : vs || '—'}
-                                                </span>
-                                            )}
-                                        </div>
-                                    );
-                                })}
+                            {/* Info Table */}
+                            <div className="detail-section">
+                                <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Dados Gerais</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                    {fields.map(([k, v]) => {
+                                        const vs = String(v || '');
+                                        const isEditing = editingField === k;
+                                        return (
+                                            <div key={k} style={{ 
+                                                display: 'flex', 
+                                                justifyContent: 'space-between', 
+                                                padding: '10px 0',
+                                                borderBottom: '1px solid rgba(255,255,255,0.03)'
+                                            }}>
+                                                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>{fieldLabel(k)}</span>
+                                                {isEditing ? (
+                                                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                                        <input className="input" style={{ width: '150px', height: '28px', fontSize: '12px' }} value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }} autoFocus />
+                                                        <button className="btn btn-primary btn-sm" style={{ height: '28px', width: '28px', padding: 0 }} onClick={saveEdit}><Check size={14} /></button>
+                                                    </div>
+                                                ) : (
+                                                    <span 
+                                                        onClick={() => startEdit(k, vs)} 
+                                                        style={{ 
+                                                            fontSize: '13px', 
+                                                            color: '#FFF', 
+                                                            fontWeight: 600,
+                                                            cursor: 'pointer',
+                                                            maxWidth: '200px',
+                                                            textAlign: 'right',
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis'
+                                                        }}
+                                                    >
+                                                        {vs.startsWith('http') ? <a href={vs} target="_blank" rel="noreferrer" style={{ color: 'var(--blue)' }}><ExternalLink size={12} /> abrir</a> : vs || '—'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
 
                             {/* History Section */}
-                            <div className="detail-section">
-                                <div className="detail-section-title">Histórico Recente</div>
-                                {loadingHistory ? <div style={{ fontSize: 11, color: 'var(--t3)' }}>A carregar...</div> : 
-                                 contactHistory.length === 0 ? <div style={{ fontSize: 11, color: 'var(--t3)' }}>Sem registos.</div> : 
-                                 contactHistory.map(a => (
-                                    <div key={a.id} style={{ display: 'flex', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 12, alignItems: 'center' }}>
-                                        <span style={{ color: 'var(--blue)' }}>{a.icon}</span>
-                                        <span style={{ flex: 1 }}>{a.title} · <small style={{ color: 'var(--t3)' }}>{a.sub}</small></span>
-                                        <span style={{ fontSize: 10, color: 'var(--t3)' }}>{new Date(a.createdAt).toLocaleDateString()}</span>
-                                    </div>
-                                 ))}
+                            <div className="detail-section" style={{ marginTop: 32 }}>
+                                <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Histórico de Atividade</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                    {loadingHistory ? <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>A carregar...</div> : 
+                                    contactHistory.length === 0 ? <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>Nenhum contacto registado.</div> : 
+                                    contactHistory.map(a => (
+                                        <div key={a.id} style={{ 
+                                            display: 'flex', 
+                                            gap: 12, 
+                                            padding: '12px', 
+                                            background: 'rgba(255,255,255,0.02)', 
+                                            borderRadius: '12px',
+                                            alignItems: 'center' 
+                                        }}>
+                                            <div style={{ 
+                                                width: 32, 
+                                                height: 32, 
+                                                borderRadius: '8px', 
+                                                background: 'rgba(255,255,255,0.05)', 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                justifyContent: 'center',
+                                                color: 'var(--blue)'
+                                            }}>{a.icon}</div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontSize: 12, fontWeight: 700, color: '#FFF' }}>{a.title}</div>
+                                                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{new Date(a.createdAt).toLocaleDateString()} · {a.userName}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </>
                     )}
@@ -426,26 +530,39 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
 
                     {activeTab === 'notes' && (
                         <div className="detail-section">
-                            <div className="detail-section-title">Notas</div>
-                            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                                <textarea className="input" rows={2} placeholder="Adicionar nota..." value={noteText} onChange={(e) => setNoteText(e.target.value)} style={{ resize: 'none', flex: 1 }} />
-                                <button className="btn btn-primary btn-sm" onClick={addNote}>Salvar</button>
+                            <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Notas Privadas</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+                                <textarea className="input" rows={3} placeholder="Escreva uma observação importante sobre este lead..." value={noteText} onChange={(e) => setNoteText(e.target.value)} style={{ resize: 'none', background: 'rgba(0,0,0,0.3)', fontSize: '13px' }} />
+                                <button className="btn btn-primary" style={{ width: '100%', height: '40px' }} onClick={addNote}>Adicionar Nota</button>
                             </div>
-                            {notes.map((n, i) => (
-                                <div key={i} style={{ background: 'var(--card2)', borderRadius: 8, padding: '10px 12px', border: '1px solid var(--border)', marginBottom: 8 }}>
-                                    <div style={{ fontSize: 13, color: 'var(--t1)' }}>{n.text}</div>
-                                    <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 4 }}>{new Date(n.date).toLocaleString()}</div>
-                                </div>
-                            ))}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                {notes.map((n, i) => (
+                                    <div key={i} style={{ 
+                                        background: 'rgba(255,255,255,0.03)', 
+                                        borderRadius: '12px', 
+                                        padding: '14px', 
+                                        border: '1px solid rgba(255,255,255,0.05)' 
+                                    }}>
+                                        <div style={{ fontSize: 13, color: '#FFF', lineHeight: 1.5 }}>{n.text}</div>
+                                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 8, fontWeight: 700 }}>{new Date(n.date).toLocaleString()}</div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>
 
-                <div className="detail-footer">
-                    <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => handleContact('telefone')}><Phone size={14} /> Telefone</button>
-                    <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => handleContact('email')}><Mail size={14} /> Email</button>
-                    <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => handleContact('whatsapp')}><MessageCircle size={14} /> WhatsApp</button>
-                    <button className="btn btn-danger btn-sm" onClick={handleDelete}><Trash2 size={14} /></button>
+                <div className="detail-footer" style={{ 
+                    padding: '16px 20px', 
+                    background: 'rgba(0,0,0,0.3)',
+                    borderTop: '1px solid rgba(255,255,255,0.05)',
+                    display: 'flex',
+                    gap: 8
+                }}>
+                    <button className="btn btn-ghost" style={{ flex: 1, height: '40px', fontSize: '12px', background: 'rgba(255,255,255,0.03)' }} onClick={() => handleContact('telefone')}><Phone size={14} /> Telefone</button>
+                    <button className="btn btn-ghost" style={{ flex: 1, height: '40px', fontSize: '12px', background: 'rgba(255,255,255,0.03)' }} onClick={() => handleContact('email')}><Mail size={14} /> Email</button>
+                    <button className="btn btn-ghost" style={{ flex: 1, height: '40px', fontSize: '12px', background: 'rgba(255,255,255,0.03)' }} onClick={() => handleContact('whatsapp')}><MessageCircle size={14} /> WhatsApp</button>
+                    <button className="btn btn-danger" style={{ height: '40px', width: '40px', minWidth: '40px', padding: 0 }} onClick={handleDelete}><Trash2 size={16} /></button>
                 </div>
 
                 {emailModalOpen && <EmailTemplateModal lead={lead} onClose={() => setEmailModalOpen(false)} onSend={handleEmailSent} />}
@@ -474,31 +591,68 @@ function IntelligenceView({ lead, settings }: { lead: any, settings: any }) {
     
     const copy = (text: string) => { copyToClipboard(text); toast('Copiado!', 'success'); };
     
-    if (loading) return <div style={{ padding: 20, textAlign: 'center', fontSize: 12, color: 'var(--t3)' }}><RotateCw size={14} className="loading-spinner-fast" style={{ marginRight: 8 }} /> Analisando lead...</div>;
-    if (!insight) return <div style={{ padding: 20, textAlign: 'center', color: 'var(--t3)' }}>Sem análise disponível.</div>;
+    if (loading) return <div style={{ padding: '60px 20px', textAlign: 'center', fontSize: '13px', color: 'rgba(255,255,255,0.4)' }}><RotateCw size={18} className="loading-spinner-fast" style={{ marginBottom: 12, display: 'block', margin: '0 auto' }} /> Gerando inteligência artificial...</div>;
+    if (!insight) return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>Sem análise disponível para este lead.</div>;
     
     return (
-        <div>
-            <div style={{ padding: '8px 16px', display: 'flex', justifyContent: 'flex-end' }}>
-                <button className="btn btn-ghost btn-sm" onClick={handleRegenerate} style={{ fontSize: 10 }}><RotateCw size={10} /> Regenerar</button>
-            </div>
-            <div className="detail-section" style={{ background: 'var(--blue-dim)' }}>
-                <div className="flex space-between">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div style={{ 
+                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.02) 100%)',
+                padding: '20px',
+                borderRadius: '16px',
+                border: '1px solid rgba(59, 130, 246, 0.2)'
+            }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
                     <div>
-                        <div style={{ fontSize: 10, color: 'var(--blue)', fontWeight: 700 }}>IA STRATEGY</div>
-                        <div style={{ fontSize: 14, fontWeight: 700 }}>{getLeadCategory(lead, 'segmento') || 'Mercado'}</div>
+                        <div style={{ fontSize: 10, color: 'var(--blue)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>IA STRATEGY SCAN</div>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: '#FFF', marginTop: 4 }}>{getLeadCategory(lead, 'segmento') || 'Mercado Geral'}</div>
                     </div>
-                    <div className={`badge badge-${insight.strategy?.qualification === 'quente' ? 'green' : 'gray'}`}>{insight.strategy?.qualification?.toUpperCase()}</div>
+                    <div className={`badge badge-${insight.strategy?.qualification === 'quente' ? 'green' : 'gray'}`} style={{ height: '24px', padding: '0 10px' }}>
+                        {insight.strategy?.qualification?.toUpperCase()}
+                    </div>
+                </div>
+                <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>{insight.analysis?.overview}</div>
+            </div>
+
+            <div className="detail-section">
+                <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Dores & Oportunidades</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {insight.analysis?.pains?.map((p: string, i: number) => (
+                        <div key={i} style={{ 
+                            fontSize: 12, 
+                            color: '#FFF', 
+                            background: 'rgba(255,255,255,0.03)', 
+                            padding: '10px 12px', 
+                            borderRadius: '8px',
+                            borderLeft: '3px solid var(--blue)' 
+                        }}>{p}</div>
+                    ))}
                 </div>
             </div>
+
             <div className="detail-section">
-                <div className="detail-section-title">Dores & Oportunidades</div>
-                {insight.analysis?.pains?.map((p: string, i: number) => <div key={i} style={{ fontSize: 12 }}>• {p}</div>)}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Script Sugerido</div>
+                    <button className="btn btn-ghost btn-sm" onClick={() => copy(insight.templates?.email?.[0] || '')} style={{ height: '24px', fontSize: '10px' }}>Copiar</button>
+                </div>
+                <div style={{ 
+                    fontSize: 12, 
+                    background: 'rgba(0,0,0,0.3)', 
+                    padding: '16px', 
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    color: 'rgba(255,255,255,0.8)',
+                    lineHeight: 1.6,
+                    fontFamily: 'monospace'
+                }}>
+                    {insight.templates?.email?.[0]}
+                </div>
             </div>
-            <div className="detail-section">
-                <div className="detail-section-title">Modelos</div>
-                <pre style={{ fontSize: 11, background: 'var(--card2)', padding: 8, whiteSpace: 'pre-wrap' }}>{insight.templates?.email?.[0]}</pre>
-                <button className="btn btn-ghost btn-sm mt-4" onClick={() => copy(insight.templates?.email?.[0] || '')}>Copiar</button>
+
+            <div style={{ textAlign: 'center', paddingBottom: 20 }}>
+                <button className="btn btn-ghost btn-sm" onClick={handleRegenerate} style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px' }}>
+                    <RotateCw size={10} style={{ marginRight: 6 }} /> Atualizar análise de IA
+                </button>
             </div>
         </div>
     );
