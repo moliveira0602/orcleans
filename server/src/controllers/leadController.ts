@@ -136,7 +136,10 @@ export async function deleteLeadsBulk(req: AuthRequest, res: Response) {
     
     console.log(`[leadController] deleteLeadsBulk - Success: ${result.count} leads deleted`);
     
-    return res.status(200).json({ count: result.count });
+    return res.status(200).json({ 
+      count: result.count,
+      _debug: result.count === 0 ? result.diagnostic : undefined
+    });
   } catch (error: any) {
     console.error('[leadController] deleteLeadsBulk error:', error);
     return res.status(400).json({ error: error.message });

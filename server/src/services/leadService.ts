@@ -216,7 +216,17 @@ export async function deleteLeadsBulk(organizationId: string | undefined, _userI
   try {
     const result = await prisma.lead.deleteMany({ where });
     console.log('[leadService] deleteLeadsBulk - Prisma result:', result);
-    return result;
+    
+    // Retornar objeto com metadados para depuração
+    return { 
+      count: result.count,
+      diagnostic: {
+        totalFoundById: existingCount,
+        foundInOrg: cleanOrgId ? (await prisma.lead.count({ where })) : existingCount,
+        orgIdUsed: cleanOrgId,
+        idsRequested: cleanIds.length
+      }
+    };
   } catch (err: any) {
     console.error('[leadService] deleteLeadsBulk - Prisma error:', err);
     throw new Error(`Erro ao eliminar leads no banco de dados: ${err.message}`);
