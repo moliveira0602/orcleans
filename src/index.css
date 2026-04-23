@@ -497,9 +497,16 @@ body {
 }
 
 .btn-danger {
-  background: var(--red-dim);
-  color: var(--red);
-  border: 1px solid rgba(239, 68, 68, .2)
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, .3);
+  font-weight: 600;
+}
+
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, .5);
+  color: #ffffff;
 }
 
 .btn-sm {

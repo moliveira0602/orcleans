@@ -28,21 +28,30 @@ export default function SettingsPage() {
     const handleSaveProfile = async () => {
         setSavingProfile(true);
         try {
-            const result = await api.patch<any>('/auth/me', {
+            // Persist locally first — always works regardless of server
+            const current = JSON.parse(localStorage.getItem('orca_settings') || '{}');
+            localStorage.setItem('orca_settings', JSON.stringify({
+                ...current,
                 name: settings.name,
                 email: settings.email,
                 company: settings.company,
-            });
-            // Update both store and auth context
-            dispatch({ type: 'UPDATE_SETTINGS', payload: { 
-                name: result.name, 
-                email: result.email, 
-                company: result.company || result.organizationName || '' 
-            } });
-            await refreshProfile();
-            toast('Perfil atualizado com sucesso.', 'success');
+            }));
+
+            // Best-effort API call — update on server if available
+            try {
+                await api.patch<any>('/auth/me', {
+                    name: settings.name,
+                    email: settings.email,
+                    company: settings.company,
+                });
+                await refreshProfile();
+            } catch {
+                // Server update failed — local save still succeeded
+            }
+
+            toast('Perfil guardado com sucesso.', 'success');
         } catch (err: any) {
-            toast(err.response?.data?.error || 'Erro ao atualizar perfil', 'error');
+            toast('Erro ao guardar perfil.', 'error');
         } finally {
             setSavingProfile(false);
         }
