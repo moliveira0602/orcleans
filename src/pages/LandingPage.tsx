@@ -1562,6 +1562,7 @@ export default function LandingPage() {
                     margin: 0 !important;
                     padding: 0 !important;
                     z-index: 1;
+                    min-height: 800px;
                 }
                 .hero-bg { 
                     position: absolute; inset: 0; z-index: 0; overflow: hidden;
@@ -1573,7 +1574,7 @@ export default function LandingPage() {
                 }
                 .hero-gradient { 
                     position: absolute; inset: 0; 
-                    background: linear-gradient(180deg, rgba(10, 10, 10, 1) 0%, rgba(10, 10, 10, 0.4) 15%, rgba(10, 10, 10, 0) 50%, #0A0A0A 100%); 
+                    background: linear-gradient(180deg, rgba(10, 10, 10, 0.5) 0%, rgba(10, 10, 10, 0.2) 15%, rgba(10, 10, 10, 0) 50%, #0A0A0A 100%); 
                     z-index: 1; 
                 }
                 .hero-particles {
@@ -1583,7 +1584,7 @@ export default function LandingPage() {
                 }
                 .hero-content { 
                     position: relative; z-index: 10; text-align: center; max-width: 900px; margin: 0 auto;
-                    padding-top: 120px !important;
+                    padding-top: 40px !important;
                 }
                 .hero-badge {
                     display: inline-block; padding: 6px 16px; background: rgba(255, 255, 255, 0.1);
