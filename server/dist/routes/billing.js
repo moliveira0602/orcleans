@@ -57,8 +57,8 @@ router.post('/create-checkout-session', auth_1.authenticate, async (req, res) =>
                 },
             ],
             mode: 'subscription',
-            success_url: `${process.env.FRONTEND_URL}/settings?session_id={CHECKOUT_SESSION_ID}&success=true`,
-            cancel_url: `${process.env.FRONTEND_URL}/settings?success=false`,
+            success_url: `${process.env.FRONTEND_URL}/app/settings?session_id={CHECKOUT_SESSION_ID}&success=true`,
+            cancel_url: `${process.env.FRONTEND_URL}/app/settings?success=false`,
             customer_email: req.user.email,
             client_reference_id: orgId, // CRITICAL: To identify the org in webhook
             metadata: {
@@ -97,16 +97,20 @@ router.post('/webhook', async (req, res) => {
             const orgId = session.client_reference_id;
             const plan = session.metadata?.plan || 'starter';
             if (orgId) {
-                // Update organization to paid plan
+                const PLAN_LIMITS = {
+                    'starter': 500,
+                    'pro': 2000,
+                    'enterprise': 10000
+                };
+                // Update organization to paid plan and set maxLeads
                 await database_1.prisma.organization.update({
                     where: { id: orgId },
                     data: {
                         plan: plan,
-                        // Stripe limits are enforced by middleware, 
-                        // but we could also update maxLeads here explicitly
+                        maxLeads: PLAN_LIMITS[plan] || 50,
                     }
                 });
-                console.log(`[Stripe] Org ${orgId} upgraded to ${plan}`);
+                console.log(`[Stripe] Org ${orgId} upgraded to ${plan} (Limit: ${PLAN_LIMITS[plan] || 50})`);
             }
             break;
         case 'customer.subscription.deleted':

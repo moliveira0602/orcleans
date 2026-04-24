@@ -42,6 +42,24 @@ export default function Layout() {
     // Refresh leads on mount (Layout only renders when user is authenticated)
     useEffect(() => {
         refreshLeads();
+
+        // Check URL for direct page access (e.g., returning from Stripe)
+        const path = window.location.pathname;
+        if (path.endsWith('/settings')) {
+            setCurrentPage('settings');
+        } else if (path.endsWith('/leads')) {
+            setCurrentPage('leads');
+        } else if (path.endsWith('/pipeline')) {
+            setCurrentPage('pipeline');
+        } else if (path.endsWith('/insights')) {
+            setCurrentPage('insights');
+        } else if (path.endsWith('/import')) {
+            setCurrentPage('import');
+        } else if (path.endsWith('/segments')) {
+            setCurrentPage('segments');
+        } else if (path.endsWith('/admin')) {
+            setCurrentPage('admin');
+        }
     }, [refreshLeads]);
 
     useEffect(() => {
