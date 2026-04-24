@@ -1551,18 +1551,17 @@ export default function LandingPage() {
                 .hero-section { 
                     position: relative !important; 
                     top: 0 !important;
-                    height: 100vh !important;
                     width: 100% !important;
+                    min-height: 100vh !important;
                     overflow: hidden; 
                     display: flex !important; 
-                    flex-direction: column;
+                    flex-direction: column !important;
                     align-items: center !important; 
                     justify-content: flex-start !important; 
                     background: transparent !important;
                     margin: 0 !important;
                     padding: 0 !important;
                     z-index: 1;
-                    min-height: 800px;
                 }
                 .hero-bg { 
                     position: absolute; inset: 0; z-index: 0; overflow: hidden;
@@ -1583,8 +1582,15 @@ export default function LandingPage() {
                     background-size: 60px 60px; opacity: 0.3; z-index: 2;
                 }
                 .hero-content { 
-                    position: relative; z-index: 10; text-align: center; max-width: 900px; margin: 0 auto;
-                    padding-top: 40px !important;
+                    position: relative; 
+                    z-index: 10; 
+                    text-align: center; 
+                    max-width: 900px; 
+                    margin: 0 auto;
+                    padding-top: 80px !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    align-items: center !important;
                 }
                 .hero-badge {
                     display: inline-block; padding: 6px 16px; background: rgba(255, 255, 255, 0.1);
