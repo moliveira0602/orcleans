@@ -98,12 +98,12 @@ const testimonials = [
 
 // ===== DATA: Client Logos (B2B Authority) =====
 const clientLogos = [
-    { name: "Conta Azul", color: "var(--orca-text)" },
-    { name: "RD Station", color: "#00FF80" },
-    { name: "Pipedrive", color: "#FF6B35" },
-    { name: "Salesforce", color: "#A855F7" },
-    { name: "HubSpot", color: "#06B6D4" },
-    { name: "Rock Content", color: "#F59E0B" }
+    { name: "ALP", color: "var(--orca-text)" },
+    { name: "ContaHub", color: "var(--orca-text)" },
+    { name: "Katu Soluções", color: "var(--orca-text)" },
+    { name: "New Meaning", color: "var(--orca-text)" },
+    { name: "Etos", color: "var(--orca-text)" },
+    { name: "Mandacaru", color: "var(--orca-text)" }
 ];
 
 // ===== DATA: Pricing Plans =====
