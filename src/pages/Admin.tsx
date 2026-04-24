@@ -295,9 +295,21 @@ export default function AdminPage() {
     const fetchConfig = async () => {
         try {
             const result = await api.get<SystemConfig>('/admin/config');
-            setSystemConfig(result);
+            if (!result || Object.keys(result).length === 0) {
+                setSystemConfig({
+                    maintenanceMode: false,
+                    maintenanceMsg: 'Estamos em manutenção para melhorar a sua experiência. Voltamos em breve!'
+                });
+            } else {
+                setSystemConfig(result);
+            }
         } catch (err: any) {
             console.error('Config fetch error:', err);
+            // Fallback for UI visibility even if fetch fails
+            setSystemConfig({
+                maintenanceMode: false,
+                maintenanceMsg: 'Estamos em manutenção para melhorar a sua experiência. Voltamos em breve!'
+            });
         }
     };
 
@@ -1312,63 +1324,70 @@ export default function AdminPage() {
                 </div>
             )}
 
-            {activeTab === 'config' && systemConfig && (
-                <div className="card">
-                    <div className="sec-header">
-                        <div className="sec-title">Configurações Globais da Plataforma</div>
+            {activeTab === 'config' && (
+                !systemConfig ? (
+                    <div className="card" style={{ padding: 40, textAlign: 'center' }}>
+                        <div className="loading-spinner" />
+                        <div style={{ marginTop: 12, color: 'var(--t3)' }}>Carregando configurações...</div>
                     </div>
-                    
-                    <div style={{ padding: '24px 0', maxWidth: 600 }}>
-                        <div style={{ marginBottom: 32 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                                <div>
-                                    <h3 style={{ margin: 0, fontSize: 18 }}>Modo de Manutenção</h3>
-                                    <p style={{ margin: '4px 0 0', color: 'var(--t3)', fontSize: 14 }}>
-                                        Quando ativado, apenas Super Admins podem aceder à plataforma.
-                                    </p>
+                ) : (
+                    <div className="card">
+                        <div className="sec-header">
+                            <div className="sec-title">Configurações Globais da Plataforma</div>
+                        </div>
+                        
+                        <div style={{ padding: '24px 0', maxWidth: 600 }}>
+                            <div style={{ marginBottom: 32 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                    <div>
+                                        <h3 style={{ margin: 0, fontSize: 18 }}>Modo de Manutenção</h3>
+                                        <p style={{ margin: '4px 0 0', color: 'var(--t3)', fontSize: 14 }}>
+                                            Quando ativado, apenas Super Admins podem aceder à plataforma.
+                                        </p>
+                                    </div>
+                                    <button 
+                                        className={`btn ${systemConfig.maintenanceMode ? 'btn-red' : 'btn-ghost'}`}
+                                        onClick={() => setSystemConfig({...systemConfig, maintenanceMode: !systemConfig.maintenanceMode})}
+                                        style={{ minWidth: 120, display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center' }}
+                                    >
+                                        {systemConfig.maintenanceMode ? (
+                                            <><Pause size={16} /> Ativado</>
+                                        ) : (
+                                            <><Play size={16} /> Desativado</>
+                                        )}
+                                    </button>
                                 </div>
+                            </div>
+
+                            <div style={{ marginBottom: 32 }}>
+                                <label className="input-label" style={{ fontSize: 16, marginBottom: 8, display: 'block' }}>
+                                    Mensagem de Manutenção
+                                </label>
+                                <textarea 
+                                    className="input" 
+                                    style={{ minHeight: 120, resize: 'vertical', padding: '12px' }}
+                                    value={systemConfig.maintenanceMsg}
+                                    onChange={(e) => setSystemConfig({...systemConfig, maintenanceMsg: e.target.value})}
+                                    placeholder="Insira uma mensagem educada para os utilizadores..."
+                                />
+                                <p style={{ margin: '8px 0 0', color: 'var(--t3)', fontSize: 12 }}>
+                                    Esta mensagem será exibida a todos os utilizadores finais durante o período de manutenção.
+                                </p>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                                 <button 
-                                    className={`btn ${systemConfig.maintenanceMode ? 'btn-red' : 'btn-ghost'}`}
-                                    onClick={() => setSystemConfig({...systemConfig, maintenanceMode: !systemConfig.maintenanceMode})}
-                                    style={{ minWidth: 120, display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center' }}
+                                    className="btn btn-primary" 
+                                    onClick={handleUpdateConfig}
+                                    disabled={saving}
+                                    style={{ display: 'flex', gap: 8, alignItems: 'center' }}
                                 >
-                                    {systemConfig.maintenanceMode ? (
-                                        <><Pause size={16} /> Ativado</>
-                                    ) : (
-                                        <><Play size={16} /> Desativado</>
-                                    )}
+                                    <Check size={16} /> {saving ? 'A guardar...' : 'Guardar Configurações'}
                                 </button>
                             </div>
                         </div>
-
-                        <div style={{ marginBottom: 32 }}>
-                            <label className="input-label" style={{ fontSize: 16, marginBottom: 8, display: 'block' }}>
-                                Mensagem de Manutenção
-                            </label>
-                            <textarea 
-                                className="input" 
-                                style={{ minHeight: 120, resize: 'vertical', padding: '12px' }}
-                                value={systemConfig.maintenanceMsg}
-                                onChange={(e) => setSystemConfig({...systemConfig, maintenanceMsg: e.target.value})}
-                                placeholder="Insira uma mensagem educada para os utilizadores..."
-                            />
-                            <p style={{ margin: '8px 0 0', color: 'var(--t3)', fontSize: 12 }}>
-                                Esta mensagem será exibida a todos os utilizadores finais durante o período de manutenção.
-                            </p>
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <button 
-                                className="btn btn-primary" 
-                                onClick={handleUpdateConfig}
-                                disabled={saving}
-                                style={{ display: 'flex', gap: 8, alignItems: 'center' }}
-                            >
-                                <Check size={16} /> {saving ? 'A guardar...' : 'Guardar Configurações'}
-                            </button>
-                        </div>
                     </div>
-                </div>
+                )
             )}
 
             {showAddModal && (
