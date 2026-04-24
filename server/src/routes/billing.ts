@@ -15,9 +15,9 @@ if (!stripe) {
 
 // Map plans to Price IDs
 const PRICE_IDS: Record<string, string> = {
-  starter: 'price_1TPWCQJq2n16iSORo91dl3VH',
-  pro: 'price_1TPWDzJq2n16iSORxWQiY7RN',
-  enterprise: 'price_1TPWEkJq2n16iSORKZmEqbc7',
+  starter: 'price_1TPho6J3U3NJRDfEmGlYy3pA',
+  pro: 'price_1TPho3J3U3NJRDfE1AHivAkE',
+  enterprise: 'price_1TPho4J3U3NJRDfEjUz7xaMq',
 };
 
 /**
