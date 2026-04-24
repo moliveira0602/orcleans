@@ -1534,16 +1534,16 @@ export default function LandingPage() {
                 /* ===== HERO SECTION ===== */
                 .hero-section { 
                     position: relative; 
-                    min-height: 100vh !important;
+                    height: 100vh !important;
                     width: 100% !important;
                     overflow: hidden; 
                     display: flex !important; 
                     flex-direction: column;
                     align-items: center !important; 
-                    justify-content: flex-start !important; 
+                    justify-content: center !important; 
                     background: #0A0A0A;
                     margin: 0 !important;
-                    padding: 160px 24px 100px !important;
+                    padding: 100px 24px 60px !important;
                     z-index: 1;
                 }
                 .hero-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
@@ -1561,11 +1561,15 @@ export default function LandingPage() {
                     background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
                     background-size: 60px 60px; opacity: 0.3; z-index: 2;
                 }
-                .hero-content { position: relative; z-index: 10; text-align: center; max-width: 900px; margin: 0 auto; }
+                .hero-content { 
+                    position: relative; z-index: 10; text-align: center; max-width: 900px; margin: 0 auto;
+                    margin-top: 0 !important;
+                }
                 .hero-badge {
                     display: inline-block; padding: 6px 16px; background: rgba(255, 255, 255, 0.1);
                     border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px; font-size: 12px;
-                    font-weight: 600; color: var(--orca-text); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 24px;
+                    font-weight: 600; color: var(--orca-text); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 20px;
+                    margin-top: 0 !important;
                 }
                 .hero-title {
                     font-size: clamp(32px, 5.5vw, 52px); font-weight: 900; line-height: 1.05;
