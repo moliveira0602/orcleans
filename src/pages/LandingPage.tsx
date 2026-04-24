@@ -533,7 +533,11 @@ export default function LandingPage() {
                         ))}
                     </nav>
                     <div className="landing-header-actions">
-                        <button onClick={() => window.location.href = '/login'} className="btn btn-ghost btn-sm desktop-only" style={{ color: 'var(--orca-text)' }}>
+                        <button 
+                            onClick={() => window.location.href = '/login'} 
+                            className="btn btn-ghost btn-sm" 
+                            style={{ color: '#EAF6FF', fontWeight: 600, border: '1px solid rgba(255,255,255,0.1)', padding: '6px 16px' }}
+                        >
                             Login
                         </button>
                         <button 
@@ -560,6 +564,13 @@ export default function LandingPage() {
                                         {item.label}
                                     </button>
                                 ))}
+                                <button 
+                                    className="btn btn-primary w-full mobile-login" 
+                                    style={{ marginTop: 24, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }} 
+                                    onClick={() => window.location.href = '/login'}
+                                >
+                                    Login
+                                </button>
                             </div>
                         </div>
                     </div>
