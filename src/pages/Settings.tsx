@@ -27,10 +27,16 @@ export default function SettingsPage() {
     const fetchOrg = async () => {
         setLoadingOrg(true);
         try {
-            const res = await api.get('/organizations/me');
+            const res = await api.get<any>('/organizations/me');
+            // If the server doesn't return leadsConsumed (or returns 0), fallback to local count
+            if (res && (res.leadsConsumed === 0 || res.leadsConsumed === undefined) && leads.length > 0) {
+                res.leadsConsumed = leads.length;
+            }
             setOrg(res);
         } catch (err) {
             console.error('Failed to fetch org:', err);
+            // Fallback: build a synthetic org object from local data
+            setOrg({ leadsConsumed: leads.length, maxLeads: 50, plan: 'trial' });
         } finally {
             setLoadingOrg(false);
         }
@@ -252,7 +258,8 @@ export default function SettingsPage() {
                                     'enterprise': 10000
                                 };
                                 const effectiveMax = org?.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[org?.plan?.toLowerCase()] || 50);
-                                const consumption = org?.leadsConsumed || 0;
+                                // Use local lead count as authoritative fallback if server counter is 0
+                                const consumption = (org?.leadsConsumed && org.leadsConsumed > 0) ? org.leadsConsumed : leads.length;
                                 
                                 return (
                                     <>

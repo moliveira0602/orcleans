@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../config/database';
 import crypto from 'crypto';
-
-const prisma = new PrismaClient();
 
 export async function getOrganization(id: string) {
   // Sync lead count before returning
