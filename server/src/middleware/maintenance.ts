@@ -2,8 +2,14 @@ import type { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/database';
 
 export async function maintenanceMode(req: Request, res: Response, next: NextFunction) {
-  // Allow health check and OIDC token endpoint (for Vercel/Neon)
-  if (req.path === '/health' || req.path === '/api/health') {
+  // Allow health check, debug and ping routes even in maintenance
+  const isDiagnostic = 
+    req.path === '/health' || req.path === '/api/health' || 
+    req.path === '/ping' || req.path === '/api/ping' ||
+    req.path === '/ping-direct' ||
+    req.path === '/debug-routes' || req.path === '/api/debug-routes';
+
+  if (isDiagnostic) {
     return next();
   }
 
