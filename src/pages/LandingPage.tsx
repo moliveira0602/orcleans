@@ -511,6 +511,7 @@ export default function LandingPage() {
 
     return (
         <div className="landing-page">
+            <MistBackground />
             <div id="scroll-sentinel" style={{ position: 'absolute', top: 10, left: 0, width: 1, height: 1 }} />
             {/* ===== NAVBAR ===== */}
             <header className={`landing-header${scrolled ? ' scrolled' : ''}`}>
@@ -1365,11 +1366,11 @@ export default function LandingPage() {
                     transition: all 0.3s ease; background: transparent;
                 }
                 .landing-header.scrolled {
-                    background: rgba(10, 10, 10, 0.7);
-                    backdrop-filter: blur(20px) saturate(180%);
-                    -webkit-backdrop-filter: blur(20px) saturate(180%);
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                    background: rgba(5, 7, 10, 0.4);
+                    backdrop-filter: blur(24px) saturate(180%);
+                    -webkit-backdrop-filter: blur(24px) saturate(180%);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                    padding: 15px 0;
                 }
                 .landing-header-inner {
                     max-width: 1400px; margin: 0 auto; padding: 0 48px;
@@ -1425,8 +1426,9 @@ export default function LandingPage() {
                     top: 100%; 
                     left: 0; 
                     right: 0;
-                    background: rgba(10, 10, 10, 0.98); 
-                    backdrop-filter: blur(20px);
+                    background: rgba(5, 7, 10, 0.6); 
+                    backdrop-filter: blur(32px) saturate(180%);
+                    -webkit-backdrop-filter: blur(32px) saturate(180%);
                     border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
                     padding: 0 24px;
                     max-height: 0;
@@ -1471,9 +1473,14 @@ export default function LandingPage() {
                 }
 
                 /* ===== HERO SECTION ===== */
-                .hero-section {
-                    min-height: 100vh; display: flex; align-items: center; justify-content: center;
-                    position: relative; padding: 140px 24px 100px; overflow: visible;
+                .hero-section { 
+                    position: relative; 
+                    height: 100vh; 
+                    overflow: hidden; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    background: transparent; 
                 }
                 .hero-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
                 .hero-video {
@@ -1935,9 +1942,14 @@ export default function LandingPage() {
                 
                 .contact-card-container { position: relative; }
                 .contact-card-inner {
-                    background: rgba(51, 51, 51, 0.4); border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 24px; padding: 40px; backdrop-filter: blur(20px);
-                    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+                    background: rgba(255, 255, 255, 0.03);
+                    backdrop-filter: blur(20px);
+                    -webkit-backdrop-filter: blur(20px);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 24px;
+                    padding: 50px;
+                    position: relative;
+                    z-index: 1;
                 }
                 .inline-contact-form { display: flex; flex-direction: column; gap: 20px; }
                 .inline-contact-form label { font-size: 13px; font-weight: 500; color: rgba(234, 246, 255, 0.7); margin-bottom: 4px; display: block; }
