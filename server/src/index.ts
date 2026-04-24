@@ -119,6 +119,10 @@ app.get('/api/debug-routes', (req: Request, res: Response) => {
   });
 });
 
+app.get('/ping', (_req: Request, res: Response) => {
+  res.send(`pong - ${new Date().toISOString()} - v3`);
+});
+
 app.get('/api/health', async (_req: Request, res: Response) => {
   try {
     await prisma.$connect();
