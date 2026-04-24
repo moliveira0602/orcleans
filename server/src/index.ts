@@ -13,6 +13,7 @@ import adminRoutes from './routes/admin';
 import scanRoutes from './routes/scan';
 import organizationRoutes from './routes/organizations';
 import billingRoutes from './routes/billing';
+import contactRoutes from './routes/contact';
 import { maintenanceMode } from './middleware/maintenance';
 import { tryAuthenticate } from './middleware/auth';
 
@@ -150,6 +151,7 @@ app.use('/api/leads', leadRoutes);
 app.use('/api/scan', scanRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/billing', billingRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Error handling middleware - MUST BE LAST
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {

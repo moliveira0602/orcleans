@@ -27,6 +27,7 @@ import {
     BarChart
 } from 'lucide-react';
 import MistBackground from '../components/ui/MistBackground';
+import api from '../services/api';
 
 // ===== DATA: FAQ Items =====
 const faqItems = [
@@ -407,25 +408,21 @@ export default function LandingPage() {
 
         setIsSubmitting(true);
         try {
-            const res = await fetch('/sendmail.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: formData.name,
-                    email: formData.email,
-                    phone: formData.phone,
-                    company: formData.company,
-                    message: formData.message,
-                }),
+            const data = await api.post<any>('/contact', {
+                name: formData.name,
+                email: formData.email,
+                phone: formData.phone,
+                company: formData.company,
+                message: formData.message,
             });
-            const data = await res.json();
+            
             if (data.success) {
                 setFormSubmitted(true);
             } else {
                 alert('Erro ao enviar mensagem. Tente novamente ou escreva para moliveira@etos.pt');
             }
-        } catch {
-            alert('Erro de conexão. Tente novamente ou escreva para moliveira@etos.pt');
+        } catch (err: any) {
+            alert(err.message || 'Erro de conexão. Tente novamente ou escreva para moliveira@etos.pt');
         }
         setIsSubmitting(false);
     };
@@ -940,8 +937,119 @@ export default function LandingPage() {
                 </div>
             </section>
 
+            {/* ===== CONTACT SECTION ===== */}
+            <section id="contacto" className="contact-form-section">
+                <div className="container">
+                    <div className="contact-grid">
+                        <div className="contact-info">
+                            <span className="section-badge">Contacto</span>
+                            <h2 className="section-title">Pronto para acelerar as suas vendas?</h2>
+                            <p className="section-subtitle">
+                                Preencha o formulário e a nossa equipa entrará em contacto em menos de 24 horas para mostrar como a ORCA pode transformar a sua prospecção.
+                            </p>
+                            
+                            <div className="contact-methods">
+                                <div className="contact-method">
+                                    <div className="method-icon"><Mail size={20} /></div>
+                                    <div className="method-content">
+                                        <h4>Email</h4>
+                                        <p>moliveira@etos.pt</p>
+                                    </div>
+                                </div>
+                                <div className="contact-method">
+                                    <div className="method-icon"><MessageSquare size={20} /></div>
+                                    <div className="method-content">
+                                        <h4>Suporte</h4>
+                                        <p>Disponível das 9h às 18h</p>
+                                    </div>
+                                </div>
+                                <div className="contact-method">
+                                    <div className="method-icon"><Phone size={20} /></div>
+                                    <div className="method-content">
+                                        <h4>Telefone</h4>
+                                        <p>+351 900 000 000</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="contact-card-container">
+                            <div className="contact-card-inner">
+                                {!formSubmitted ? (
+                                    <form className="inline-contact-form" onSubmit={handleSubmit}>
+                                        <div className="form-group">
+                                            <label htmlFor="name-inline">Nome completo *</label>
+                                            <input 
+                                                type="text" 
+                                                id="name-inline" 
+                                                name="name" 
+                                                value={formData.name} 
+                                                onChange={handleInputChange} 
+                                                placeholder="Seu nome" 
+                                                required 
+                                            />
+                                            {formErrors.name && <span className="error-text">{formErrors.name}</span>}
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="email-inline">E-mail corporativo *</label>
+                                            <input 
+                                                type="email" 
+                                                id="email-inline" 
+                                                name="email" 
+                                                value={formData.email} 
+                                                onChange={handleInputChange} 
+                                                placeholder="seu@empresa.com" 
+                                                required 
+                                            />
+                                            {formErrors.email && <span className="error-text">{formErrors.email}</span>}
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="company-inline">Empresa *</label>
+                                            <input 
+                                                type="text" 
+                                                id="company-inline" 
+                                                name="company" 
+                                                value={formData.company} 
+                                                onChange={handleInputChange} 
+                                                placeholder="Sua empresa" 
+                                                required 
+                                            />
+                                            {formErrors.company && <span className="error-text">{formErrors.company}</span>}
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="message-inline">Como podemos ajudar?</label>
+                                            <textarea 
+                                                id="message-inline" 
+                                                name="message" 
+                                                value={formData.message} 
+                                                onChange={handleInputChange} 
+                                                placeholder="Descreva brevemente o que você precisa..." 
+                                                rows={4} 
+                                            />
+                                        </div>
+                                        <button type="submit" className="btn btn-primary btn-lg w-full" disabled={isSubmitting}>
+                                            {isSubmitting ? 'Enviando...' : 'Enviar Mensagem'}
+                                        </button>
+                                        <p className="form-privacy">Ao enviar, concorda com a nossa <a href="/privacidade">Política de Privacidade</a>.</p>
+                                    </form>
+                                ) : (
+                                    <div className="contact-success">
+                                        <div className="success-icon-circle">
+                                            <Check size={32} />
+                                        </div>
+                                        <h3>Mensagem enviada!</h3>
+                                        <p>Obrigado pelo contacto. A nossa equipa entrará em contacto consigo em breve.</p>
+                                        <button className="btn btn-ghost" onClick={() => setFormSubmitted(false)}>Enviar outra mensagem</button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* ===== CTA FINAL SECTION ===== */}
-            <section id="contacto" className="cta-section">
+            <section className="cta-section">
                 <div className="cta-bg">
                     <MistBackground />
                     <div className="cta-gradient" />
@@ -1716,6 +1824,70 @@ export default function LandingPage() {
                 }
                 .cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 1; }
                 .cta-section .btn { position: relative; z-index: 1; }
+
+                /* ===== NEW CONTACT FORM SECTION ===== */
+                .contact-form-section { 
+                    padding: 120px 0; 
+                    background: #0A0A0A; 
+                    position: relative; 
+                    z-index: 50;
+                    display: block !important;
+                    opacity: 1 !important;
+                }
+                .contact-grid { 
+                    display: grid; 
+                    grid-template-columns: 1fr 1fr; 
+                    gap: 80px; 
+                    align-items: start;
+                    opacity: 1 !important;
+                }
+                .contact-methods { display: flex; flex-direction: column; gap: 24px; margin-top: 40px; }
+                .contact-method { display: flex; gap: 16px; align-items: flex-start; }
+                .method-icon { 
+                    width: 44px; height: 44px; background: rgba(255, 255, 255, 0.05); 
+                    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+                    display: flex; align-items: center; justify-content: center; color: var(--orca-text);
+                    flex-shrink: 0;
+                }
+                .method-content h4 { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: #FFF; }
+                .method-content p { font-size: 14px; color: rgba(234, 246, 255, 0.5); }
+                
+                .contact-card-container { position: relative; }
+                .contact-card-inner {
+                    background: rgba(51, 51, 51, 0.4); border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 24px; padding: 40px; backdrop-filter: blur(20px);
+                    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+                }
+                .inline-contact-form { display: flex; flex-direction: column; gap: 20px; }
+                .inline-contact-form label { font-size: 13px; font-weight: 500; color: rgba(234, 246, 255, 0.7); margin-bottom: 4px; display: block; }
+                .inline-contact-form input, .inline-contact-form textarea {
+                    width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 12px; padding: 12px 16px; font-size: 14px; color: #FFF; outline: none;
+                    transition: all 0.3s ease;
+                }
+                .inline-contact-form input:focus, .inline-contact-form textarea:focus {
+                    border-color: var(--orca-text); background: rgba(0, 0, 0, 0.5);
+                }
+                .error-text { font-size: 12px; color: #EF4444; margin-top: 4px; display: block; }
+                .w-full { width: 100%; }
+                .form-privacy { font-size: 12px; color: rgba(234, 246, 255, 0.4); text-align: center; margin-top: 12px; }
+                .form-privacy a { color: var(--orca-text); text-decoration: none; }
+                
+                .contact-success { text-align: center; padding: 20px 0; }
+                .success-icon-circle {
+                    width: 64px; height: 64px; background: rgba(0, 255, 128, 0.1); border: 2px solid var(--orca-text);
+                    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                    margin: 0 auto 24px; color: var(--orca-text);
+                }
+                .contact-success h3 { font-size: 24px; font-weight: 700; margin-bottom: 12px; }
+                .contact-success p { font-size: 15px; color: rgba(234, 246, 255, 0.6); margin-bottom: 32px; }
+
+                @media (max-width: 900px) {
+                    .contact-grid { grid-template-columns: 1fr; gap: 60px; }
+                    .contact-info { text-align: center; }
+                    .contact-methods { align-items: center; }
+                    .contact-method { text-align: left; }
+                }
 
                 /* ===== CONTACT MODAL ===== */
                 .contact-modal-overlay {
