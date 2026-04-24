@@ -56,8 +56,17 @@ export async function createLeadsBulk(organizationId: string, userId: string, le
       throw new Error(`Importação excede o limite de ${maxBatch} leads por vez. Divida o arquivo em partes menores.`);
     }
 
-    if (org.leadsConsumed + leads.length > org.maxLeads) {
-      throw new Error(`Limite de leads atingido. Espaço disponível: ${org.maxLeads - org.leadsConsumed} leads.`);
+    const PLAN_LIMITS: Record<string, number> = {
+      'trial': 50,
+      'starter': 500,
+      'pro': 2000,
+      'enterprise': 10000
+    };
+    
+    const effectiveMaxLeads = org.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[(org.plan || '').toLowerCase()] || 50);
+
+    if (org.leadsConsumed + leads.length > effectiveMaxLeads) {
+      throw new Error(`Limite de leads atingido. Espaço disponível: ${effectiveMaxLeads - org.leadsConsumed} leads.`);
     }
 
     const data = leads.map((lead) => ({

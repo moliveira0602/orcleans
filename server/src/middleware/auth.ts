@@ -30,6 +30,12 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
     req.organizationId = decoded.organizationId;
     req.userRole = decoded.role as Role;
 
+    // Prevent aggressive caching of authenticated routes (CDN or Browser side)
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+
     return next();
   } catch {
     return res.status(401).json({ error: 'Token inválido ou expirado' });

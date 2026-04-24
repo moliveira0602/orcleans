@@ -61,12 +61,20 @@ function buildNavItems(isSuperAdmin: boolean): { section: string; items: { id: P
         items[2].items.push({ id: 'admin', label: 'Admin', icon: <Shield size={20} strokeWidth={1.75} /> });
     }
 
-    return items;
+        return items;
 }
+
+import { api } from '../services/api';
+import { useEffect } from 'react';
 
 export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, mobileOpen }: SidebarProps) {
     const { leads, settings } = useAppState();
     const [scanModalOpen, setScanModalOpen] = useState(false);
+    const [org, setOrg] = useState<any>(null);
+    
+    useEffect(() => {
+        api.get('/organizations/me').then(setOrg).catch(console.error);
+    }, []);
     
     // Get scan status for Sonar button
     const preset = SCAN_PRESETS['clinicasOlhao'];
@@ -74,6 +82,12 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, 
     const { logout, isSuperAdmin } = useAuth();
 
     const navItems = buildNavItems(isSuperAdmin);
+
+    const formatPlan = (plan: string) => {
+        if (!plan) return 'Plano Free';
+        if (plan === 'trial') return 'Teste Grátis';
+        return `Plano ${plan.charAt(0).toUpperCase() + plan.slice(1)}`;
+    };
 
     return (
         <aside className={`sidebar${collapsed ? ' collapsed' : ''}${mobileOpen ? ' mobile-open' : ''}`}>
@@ -121,7 +135,9 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, 
                 {!collapsed && (
                     <div>
                         <div className="user-name">{settings.name || 'Usuário'}</div>
-                        <div className="user-role">Plano Profissional</div>
+                        <div className="user-role" style={{ textTransform: 'capitalize' }}>
+                            {org ? formatPlan(org.plan) : '...'}
+                        </div>
                     </div>
                 )}
             </div>

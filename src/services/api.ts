@@ -109,6 +109,7 @@ class ApiClient {
       const response = await fetch(url.toString(), {
         ...restOptions,
         headers,
+        cache: 'no-store', // Crucial to prevent session cross-contamination
       });
 
       if (response.status === 401) {
@@ -118,6 +119,7 @@ class ApiClient {
           const retryResponse = await fetch(url.toString(), {
             ...restOptions,
             headers,
+            cache: 'no-store',
           });
 
           if (!retryResponse.ok) {

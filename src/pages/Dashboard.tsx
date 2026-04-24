@@ -84,8 +84,9 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                     await createLeadsBulk(result.leads);
                     // Refresh profile to update lead consumption counter
                     await refreshProfile();
-                } catch (err) {
+                } catch (err: any) {
                     console.error('[Dashboard] Failed to sync leads to backend:', err);
+                    toast('Erro ao sincronizar com servidor: ' + (err.message || 'Limite atingido'), 'error');
                 }
 
                 // Add activity
@@ -104,6 +105,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
 
                 toast(`${result.imported} leads importados do scan!`, 'success');
                 setScanModalOpen(false);
+                onNavigate('leads'); // Redirect user to the Leads tab after importing
             } else if (result.cached) {
                 toast('Scan recente já existe. Aguarde 7 dias ou limpe o cache.', 'info');
             } else if (result.success) {

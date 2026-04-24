@@ -351,9 +351,9 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
         setDupeMode('skip');
         if (fileInput.current) fileInput.current.value = '';
 
-        // Navigate to dashboard so user sees updated KPIs and fresh lead count
+        // Navigate to leads so user can view the newly imported targets
         if (onNavigate) {
-            onNavigate('dashboard');
+            onNavigate('leads');
         }
     };
 
