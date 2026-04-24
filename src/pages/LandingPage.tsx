@@ -1351,32 +1351,22 @@ export default function LandingPage() {
 
             <style>{`
                 /* ===== LANDING PAGE STYLES ===== */
-                html, body { 
+                html, body, #root, .landing-page, main { 
                     margin: 0 !important; 
                     padding: 0 !important; 
-                    overflow-y: auto !important; 
-                    scroll-behavior: smooth;
-                    background: #0A0A0A !important;
-                    height: 100% !important;
                     width: 100% !important;
-                }
-                
-                .landing-page {
-                    background: transparent !important;
-                    color: #EAF6FF;
-                    font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-                    overflow-x: hidden;
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    width: 100%;
-                    min-height: 100vh;
+                    height: 100% !important;
+                    background: #0A0A0A !important;
+                    overflow-x: hidden !important;
                     position: relative;
                 }
-
+                
                 main {
+                    display: block !important;
+                    position: relative !important;
+                    top: 0 !important;
                     margin: 0 !important;
                     padding: 0 !important;
-                    display: block;
                 }
 
                 .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
@@ -1414,8 +1404,13 @@ export default function LandingPage() {
 
                 /* ===== HEADER ===== */
                 .landing-header {
-                    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-                    transition: all 0.3s ease; background: transparent;
+                    position: fixed !important; 
+                    top: 0 !important; 
+                    left: 0 !important; 
+                    right: 0 !important; 
+                    z-index: 1000 !important;
+                    transition: all 0.3s ease; 
+                    background: transparent;
                 }
                 .landing-header.scrolled {
                     background: rgba(5, 7, 10, 0.4);
@@ -1527,7 +1522,8 @@ export default function LandingPage() {
 
                 /* ===== HERO SECTION ===== */
                 .hero-section { 
-                    position: relative; 
+                    position: relative !important; 
+                    top: 0 !important;
                     height: 100vh !important;
                     width: 100% !important;
                     overflow: hidden; 
@@ -1535,7 +1531,7 @@ export default function LandingPage() {
                     flex-direction: column;
                     align-items: center !important; 
                     justify-content: flex-start !important; 
-                    background: transparent;
+                    background: transparent !important;
                     margin: 0 !important;
                     padding: 0 !important;
                     z-index: 1;
