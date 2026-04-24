@@ -722,42 +722,6 @@ export default function LandingPage() {
                         </div>
                     </div>
 
-                    {/* ===== HOW IT WORKS INLINE CAPTURE ===== */}
-                    <div className="hero-capture-wrapper" style={{ marginTop: '48px' }}>
-                        {!heroCaptureSubmitted ? (
-                            <form className="hero-capture__form hero-capture__form-inline" onSubmit={handleHeroCapture}>
-                                <input className="hero-capture__input" type="email" placeholder="seu@email.com.br" required />
-                                <button type="submit" className="hero-capture__btn">
-                                    Ver meus leads grátis
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                        <line x1="5" y1="12" x2="19" y2="12"/>
-                                        <polyline points="12 5 19 12 12 19"/>
-                                    </svg>
-                                </button>
-                            </form>
-                        ) : (
-                            <div className="hero-capture__success hero-capture__success-inline">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <polyline points="20 6 9 17 4 12"/>
-                                </svg>
-                                <p>Perfeito! <span>Enviamos o acesso para seu email.</span> Verifique a caixa de entrada.</p>
-                            </div>
-                        )}
-                        <div className="hero-capture__trust">
-                            <span className="hero-capture__trust-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                                Sem cartão de crédito
-                            </span>
-                            <span className="hero-capture__trust-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                                7 dias grátis
-                            </span>
-                            <span className="hero-capture__trust-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                                LGPD compliant
-                            </span>
-                        </div>
-                    </div>
                 </div>
             </section>
 
@@ -1199,26 +1163,6 @@ export default function LandingPage() {
                 </div>
             )}
 
-            {/* ===== STICKY CTA BAR ===== */}
-            {!stickyBarDismissed && scrolled && (
-                <div className="sticky-bar visible">
-                    <div className="sticky-bar__left">
-                        <img src="/images/ORCA-white.png" alt="ORCA" className="sticky-bar__logo" />
-                        <span className="sticky-bar__sep"></span>
-                        <span className="sticky-bar__copy">Primeiros leads ainda hoje — setup em 10 min</span>
-                    </div>
-                    <div className="sticky-bar__right">
-                        <button className="sticky-bar__cta" onClick={openDemoModal}>
-                            Começar grátis
-                        </button>
-                        <button className="sticky-bar__dismiss" onClick={dismissStickyBar} title="Fechar">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            )}
 
             {/* ===== FLOATING WHATSAPP ===== */}
             <div className="float-contact">
