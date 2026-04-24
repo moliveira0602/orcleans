@@ -84,7 +84,7 @@ router.post('/webhook', async (req, res) => {
   // Handle the event
   switch (event.type) {
     case 'checkout.session.completed':
-      const session = event.data.object as Stripe.Checkout.Session;
+      const session = event.data.object as any;
       const orgId = session.client_reference_id;
       const plan = session.metadata?.plan || 'starter';
 
@@ -103,7 +103,7 @@ router.post('/webhook', async (req, res) => {
       break;
 
     case 'customer.subscription.deleted':
-      const subscription = event.data.object as Stripe.Subscription;
+      const subscription = event.data.object as any;
       // Handle cancellation logic (e.g., downgrade to trial or restricted mode)
       break;
 
