@@ -65,7 +65,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (api.isAuthenticated() && !user) {
+    // CRITICAL: Always validate session with server on page load.
+    // We CANNOT trust localStorage alone because the stored 'orca_user' 
+    // might belong to a DIFFERENT user than the current JWT token.
+    // For example: Marcos logs in, then Michelle logs in on the same browser.
+    // After Michelle's token expires and refreshes, the old 'orca_user' (Marcos)
+    // could pollute the session. Fix: always validate against /auth/me.
+    if (api.isAuthenticated()) {
       api.get<any>('/auth/me')
         .then((profile) => {
           const userData: User = {
@@ -82,12 +88,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           dispatch({ type: 'UPDATE_SETTINGS', payload: { name: profile.name, email: profile.email, company: profile.company || '' } });
         })
         .catch(() => {
+          // Token is invalid or expired - clear everything
           api.logout();
           clearSession();
           setUser(null);
         })
         .finally(() => setIsLoading(false));
     } else {
+      // No token at all - clear stale user data that might be from a previous user
+      clearSession();
+      setUser(null);
       setIsLoading(false);
     }
   }, []);
@@ -113,6 +123,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user?.id]);
 
   const login = useCallback(async (email: string, password: string) => {
+    // Clear any previous user's data BEFORE setting new tokens
+    clearSession();
     const result = await api.post<any>('/auth/login', { email, password });
     api.setTokens(result.accessToken, result.refreshToken);
     const userData: User = result.user;
