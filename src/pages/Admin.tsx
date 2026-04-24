@@ -839,9 +839,13 @@ export default function AdminPage() {
                 <div className="card">
                     <div className="sec-header">
                         <div className="sec-title">Leads Recebidos (Site / Demo)</div>
-                        <button className="btn btn-ghost btn-sm" onClick={fetchOrcaLeads}>
-                            <RefreshCw size={16} />
-                        </button>
+                        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                            <div className="badge badge-blue">Total: {orcaLeads.length}</div>
+                            <div className="badge badge-green">Novos: {orcaLeads.filter(l => l.status === 'new').length}</div>
+                            <button className="btn btn-ghost btn-sm" onClick={fetchOrcaLeads}>
+                                <RefreshCw size={16} />
+                            </button>
+                        </div>
                     </div>
                     <table>
                         <thead>

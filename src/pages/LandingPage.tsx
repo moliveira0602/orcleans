@@ -1147,7 +1147,7 @@ export default function LandingPage() {
                                             </div>
                                         </div>
                                         <div className="form-group">
-                                            <label htmlFor="phone">Telefone</label>
+                                            <label htmlFor="phone">Telefone / WhatsApp</label>
                                             <div className={`input-wrapper${formErrors.phone ? ' has-error' : ''}${formData.phone ? ' has-value' : ''}`}>
                                                 <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handlePhoneChange} placeholder="+351 9XX XXX XXX" autoComplete="tel" />
                                                 {formErrors.phone && <span className="field-error">{formErrors.phone}</span>}
