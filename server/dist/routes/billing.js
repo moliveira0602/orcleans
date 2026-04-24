@@ -8,9 +8,14 @@ const stripe_1 = __importDefault(require("stripe"));
 const auth_1 = require("../middleware/auth");
 const database_1 = require("../config/database");
 const router = (0, express_1.Router)();
-const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY || '', {
-    apiVersion: '2025-01-27',
-});
+const stripe = process.env.STRIPE_SECRET_KEY
+    ? new stripe_1.default(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: '2025-01-27',
+    })
+    : null;
+if (!stripe) {
+    console.warn('[Stripe] STRIPE_SECRET_KEY is missing. Billing features will be disabled.');
+}
 // Map plans to Price IDs
 const PRICE_IDS = {
     starter: 'price_1TPWCQJq2n16iSORo91dl3VH',
@@ -22,6 +27,9 @@ const PRICE_IDS = {
  * POST /billing/create-checkout-session
  */
 router.post('/create-checkout-session', auth_1.authenticate, async (req, res) => {
+    if (!stripe) {
+        return res.status(503).json({ error: 'Funcionalidade de pagamento não configurada no servidor.' });
+    }
     try {
         const { plan } = req.body;
         const priceId = PRICE_IDS[plan.toLowerCase()];
@@ -65,6 +73,8 @@ router.post('/create-checkout-session', auth_1.authenticate, async (req, res) =>
  * NOTE: This route needs raw body to verify signature
  */
 router.post('/webhook', async (req, res) => {
+    if (!stripe)
+        return res.status(503).send('Stripe not configured');
     const sig = req.headers['stripe-signature'];
     let event;
     try {

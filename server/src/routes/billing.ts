@@ -4,9 +4,15 @@ import { authenticate } from '../middleware/auth';
 import { prisma } from '../config/database';
 
 const router = Router();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-01-27' as any,
-});
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-01-27' as any,
+    })
+  : null;
+
+if (!stripe) {
+  console.warn('[Stripe] STRIPE_SECRET_KEY is missing. Billing features will be disabled.');
+}
 
 // Map plans to Price IDs
 const PRICE_IDS: Record<string, string> = {
@@ -20,6 +26,9 @@ const PRICE_IDS: Record<string, string> = {
  * POST /billing/create-checkout-session
  */
 router.post('/create-checkout-session', authenticate, async (req: any, res) => {
+  if (!stripe) {
+    return res.status(503).json({ error: 'Funcionalidade de pagamento não configurada no servidor.' });
+  }
   try {
     const { plan } = req.body;
     const priceId = PRICE_IDS[plan.toLowerCase()];
@@ -68,6 +77,7 @@ router.post('/create-checkout-session', authenticate, async (req: any, res) => {
  * NOTE: This route needs raw body to verify signature
  */
 router.post('/webhook', async (req, res) => {
+  if (!stripe) return res.status(503).send('Stripe not configured');
   const sig = req.headers['stripe-signature'] as string;
   let event;
 
