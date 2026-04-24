@@ -4,7 +4,13 @@ import nodemailer from 'nodemailer';
 const router = Router();
 
 router.post('/', async (req: Request, res: Response) => {
-  const { name, email, company, phone, message } = req.body;
+  const { name, email, company, phone, message, website } = req.body;
+
+  // Honeypot check
+  if (website) {
+    console.log('[SPAM] Honeypot field filled. Silently ignoring.');
+    return res.status(200).json({ success: true, message: 'Mensagem enviada com sucesso.' });
+  }
 
   // Basic validation
   if (!name || !email || !company) {

@@ -250,6 +250,7 @@ export default function LandingPage() {
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [formSubmitted, setFormSubmitted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [honeypot, setHoneypot] = useState('');
     const [heroAnimated, setHeroAnimated] = useState(false);
     const [heroPhrase, setHeroPhrase] = useState(0);
     const [demoModalOpen, setDemoModalOpen] = useState(false);
@@ -406,6 +407,12 @@ export default function LandingPage() {
             return;
         }
 
+        if (honeypot) {
+            setFormSubmitted(true);
+            setIsSubmitting(false);
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             const data = await api.post<any>('/contact', {
@@ -414,6 +421,7 @@ export default function LandingPage() {
                 phone: formData.phone,
                 company: formData.company,
                 message: formData.message,
+                website: honeypot
             });
             
             if (data.success) {
@@ -427,7 +435,10 @@ export default function LandingPage() {
         setIsSubmitting(false);
     };
 
-    const closeModal = () => setContactModalOpen(false);
+    const closeModal = () => {
+        setContactModalOpen(false);
+        setFormSubmitted(false);
+    };
 
     // Demo modal handlers
     const openDemoModal = () => setDemoModalOpen(true);
@@ -458,8 +469,29 @@ export default function LandingPage() {
     // Demo form handler
     const handleDemoSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        await new Promise(resolve => setTimeout(resolve, 1200));
-        closeDemoModal();
+        
+        if (honeypot) {
+            closeDemoModal();
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            await api.post('/contact', {
+                name: `${demoFormData.firstName} ${demoFormData.lastName}`,
+                email: demoFormData.email,
+                company: demoFormData.company,
+                message: `[PEDIDO DE DEMO]\nTamanho do time: ${demoFormData.teamSize}`,
+                website: honeypot
+            });
+            
+            alert('Recebemos o seu pedido de demo! Entraremos em contacto em breve.');
+            setDemoFormData({ firstName: '', lastName: '', email: '', company: '', teamSize: '' });
+            closeDemoModal();
+        } catch (err: any) {
+            alert('Erro ao processar pedido. Por favor tente novamente ou escreva para contacto@orcaleads.online');
+        }
+        setIsSubmitting(false);
     };
 
     const handleDemoInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -1007,6 +1039,18 @@ export default function LandingPage() {
                                         <button type="submit" className="btn btn-primary btn-lg w-full" disabled={isSubmitting}>
                                             {isSubmitting ? 'Enviando...' : 'Enviar Mensagem'}
                                         </button>
+
+                                        {/* Honeypot */}
+                                        <div style={{ display: 'none' }} aria-hidden="true">
+                                            <input 
+                                                type="text" 
+                                                name="website" 
+                                                tabIndex={-1} 
+                                                autoComplete="off" 
+                                                value={honeypot} 
+                                                onChange={(e) => setHoneypot(e.target.value)} 
+                                            />
+                                        </div>
                                         <p className="form-privacy">Ao enviar, concorda com a nossa <a href="/privacidade">Política de Privacidade</a>.</p>
                                     </form>
                                 ) : (
@@ -1104,6 +1148,18 @@ export default function LandingPage() {
                                     <button type="submit" className="btn btn-primary btn-lg form-submit" disabled={isSubmitting}>
                                         {isSubmitting ? <span className="btn-loading"><svg className="spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeDasharray="31.4" strokeDashoffset="10" strokeLinecap="round" /></svg>Enviando...</span> : 'Solicitar contacto'}
                                     </button>
+
+                                    {/* Honeypot */}
+                                    <div style={{ display: 'none' }} aria-hidden="true">
+                                        <input 
+                                            type="text" 
+                                            name="website" 
+                                            tabIndex={-1} 
+                                            autoComplete="off" 
+                                            value={honeypot} 
+                                            onChange={(e) => setHoneypot(e.target.value)} 
+                                        />
+                                    </div>
                                     <div className="form-trust">
                                         <div className="trust-item"><ShieldCheck size={14} /><span>Seus dados estão seguros</span></div>
                                         <div className="trust-item"><Clock size={14} /><span>Resposta em até 24h</span></div>
@@ -1167,9 +1223,21 @@ export default function LandingPage() {
                                     </select>
                                 </div>
                             </div>
-                            <button type="submit" className="demo-modal__submit">
-                                Receber demo personalizada
+                            <button type="submit" className="demo-modal__submit" disabled={isSubmitting}>
+                                {isSubmitting ? 'Enviando...' : 'Receber demo personalizada'}
                             </button>
+
+                            {/* Honeypot */}
+                            <div style={{ display: 'none' }} aria-hidden="true">
+                                <input 
+                                    type="text" 
+                                    name="website" 
+                                    tabIndex={-1} 
+                                    autoComplete="off" 
+                                    value={honeypot} 
+                                    onChange={(e) => setHoneypot(e.target.value)} 
+                                />
+                            </div>
                         </form>
                         <p className="demo-modal__fine-print">Sem cartão de crédito. Setup em 10 minutos.</p>
                     </div>
