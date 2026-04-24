@@ -12,7 +12,7 @@ const MistBackground: React.FC = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const gl = canvas.getContext('webgl');
+    const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: false });
     if (!gl) return;
 
     const vsSource = `
@@ -88,7 +88,7 @@ const MistBackground: React.FC = () => {
 
           // Post-processing
           color = pow(color, vec3(1.1)) * 1.4;
-          gl_FragColor = vec4(color, 1.0);
+          gl_FragColor = vec4(color, f * 0.4); // Mist transparency
       }
     `;
 
@@ -133,6 +133,9 @@ const MistBackground: React.FC = () => {
         canvas.height = window.innerHeight;
         gl.viewport(0, 0, canvas.width, canvas.height);
       }
+
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
 
       gl.uniform1f(timeLoc, time * 0.001);
       gl.uniform2f(resLoc, canvas.width, canvas.height);

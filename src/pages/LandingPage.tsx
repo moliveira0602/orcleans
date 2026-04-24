@@ -536,9 +536,6 @@ export default function LandingPage() {
                         <button onClick={() => window.location.href = '/login'} className="btn btn-ghost btn-sm desktop-only" style={{ color: 'var(--orca-text)' }}>
                             Login
                         </button>
-                        <button onClick={() => window.location.href = '/login'} className="btn btn-primary btn-sm desktop-only">
-                            Começar Agora
-                        </button>
                         <button 
                             className={`mobile-menu-btn ${mobileMenuOpen ? 'open' : ''}`} 
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -563,9 +560,6 @@ export default function LandingPage() {
                                         {item.label}
                                     </button>
                                 ))}
-                                <button className="btn btn-primary w-full mobile-login" style={{ marginTop: 24 }} onClick={() => window.location.href = '/login'}>
-                                    Começar Grátis
-                                </button>
                             </div>
                         </div>
                     </div>
