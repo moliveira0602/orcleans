@@ -126,7 +126,7 @@ app.get('/ping', (_req: Request, res: Response) => {
 app.get('/api/health', async (_req: Request, res: Response) => {
   try {
     await prisma.$connect();
-    res.json({ status: 'ok', timestamp: new Date().toISOString(), version: 'ANTIGRAVITY_FIX_V5' });
+    res.json({ status: 'ok', timestamp: new Date().toISOString(), version: 'V6_STRIPE_FIX' });
   } catch (err: any) {
     console.error('Health check error:', err);
     res.status(500).json({ error: err.message || 'Internal server error' });

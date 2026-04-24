@@ -154,7 +154,7 @@ app.get('/ping', (_req, res) => {
 app.get('/api/health', async (_req, res) => {
     try {
         await database_1.prisma.$connect();
-        res.json({ status: 'ok', timestamp: new Date().toISOString(), version: 'ANTIGRAVITY_FIX_V5' });
+        res.json({ status: 'ok', timestamp: new Date().toISOString(), version: 'V6_STRIPE_FIX' });
     }
     catch (err) {
         console.error('Health check error:', err);
