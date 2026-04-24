@@ -139,6 +139,14 @@ class ApiClient {
         }
       }
 
+      if (response.status === 503) {
+        const data = await response.json().catch(() => ({}));
+        if (data.maintenance && window.location.pathname !== '/maintenance') {
+          window.location.href = '/maintenance';
+          throw new Error(data.error || 'Em Manutenção');
+        }
+      }
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Erro na requisição' }));
         throw new Error(error.error || 'Erro na requisição');

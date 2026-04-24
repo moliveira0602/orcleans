@@ -180,3 +180,12 @@ model AuditLog {
   @@index([createdAt])
   @@map("audit_logs")
 }
+
+model SystemConfig {
+  id              String   @id @default("global")
+  maintenanceMode Boolean  @default(false)
+  maintenanceMsg  String   @default("Estamos em manutenção para melhorar a sua experiência. Voltamos em breve!")
+  updatedAt       DateTime @updatedAt
+
+  @@map("system_config")
+}

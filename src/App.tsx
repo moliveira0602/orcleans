@@ -10,6 +10,7 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
+import MaintenancePage from './pages/MaintenancePage';
 
 function LoadingScreen() {
     return (
@@ -64,6 +65,7 @@ export default function App() {
                                     <Route path="/" element={<LandingPage />} />
                                     <Route path="/privacidade" element={<PrivacyPage />} />
                                     <Route path="/termos" element={<TermsPage />} />
+                                    <Route path="/maintenance" element={<MaintenancePage />} />
                                     <Route
                                         path="/login"
                                         element={

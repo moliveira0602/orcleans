@@ -158,7 +158,12 @@ interface PipelineData {
     pipeline: Record<string, { id: string; nome: string; score: number }[]>;
 }
 
-type Tab = 'overview' | 'tenants' | 'users' | 'viewAs' | 'health' | 'logs' | 'support';
+interface SystemConfig {
+    maintenanceMode: boolean;
+    maintenanceMsg: string;
+}
+
+type Tab = 'overview' | 'tenants' | 'users' | 'viewAs' | 'health' | 'logs' | 'support' | 'config';
 
 const TAB_CONFIG = [
     { id: 'overview', label: 'Visão Geral', icon: Activity },
@@ -168,6 +173,7 @@ const TAB_CONFIG = [
     { id: 'health', label: 'Estado do Sistema', icon: Server },
     { id: 'logs', label: 'Logs de Auditoria', icon: Search },
     { id: 'support', label: 'Suporte', icon: Wrench },
+    { id: 'config', label: 'Configurações', icon: Wrench },
 ] as const;
 
 export default function AdminPage() {
@@ -180,6 +186,7 @@ export default function AdminPage() {
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [logTotal, setLogTotal] = useState(0);
     const [diagnostics, setDiagnostics] = useState<Diagnostics | null>(null);
+    const [systemConfig, setSystemConfig] = useState<SystemConfig | null>(null);
     
     const [selectedUserToView, setSelectedUserToView] = useState<string | null>(null);
     const [viewAsDashboard, setViewAsDashboard] = useState<ViewAsUserDashboard | null>(null);
@@ -285,6 +292,15 @@ export default function AdminPage() {
         }
     };
 
+    const fetchConfig = async () => {
+        try {
+            const result = await api.get<SystemConfig>('/admin/config');
+            setSystemConfig(result);
+        } catch (err: any) {
+            console.error('Config fetch error:', err);
+        }
+    };
+
     const fetchViewAsDashboard = async (userId: string) => {
         setViewAsLoading(true);
         try {
@@ -346,6 +362,7 @@ export default function AdminPage() {
                 fetchUsers(),
                 fetchLogs(),
                 fetchDiagnostics(),
+                fetchConfig(),
             ]);
 
             // Check if auth failed - redirect to login
@@ -601,6 +618,23 @@ export default function AdminPage() {
             l.entityType.toLowerCase().includes(logFilter.toLowerCase())
         )
         : logs;
+
+    const handleUpdateConfig = async () => {
+        if (!systemConfig) return;
+        setSaving(true);
+        try {
+            const res = await api.patch<SystemConfig>('/admin/config', {
+                maintenanceMode: systemConfig.maintenanceMode,
+                maintenanceMsg: systemConfig.maintenanceMsg
+            });
+            setSystemConfig(res);
+            toast('Configuração atualizada com sucesso!', 'success');
+        } catch (err: any) {
+            toast('Erro ao atualizar configuração', 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -1274,6 +1308,65 @@ export default function AdminPage() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'config' && systemConfig && (
+                <div className="card">
+                    <div className="sec-header">
+                        <div className="sec-title">Configurações Globais da Plataforma</div>
+                    </div>
+                    
+                    <div style={{ padding: '24px 0', maxWidth: 600 }}>
+                        <div style={{ marginBottom: 32 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: 18 }}>Modo de Manutenção</h3>
+                                    <p style={{ margin: '4px 0 0', color: 'var(--t3)', fontSize: 14 }}>
+                                        Quando ativado, apenas Super Admins podem aceder à plataforma.
+                                    </p>
+                                </div>
+                                <button 
+                                    className={`btn ${systemConfig.maintenanceMode ? 'btn-red' : 'btn-ghost'}`}
+                                    onClick={() => setSystemConfig({...systemConfig, maintenanceMode: !systemConfig.maintenanceMode})}
+                                    style={{ minWidth: 120, display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center' }}
+                                >
+                                    {systemConfig.maintenanceMode ? (
+                                        <><Pause size={16} /> Ativado</>
+                                    ) : (
+                                        <><Play size={16} /> Desativado</>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style={{ marginBottom: 32 }}>
+                            <label className="input-label" style={{ fontSize: 16, marginBottom: 8, display: 'block' }}>
+                                Mensagem de Manutenção
+                            </label>
+                            <textarea 
+                                className="input" 
+                                style={{ minHeight: 120, resize: 'vertical', padding: '12px' }}
+                                value={systemConfig.maintenanceMsg}
+                                onChange={(e) => setSystemConfig({...systemConfig, maintenanceMsg: e.target.value})}
+                                placeholder="Insira uma mensagem educada para os utilizadores..."
+                            />
+                            <p style={{ margin: '8px 0 0', color: 'var(--t3)', fontSize: 12 }}>
+                                Esta mensagem será exibida a todos os utilizadores finais durante o período de manutenção.
+                            </p>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <button 
+                                className="btn btn-primary" 
+                                onClick={handleUpdateConfig}
+                                disabled={saving}
+                                style={{ display: 'flex', gap: 8, alignItems: 'center' }}
+                            >
+                                <Check size={16} /> {saving ? 'A guardar...' : 'Guardar Configurações'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

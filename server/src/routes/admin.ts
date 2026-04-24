@@ -1041,4 +1041,42 @@ router.get('/users/:id/pipeline', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// System Config Routes
+router.get('/config', async (_req: AuthRequest, res: Response) => {
+  try {
+    const config = await prisma.systemConfig.findUnique({
+      where: { id: 'global' }
+    });
+    res.json(config);
+  } catch (error) {
+    console.error('Get config error:', error);
+    res.status(500).json({ error: 'Erro ao obter configuração' });
+  }
+});
+
+router.patch('/config', async (req: AuthRequest, res: Response) => {
+  try {
+    const { maintenanceMode, maintenanceMsg } = req.body;
+    const config = await prisma.systemConfig.upsert({
+      where: { id: 'global' },
+      update: {
+        maintenanceMode,
+        maintenanceMsg,
+      },
+      create: {
+        id: 'global',
+        maintenanceMode: maintenanceMode ?? false,
+        maintenanceMsg: maintenanceMsg ?? 'Estamos em manutenção para melhorar a sua experiência. Voltamos em breve!',
+      },
+    });
+    
+    await logAudit(req, 'config.updated', 'system_config', 'global', { maintenanceMode, maintenanceMsg });
+    
+    res.json(config);
+  } catch (error) {
+    console.error('Update config error:', error);
+    res.status(500).json({ error: 'Erro ao atualizar configuração' });
+  }
+});
+
 export default router;

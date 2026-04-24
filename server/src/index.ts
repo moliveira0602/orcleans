@@ -13,6 +13,7 @@ import adminRoutes from './routes/admin';
 import scanRoutes from './routes/scan';
 import organizationRoutes from './routes/organizations';
 import billingRoutes from './routes/billing';
+import { maintenanceMode } from './middleware/maintenance';
 
 const app = express();
 
@@ -71,6 +72,7 @@ const apiLimiter = rateLimit({
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api', apiLimiter);
+app.use('/api', maintenanceMode);
 // ─────────────────────────────────────────────────────────────────────────────
 
 app.get('/api/health', async (_req: Request, res: Response) => {
