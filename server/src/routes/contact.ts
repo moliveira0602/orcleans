@@ -22,6 +22,20 @@ router.post('/', async (req: Request, res: Response) => {
   }
 
   try {
+    // Save to database
+    const isDemo = message && message.includes('[PEDIDO DE DEMO]');
+    await prisma.orcaLead.create({
+      data: {
+        name,
+        email,
+        company,
+        phone: phone || '',
+        message: message || '',
+        type: isDemo ? 'demo' : 'contact',
+        source: 'landing_page'
+      }
+    });
+
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT || 587),

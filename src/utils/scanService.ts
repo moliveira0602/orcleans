@@ -110,7 +110,7 @@ async function enrichLead(lead: Lead): Promise<Lead> {
         const data: any = await api.get(`${API_BASES.google}/details`, {
             params: { 
                 place_id: placeId,
-                fields: 'formatted_phone_number,website,opening_hours' 
+                fields: 'formatted_phone_number,website,opening_hours,address_components,formatted_address' 
             }
         });
         
@@ -118,6 +118,19 @@ async function enrichLead(lead: Lead): Promise<Lead> {
             const r = data.result;
             lead.telefone = r.formatted_phone_number || lead.telefone;
             lead.website = r.website || lead.website;
+            
+            // Extract city from address_components if city is currently coordinates
+            if ((!lead.cidade || lead.cidade.includes(',')) && r.address_components) {
+                const cityComp = r.address_components.find((c: any) => 
+                    c.types.includes('locality') || 
+                    c.types.includes('administrative_area_level_2') ||
+                    c.types.includes('administrative_area_level_1')
+                );
+                if (cityComp) {
+                    lead.cidade = cityComp.long_name;
+                }
+            }
+
             if (r.website && !lead.email) {
                 try {
                     const domain = new URL(r.website).hostname.replace('www.', '');
@@ -157,9 +170,17 @@ function processPlaces(
             // Detect city from address if the input city was coordinates
             let finalCity = city;
             if (city.includes(',') && endereco) {
-                const parts = endereco.split(',');
+                const parts = endereco.split(',').map(p => p.trim());
                 if (parts.length >= 2) {
-                    finalCity = parts[parts.length - 2].trim().replace(/\d+/g, '').trim();
+                    // In Portugal, city is often in the last part: "8700-240 Olhão"
+                    const lastPart = parts[parts.length - 1];
+                    const cityMatch = lastPart.match(/(?:\d{4}-\d{3})\s+(.+)$/);
+                    if (cityMatch) {
+                        finalCity = cityMatch[1].trim();
+                    } else {
+                        // Fallback: use the second to last part
+                        finalCity = parts[parts.length - 2].replace(/\d+/g, '').trim();
+                    }
                 }
             }
             
@@ -414,13 +435,13 @@ export async function runScan(
         let validLeads = leads.filter((l: Lead | null): l is Lead => l !== null);
         
         // ========================================================================
-        // ENRICHMENT Phase - Auto-fetch details for top results
+        // ENRICHMENT Phase - Auto-fetch details for results
         // ========================================================================
-        const toEnrich = validLeads.slice(0, 10);
+        const toEnrich = validLeads.slice(0, 20); // Enrich more leads to ensure data is present
         if (toEnrich.length > 0) {
-            onProgress?.(`Enriquecendo dados de ${toEnrich.length} leads (Telefone, Website)...`);
+            onProgress?.(`Enriquecendo dados de ${toEnrich.length} leads (Telefone, Website, Cidade)...`);
             const enriched = await Promise.all(toEnrich.map(l => enrichLead(l)));
-            validLeads = [...enriched, ...validLeads.slice(10)];
+            validLeads = enriched; // Since we took slice(0, 20) and Google usually returns 20
         }
 
         console.log('[ScanService] Google Places retornou:', validLeads.length, 'leads');

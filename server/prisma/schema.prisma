@@ -189,3 +189,18 @@ model SystemConfig {
 
   @@map("system_config")
 }
+
+model OrcaLead {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  company   String?
+  phone     String?
+  message   String?
+  type      String   // 'demo' or 'contact'
+  source    String   @default("landing_page")
+  status    String   @default("new")
+  createdAt DateTime @default(now())
+
+  @@map("orca_leads")
+}

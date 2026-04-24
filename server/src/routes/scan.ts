@@ -82,7 +82,7 @@ router.get('/details', authenticate, async (req: Request, res: Response) => {
       params: {
         place_id,
         key: env.GOOGLE_API_KEY,
-        fields: 'formatted_phone_number,website,opening_hours,rating,user_ratings_total,reviews',
+        fields: req.query.fields || 'formatted_phone_number,website,opening_hours,rating,user_ratings_total,reviews,address_components,formatted_address',
         language: 'pt-PT',
       }
     });

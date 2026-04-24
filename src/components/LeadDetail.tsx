@@ -562,7 +562,35 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                     <button className="btn btn-ghost" style={{ flex: 1, height: '40px', fontSize: '12px', background: 'rgba(255,255,255,0.03)' }} onClick={() => handleContact('telefone')}><Phone size={14} /> Telefone</button>
                     <button className="btn btn-ghost" style={{ flex: 1, height: '40px', fontSize: '12px', background: 'rgba(255,255,255,0.03)' }} onClick={() => handleContact('email')}><Mail size={14} /> Email</button>
                     <button className="btn btn-ghost" style={{ flex: 1, height: '40px', fontSize: '12px', background: 'rgba(255,255,255,0.03)' }} onClick={() => handleContact('whatsapp')}><MessageCircle size={14} /> WhatsApp</button>
-                    <button className="btn btn-danger" style={{ height: '40px', width: '40px', minWidth: '40px', padding: 0 }} onClick={handleDelete}><Trash2 size={16} /></button>
+                    <button 
+                        className="btn btn-ghost" 
+                        style={{ 
+                            height: '40px', 
+                            width: '40px', 
+                            minWidth: '40px', 
+                            padding: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'rgba(239, 68, 68, 0.7)',
+                            borderColor: 'rgba(239, 68, 68, 0.2)',
+                            background: 'rgba(239, 68, 68, 0.05)',
+                            transition: 'all 0.2s ease'
+                        }} 
+                        onClick={handleDelete}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                            e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                            e.currentTarget.style.color = '#FFFFFF';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)';
+                            e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+                            e.currentTarget.style.color = 'rgba(239, 68, 68, 0.7)';
+                        }}
+                    >
+                        <Trash2 size={18} />
+                    </button>
                 </div>
 
                 {emailModalOpen && <EmailTemplateModal lead={lead} onClose={() => setEmailModalOpen(false)} onSend={handleEmailSent} />}

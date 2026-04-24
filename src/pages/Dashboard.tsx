@@ -5,6 +5,7 @@ import { detectNameCol, detectCatCol, getLeadName, getLeadCategory } from '../ut
 import ScoreRing from '../components/ScoreRing';
 import BarChart from '../components/BarChart';
 import FunnelChart from '../components/FunnelChart';
+import PieChart from '../components/PieChart';
 import DottedSurface from '../components/ui/DottedSurface';
 import SonarButton from '../components/SonarButton';
 import { formatTime } from '../utils/time';
@@ -213,60 +214,51 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
 
     return (
         <>
-            {/* ===== ROW 0: Plan Status Alert (if near limit) ===== */}
-            {user?.organization && (
-                <div style={{ marginBottom: 20 }}>
-                    {(() => {
-                        const PLAN_LIMITS: Record<string, number> = {
-                            'trial': 50,
-                            'starter': 500,
-                            'pro': 2000,
-                            'enterprise': 10000
-                        };
-                        const org = user.organization;
-                        const effectiveMax = org.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[org.plan?.toLowerCase()] || 50);
-                        const consumption = org.leadsConsumed || leads.length;
-                        const usagePct = (consumption / effectiveMax) * 100;
-                        
-                        if (usagePct >= 80) {
-                            return (
-                                <div className="card" style={{ 
-                                    background: usagePct >= 100 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)', 
-                                    border: `1px solid ${usagePct >= 100 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    padding: '12px 20px',
-                                    borderRadius: 12
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                        <div style={{ 
-                                            width: 40, height: 40, borderRadius: '50%', 
-                                            background: usagePct >= 100 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            color: usagePct >= 100 ? '#EF4444' : '#F59E0B'
-                                        }}>
-                                            <AlertTriangle size={20} />
-                                        </div>
-                                        <div>
-                                            <div style={{ fontSize: 14, fontWeight: 700, color: '#FFF' }}>
-                                                {usagePct >= 100 ? 'Limite de Leads Atingido' : 'Limite de Leads Próximo'}
-                                            </div>
-                                            <div style={{ fontSize: 12, color: 'var(--t3)' }}>
-                                                Você usou {consumption} de {effectiveMax} leads do seu plano {org.plan}.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <button className="btn btn-primary btn-sm" onClick={() => onNavigate('settings')}>
-                                        Fazer Upgrade
-                                    </button>
-                                </div>
-                            );
-                        }
-                        return null;
-                    })()}
+            {/* ===== COMMAND CENTER HEADER ===== */}
+            <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                marginBottom: 24,
+                padding: '12px 20px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                borderRadius: 12,
+                backdropFilter: 'blur(10px)'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{ position: 'relative' }}>
+                        <div className="pulse-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ADE80', boxShadow: '0 0 10px #4ADE80' }} />
+                        <style>{`
+                            @keyframes pulse {
+                                0% { transform: scale(1); opacity: 1; }
+                                100% { transform: scale(3); opacity: 0; }
+                            }
+                            .pulse-dot::after {
+                                content: '';
+                                position: absolute;
+                                top: 0; left: 0; right: 0; bottom: 0;
+                                border-radius: 50%;
+                                background: inherit;
+                                animation: pulse 2s infinite;
+                            }
+                        `}</style>
+                    </div>
+                    <div>
+                        <div style={{ fontSize: 10, fontWeight: 800, color: '#4ADE80', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Sistema Operacional</div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Sonar Scan Ativo · {new Date().toLocaleDateString('pt-PT')}</div>
+                    </div>
                 </div>
-            )}
+                <div style={{ display: 'flex', gap: 24 }}>
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Data-Stream</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#FFF', fontFamily: 'monospace' }}>{new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</div>
+                    </div>
+                    <button className="btn btn-primary btn-sm" onClick={() => setScanModalOpen(true)}>
+                        <Radar size={14} /> Novo Scan
+                    </button>
+                </div>
+            </div>
 
             {/* ===== ROW 1: Core Metrics (5 cols) ===== */}
             <div className="kpi-grid" style={{ marginBottom: 24 }}>
@@ -289,13 +281,13 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                     <div className="kpi-label">Leads Quentes</div>
                     <div className="kpi-val green">{hot.length}</div>
                     <div className="kpi-sub">
-                        <span className="kpi-delta up"><ArrowUpRight size={14} /> {Math.round((hot.length / leads.length) * 100)}%</span> da base
+                        <span className="kpi-delta up"><ArrowUpRight size={14} /> {leads.length > 0 ? Math.round((hot.length / leads.length) * 100) : 0}%</span> da base
                     </div>
                 </div>
                 <div className="kpi amber">
                     <div className="kpi-label">Leads Mornos</div>
                     <div className="kpi-val amber">{warm.length}</div>
-                    <div className="kpi-sub">{Math.round((warm.length / leads.length) * 100)}% da base</div>
+                    <div className="kpi-sub">{leads.length > 0 ? Math.round((warm.length / leads.length) * 100) : 0}% da base</div>
                 </div>
                 <div className="kpi purple">
                     <div className="kpi-label">Score Médio</div>
@@ -309,7 +301,45 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 </div>
             </div>
 
-            {/* ===== ROW 2: Engagement & Performance ===== */}
+            {/* ===== ROW 2: Command Charts (Pie/Donut) ===== */}
+            <div className="grid-2 mb-24">
+                <div className="card">
+                    <div className="sec-header">
+                        <div>
+                            <div className="sec-title">Distribuição de Qualidade</div>
+                            <div className="sec-sub">Qualificação térmica da base</div>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0' }}>
+                        <PieChart 
+                            size={160} 
+                            innerRadius={50}
+                            data={[
+                                { label: 'Quentes', value: hot.length, color: 'var(--green)' },
+                                { label: 'Mornos', value: warm.length, color: 'var(--amber)' },
+                                { label: 'Frios', value: cold.length, color: 'var(--red)' },
+                            ]} 
+                        />
+                    </div>
+                </div>
+                <div className="card">
+                    <div className="sec-header">
+                        <div>
+                            <div className="sec-title">Status do Pipeline</div>
+                            <div className="sec-sub">Volume por etapa do funil</div>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0' }}>
+                        <PieChart 
+                            size={160} 
+                            innerRadius={0}
+                            data={funnelData.slice(0, 5).map(d => ({ label: d.label, value: d.value, color: d.color }))} 
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* ===== ROW 3: Engagement & Performance ===== */}
             <div className="kpi-grid" style={{ marginBottom: 24 }}>
                 <div className="kpi">
                     <div className="kpi-label">Em Negociação</div>
@@ -324,7 +354,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 <div className="kpi">
                     <div className="kpi-label">Contatados</div>
                     <div className="kpi-val" style={{ fontSize: 28, color: 'var(--green)' }}>{contacted}</div>
-                    <div className="kpi-sub">{Math.round((contacted / leads.length) * 100)}% da base</div>
+                    <div className="kpi-sub">{leads.length > 0 ? Math.round((contacted / leads.length) * 100) : 0}% da base</div>
                 </div>
                 <div className="kpi">
                     <div className="kpi-label">Taxa de Perda</div>
@@ -580,39 +610,51 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
 
                 <div className="card">
                     <div className="sec-header">
-                        <div><div className="sec-title">Atividade Recente</div></div>
-                        <button className="btn btn-ghost btn-sm" onClick={() => onNavigate('import')}>Ver histórico</button>
+                        <div><div className="sec-title">Stream de Atividade</div></div>
+                        <div style={{ fontSize: 10, color: '#4ADE80', fontWeight: 800 }}>LIVE FEED</div>
                     </div>
-                    <div className="activity-list">
-                        {activities.length ? activities.slice(0, 6).map((a, i) => {
-                            const iconMap: Record<string, React.ReactNode> = { 
-                                'folder': <Upload size={14} />, 
-                                'radar': <Radar size={14} />, 
-                                'pipeline': <Columns3 size={14} />,
-                                'edit': <Activity size={14} />,
-                                'trash': <Trash2 size={14} />,
-                                '✉': <Mail size={14} />,
-                                '📞': <Phone size={14} />,
-                                '💬': <MessageCircle size={14} />,
-                                'mail': <Mail size={14} />,
-                                'phone': <Phone size={14} />,
-                                'whatsapp': <MessageCircle size={14} />
+                    <div className="activity-list" style={{ 
+                        background: 'rgba(0,0,0,0.3)', 
+                        padding: '16px', 
+                        borderRadius: '12px', 
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        maxHeight: '300px',
+                        overflowY: 'auto',
+                        fontFamily: 'monospace'
+                    }}>
+                        {activities.length ? activities.slice(0, 10).map((a, i) => {
+                            const iconMap: Record<string, string> = { 
+                                'folder': 'USR_IMP', 
+                                'radar': 'SNR_SCN', 
+                                'pipeline': 'PPL_MOV',
+                                'edit': 'SYS_UPD',
+                                'trash': 'SYS_DEL',
+                                '✉': 'COM_EML', 
+                                '📞': 'COM_PHN', 
+                                '💬': 'COM_WTP',
+                                'mail': 'COM_EML', 
+                                'phone': 'COM_PHN', 
+                                'whatsapp': 'COM_WTP'
                             };
                             return (
-                                <div className="activity-item" key={i}>
-                                    <div className="activity-dot" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        {iconMap[a.icon] || <Activity size={14} />}
-                                    </div>
-                                    <div className="activity-content">
-                                        <div className="activity-title">{a.title}</div>
-                                        <div className="activity-sub">{a.sub} · {formatTime(a.time)}</div>
+                                <div key={i} style={{ 
+                                    display: 'flex', 
+                                    gap: 12, 
+                                    marginBottom: 12, 
+                                    fontSize: 11,
+                                    color: 'rgba(255,255,255,0.6)',
+                                    borderLeft: '2px solid rgba(255,255,255,0.1)',
+                                    paddingLeft: 12
+                                }}>
+                                    <span style={{ color: '#4ADE80', fontWeight: 800 }}>[{iconMap[a.icon] || 'SYS_LOG'}]</span>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ color: '#FFF' }}>{a.title}</div>
+                                        <div style={{ fontSize: 10, opacity: 0.5 }}>{a.sub} · {formatTime(a.time)}</div>
                                     </div>
                                 </div>
                             );
                         }) : (
-                            <div className="empty" style={{ padding: 24 }}>
-                                <div className="empty-sub">Nenhuma atividade ainda.</div>
-                            </div>
+                            <div className="text-muted text-sm">Nenhuma atividade detectada.</div>
                         )}
                     </div>
                 </div>

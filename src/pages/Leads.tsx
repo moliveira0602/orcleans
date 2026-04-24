@@ -278,9 +278,25 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                             )}
                             <button
                                 className="btn btn-sm"
-                                style={{ background: '#000', color: '#EF4444', border: '1px solid #EF4444', display: 'flex', alignItems: 'center', gap: 6 }}
+                                style={{ 
+                                    background: 'rgba(239, 68, 68, 0.1)', 
+                                    color: '#EF4444', 
+                                    border: '1px solid rgba(239, 68, 68, 0.2)', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: 6,
+                                    transition: 'all 0.2s ease'
+                                }}
                                 onClick={handleBulkDelete}
                                 disabled={isDeleting}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                                    e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                                    e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+                                }}
                             >
                                 <Trash2 size={14} />
                                 <span>{isDeleting ? 'A eliminar...' : `Eliminar (${selectedLeads.size})`}</span>

@@ -163,10 +163,23 @@ interface SystemConfig {
     maintenanceMsg: string;
 }
 
-type Tab = 'overview' | 'tenants' | 'users' | 'viewAs' | 'health' | 'logs' | 'support' | 'config';
+interface OrcaLead {
+    id: string;
+    name: string;
+    email: string;
+    company: string | null;
+    phone: string | null;
+    message: string | null;
+    type: string;
+    status: string;
+    createdAt: string;
+}
+
+type Tab = 'overview' | 'tenants' | 'users' | 'orcaLeads' | 'viewAs' | 'health' | 'logs' | 'support' | 'config';
 
 const TAB_CONFIG = [
     { id: 'overview', label: 'Visão Geral', icon: Activity },
+    { id: 'orcaLeads', label: 'Leads Orca', icon: Search },
     { id: 'tenants', label: 'Tenants', icon: Users },
     { id: 'users', label: 'Utilizadores', icon: Users },
     { id: 'viewAs', label: 'Ver como Utilizador', icon: Activity },
@@ -183,6 +196,7 @@ export default function AdminPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [orgs, setOrgs] = useState<Org[]>([]);
     const [tenants, setTenants] = useState<Tenant[]>([]);
+    const [orcaLeads, setOrcaLeads] = useState<OrcaLead[]>([]);
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [logTotal, setLogTotal] = useState(0);
     const [diagnostics, setDiagnostics] = useState<Diagnostics | null>(null);
@@ -355,6 +369,36 @@ export default function AdminPage() {
         fetchViewAsDashboard(userId);
     };
 
+    const fetchOrcaLeads = async () => {
+        try {
+            const result = await api.get<OrcaLead[]>('/admin/orca-leads');
+            setOrcaLeads(result);
+        } catch (err: any) {
+            console.error('Orca leads fetch error:', err);
+        }
+    };
+
+    const handleUpdateOrcaLeadStatus = async (id: string, status: string) => {
+        try {
+            await api.patch(`/admin/orca-leads/${id}/status`, { status });
+            toast('Status atualizado.', 'success');
+            fetchOrcaLeads();
+        } catch (err: any) {
+            toast('Erro ao atualizar status', 'error');
+        }
+    };
+
+    const handleDeleteOrcaLead = async (id: string) => {
+        if (!confirm('Tem certeza que deseja remover este lead?')) return;
+        try {
+            await api.delete(`/admin/orca-leads/${id}`);
+            toast('Lead removido.', 'success');
+            fetchOrcaLeads();
+        } catch (err: any) {
+            toast('Erro ao remover lead', 'error');
+        }
+    };
+
     const handleViewAsTabChange = (view: 'dashboard' | 'leads' | 'pipeline') => {
         setViewAsActiveView(view);
         if (!selectedUserToView) return;
@@ -372,6 +416,7 @@ export default function AdminPage() {
                 fetchOverview(),
                 fetchTenants(),
                 fetchUsers(),
+                fetchOrcaLeads(),
                 fetchLogs(),
                 fetchDiagnostics(),
                 fetchConfig(),
@@ -785,6 +830,97 @@ export default function AdminPage() {
                             </tbody>
                         </table>
                     </div>
+                </div>
+            )}
+
+            {activeTab === 'orcaLeads' && (
+                <div className="card">
+                    <div className="sec-header">
+                        <div className="sec-title">Leads Recebidos (Site / Demo)</div>
+                        <button className="btn btn-ghost btn-sm" onClick={fetchOrcaLeads}>
+                            <RefreshCw size={16} />
+                        </button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Tipo</th>
+                                <th>Nome</th>
+                                <th>Contacto</th>
+                                <th>Empresa</th>
+                                <th>Status</th>
+                                <th>Acções</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {orcaLeads.map((lead) => (
+                                <tr key={lead.id}>
+                                    <td style={{ fontSize: 12 }}>{new Date(lead.createdAt).toLocaleDateString('pt-PT')}</td>
+                                    <td>
+                                        <span className={`badge badge-${lead.type === 'demo' ? 'blue' : 'purple'}`}>
+                                            {lead.type === 'demo' ? 'Demo' : 'Contacto'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div style={{ fontWeight: 600 }}>{lead.name}</div>
+                                    </td>
+                                    <td>
+                                        <div style={{ fontSize: 13 }}>{lead.email}</div>
+                                        <div style={{ fontSize: 11, color: 'var(--t3)' }}>{lead.phone || 'Sem telefone'}</div>
+                                    </td>
+                                    <td>{lead.company || '-'}</td>
+                                    <td>
+                                        <select 
+                                            value={lead.status} 
+                                            onChange={(e) => handleUpdateOrcaLeadStatus(lead.id, e.target.value)}
+                                            style={{ 
+                                                fontSize: 12, 
+                                                padding: '4px 8px', 
+                                                borderRadius: 6, 
+                                                background: 'var(--bg-card)', 
+                                                color: 'var(--t1)',
+                                                border: '1px solid var(--border)'
+                                            }}
+                                        >
+                                            <option value="new">Novo</option>
+                                            <option value="contacted">Contactado</option>
+                                            <option value="qualified">Qualificado</option>
+                                            <option value="archived">Arquivado</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <div style={{ display: 'flex', gap: 8 }}>
+                                            <button 
+                                                className="btn btn-ghost btn-sm" 
+                                                onClick={() => {
+                                                    if (lead.message) alert(`Mensagem de ${lead.name}:\n\n${lead.message}`);
+                                                    else alert('Este lead não deixou mensagem.');
+                                                }}
+                                                title="Ver Mensagem"
+                                            >
+                                                <Search size={14} />
+                                            </button>
+                                            <button 
+                                                className="btn btn-ghost btn-sm text-red" 
+                                                onClick={() => handleDeleteOrcaLead(lead.id)}
+                                                title="Remover"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                            {orcaLeads.length === 0 && (
+                                <tr>
+                                    <td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--t3)' }}>
+                                        Nenhum lead recebido ainda.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             )}
 

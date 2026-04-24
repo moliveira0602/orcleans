@@ -263,7 +263,8 @@ export default function LandingPage() {
         lastName: '',
         email: '',
         company: '',
-        teamSize: ''
+        teamSize: '',
+        phone: ''
     });
     const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
 
@@ -481,13 +482,14 @@ export default function LandingPage() {
                 name: `${demoFormData.firstName} ${demoFormData.lastName}`,
                 email: demoFormData.email,
                 company: demoFormData.company,
+                phone: demoFormData.phone,
                 message: `[PEDIDO DE DEMO]\nTamanho do time: ${demoFormData.teamSize}`,
                 website: honeypot
             });
             
-            alert('Recebemos o seu pedido de demo! Entraremos em contacto em breve.');
-            setDemoFormData({ firstName: '', lastName: '', email: '', company: '', teamSize: '' });
-            closeDemoModal();
+            setFormSubmitted(true);
+            setDemoFormData({ firstName: '', lastName: '', email: '', company: '', teamSize: '', phone: '' });
+            // closeDemoModal(); // User requested to see success msg
         } catch (err: any) {
             alert('Erro ao processar pedido. Por favor tente novamente ou escreva para contacto@orcaleads.online');
         }
@@ -1190,57 +1192,77 @@ export default function LandingPage() {
                                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                             </svg>
                         </button>
-                        <div className="demo-modal__eyebrow">Demo Personalizada</div>
-                        <h3 className="demo-modal__title">Veja a ORCA em ação</h3>
-                        <p className="demo-modal__subtitle">Preencha os dados abaixo e receba uma demo personalizada da plataforma.</p>
-                        <form className="demo-modal__form" onSubmit={handleDemoSubmit}>
-                            <div className="demo-form-row">
-                                <div className="demo-form-field">
-                                    <label htmlFor="demo-firstName">Nome</label>
-                                    <input type="text" id="demo-firstName" name="firstName" value={demoFormData.firstName} onChange={handleDemoInputChange} placeholder="Seu nome" required />
-                                </div>
-                                <div className="demo-form-field">
-                                    <label htmlFor="demo-lastName">Sobrenome</label>
-                                    <input type="text" id="demo-lastName" name="lastName" value={demoFormData.lastName} onChange={handleDemoInputChange} placeholder="Seu sobrenome" required />
-                                </div>
-                            </div>
-                            <div className="demo-form-field">
-                                <label htmlFor="demo-email">E-mail corporativo</label>
-                                <input type="email" id="demo-email" name="email" value={demoFormData.email} onChange={handleDemoInputChange} placeholder="seu@empresa.com" required />
-                            </div>
-                            <div className="demo-form-row">
-                                <div className="demo-form-field">
-                                    <label htmlFor="demo-company">Empresa</label>
-                                    <input type="text" id="demo-company" name="company" value={demoFormData.company} onChange={handleDemoInputChange} placeholder="Nome da empresa" required />
-                                </div>
-                                <div className="demo-form-field">
-                                    <label htmlFor="demo-teamSize">Tamanho do time</label>
-                                    <select id="demo-teamSize" name="teamSize" value={demoFormData.teamSize} onChange={handleDemoInputChange} required>
-                                        <option value="">Selecione...</option>
-                                        <option value="1-5">1-5 pessoas</option>
-                                        <option value="6-20">6-20 pessoas</option>
-                                        <option value="21-50">21-50 pessoas</option>
-                                        <option value="51+">51+ pessoas</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <button type="submit" className="demo-modal__submit" disabled={isSubmitting}>
-                                {isSubmitting ? 'Enviando...' : 'Receber demo personalizada'}
-                            </button>
+                        {!formSubmitted ? (
+                            <>
+                                <div className="demo-modal__eyebrow">Demo Personalizada</div>
+                                <h3 className="demo-modal__title">Veja a ORCA em ação</h3>
+                                <p className="demo-modal__subtitle">Preencha os dados abaixo e receba uma demo personalizada da plataforma.</p>
+                                <form className="demo-modal__form" onSubmit={handleDemoSubmit}>
+                                    <div className="demo-form-row">
+                                        <div className="demo-form-field">
+                                            <label htmlFor="demo-firstName">Nome</label>
+                                            <input type="text" id="demo-firstName" name="firstName" value={demoFormData.firstName} onChange={handleDemoInputChange} placeholder="Seu nome" required />
+                                        </div>
+                                        <div className="demo-form-field">
+                                            <label htmlFor="demo-lastName">Sobrenome</label>
+                                            <input type="text" id="demo-lastName" name="lastName" value={demoFormData.lastName} onChange={handleDemoInputChange} placeholder="Seu sobrenome" required />
+                                        </div>
+                                    </div>
+                                    <div className="demo-form-field">
+                                        <label htmlFor="demo-email">E-mail corporativo</label>
+                                        <input type="email" id="demo-email" name="email" value={demoFormData.email} onChange={handleDemoInputChange} placeholder="seu@empresa.com" required />
+                                    </div>
+                                    <div className="demo-form-row">
+                                        <div className="demo-form-field">
+                                            <label htmlFor="demo-company">Empresa</label>
+                                            <input type="text" id="demo-company" name="company" value={demoFormData.company} onChange={handleDemoInputChange} placeholder="Nome da empresa" required />
+                                        </div>
+                                        <div className="demo-form-field">
+                                            <label htmlFor="demo-phone">Telefone / WhatsApp</label>
+                                            <input type="tel" id="demo-phone" name="phone" value={demoFormData.phone} onChange={handleDemoInputChange} placeholder="+351 9XX XXX XXX" required />
+                                        </div>
+                                        <div className="demo-form-field">
+                                            <label htmlFor="demo-teamSize">Tamanho do time</label>
+                                            <select id="demo-teamSize" name="teamSize" value={demoFormData.teamSize} onChange={handleDemoInputChange} required>
+                                                <option value="">Selecione...</option>
+                                                <option value="1-5">1-5 pessoas</option>
+                                                <option value="6-20">6-20 pessoas</option>
+                                                <option value="21-50">21-50 pessoas</option>
+                                                <option value="51+">51+ pessoas</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button type="submit" className="demo-modal__submit" disabled={isSubmitting}>
+                                        {isSubmitting ? 'Enviando...' : 'Receber demo personalizada'}
+                                    </button>
 
-                            {/* Honeypot */}
-                            <div style={{ display: 'none' }} aria-hidden="true">
-                                <input 
-                                    type="text" 
-                                    name="website" 
-                                    tabIndex={-1} 
-                                    autoComplete="off" 
-                                    value={honeypot} 
-                                    onChange={(e) => setHoneypot(e.target.value)} 
-                                />
+                                    {/* Honeypot */}
+                                    <div style={{ display: 'none' }} aria-hidden="true">
+                                        <input 
+                                            type="text" 
+                                            name="website" 
+                                            tabIndex={-1} 
+                                            autoComplete="off" 
+                                            value={honeypot} 
+                                            onChange={(e) => setHoneypot(e.target.value)} 
+                                        />
+                                    </div>
+                                </form>
+                                <p className="demo-modal__fine-print">Sem cartão de crédito. Setup em 10 minutos.</p>
+                            </>
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                                <div style={{ 
+                                    width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', 
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' 
+                                }}>
+                                    <Check size={40} color="var(--orca-text)" />
+                                </div>
+                                <h3 className="demo-modal__title">Pedido recebido!</h3>
+                                <p className="demo-modal__subtitle">Obrigado pelo seu interesse. A nossa equipa entrará em contacto para agendar a sua demo.</p>
+                                <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={closeDemoModal}>Fechar</button>
                             </div>
-                        </form>
-                        <p className="demo-modal__fine-print">Sem cartão de crédito. Setup em 10 minutos.</p>
+                        )}
                     </div>
                 </div>
             )}
