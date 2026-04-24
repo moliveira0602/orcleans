@@ -14,6 +14,7 @@ import scanRoutes from './routes/scan';
 import organizationRoutes from './routes/organizations';
 import billingRoutes from './routes/billing';
 import { maintenanceMode } from './middleware/maintenance';
+import { tryAuthenticate } from './middleware/auth';
 
 const app = express();
 
@@ -72,28 +73,9 @@ const apiLimiter = rateLimit({
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api', apiLimiter);
-
-// Import tryAuthenticate from auth middleware
-import { tryAuthenticate } from './middleware/auth';
 app.use('/api', tryAuthenticate);
 app.use('/api', maintenanceMode);
 // ─────────────────────────────────────────────────────────────────────────────
-
-app.get('/api/health', async (_req: Request, res: Response) => {
-  try {
-    await prisma.$connect();
-    res.json({ status: 'ok', timestamp: new Date().toISOString(), version: 'v2' });
-  } catch (err: any) {
-    console.error('Health check error:', err);
-    res.status(500).json({ error: err.message || 'Internal server error' });
-  }
-});
-
-// Error handling middleware
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
-});
 
 // Ensure super admin exists on first request (non-blocking, lazy)
 let _superAdminChecked = false;
@@ -107,6 +89,16 @@ async function ensureSuperAdminOnce() {
     console.error('Super admin check failed:', err);
   }
 }
+
+app.get('/api/health', async (_req: Request, res: Response) => {
+  try {
+    await prisma.$connect();
+    res.json({ status: 'ok', timestamp: new Date().toISOString(), version: 'v2' });
+  } catch (err: any) {
+    console.error('Health check error:', err);
+    res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+});
 
 // Ensure super admin exists on first auth/admin request (fire-and-forget)
 app.use('/api/auth', (_req: Request, _res: Response, next: NextFunction) => {
@@ -125,6 +117,12 @@ app.use('/api/leads', leadRoutes);
 app.use('/api/scan', scanRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/billing', billingRoutes);
+
+// Error handling middleware - MUST BE LAST
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 const PORT = Number(process.env.PORT || env.PORT || 3333);
 
