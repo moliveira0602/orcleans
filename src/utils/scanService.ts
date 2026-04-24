@@ -81,10 +81,7 @@ export async function loadLeadPhotos(placeId: string): Promise<string[]> {
         return cached;
     }
 
-    if (!trackApiCall('photo')) {
-        console.warn('[Photos] Rate limit atingido para fotos');
-        return [];
-    }
+    if (!trackApiCall('details')) return [];
 
     try {
         const data: any = await api.get(
@@ -92,18 +89,45 @@ export async function loadLeadPhotos(placeId: string): Promise<string[]> {
             { params: { place_id: placeId, fields: 'photos' } }
         );
         
-        // Note: photos are still displayed via direct Google URL but the reference is fetched via proxy
-        // To fully hide the key, we'd need a proxy for photos too, but that's bandwidth heavy.
-        // For now, we protect the textsearch/details keys.
-        
         const fotos = (data.result?.photos || []).slice(0, 3).map(
             (ph: any) => `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${ph.photo_reference}&key=${GOOGLE_KEY}`
         );
         setCached(cacheKey, fotos);
         return fotos;
     } catch (err) {
-        console.error('[Photos] Error loading:', placeId, err);
         return [];
+    }
+}
+
+/**
+ * Enrichment: Fetch details for a specific lead
+ */
+async function enrichLead(lead: Lead): Promise<Lead> {
+    if (!lead.id.startsWith('google_')) return lead;
+    const placeId = lead.id.replace('google_', '');
+    
+    try {
+        const data: any = await api.get(`${API_BASES.google}/details`, {
+            params: { 
+                place_id: placeId,
+                fields: 'formatted_phone_number,website,opening_hours' 
+            }
+        });
+        
+        if (data.result) {
+            const r = data.result;
+            lead.telefone = r.formatted_phone_number || lead.telefone;
+            lead.website = r.website || lead.website;
+            if (r.website && !lead.email) {
+                try {
+                    const domain = new URL(r.website).hostname.replace('www.', '');
+                    lead.email = `info@${domain}`;
+                } catch {}
+            }
+        }
+        return lead;
+    } catch (err) {
+        return lead;
     }
 }
 
@@ -124,23 +148,35 @@ function processPlaces(
             // Nearby search returns basic fields for FREE
             const d = place;
             
-            // Extract address from vicinity (nearby search returns vicinity instead of formatted_address)
+            // Extract address components
             let endereco = d.formatted_address || d.vicinity || '';
             let telefone = d.formatted_phone_number || '';
             let website = d.website || '';
             let horario = '';
+
+            // Detect city from address if the input city was coordinates
+            let finalCity = city;
+            if (city.includes(',') && endereco) {
+                const parts = endereco.split(',');
+                if (parts.length >= 2) {
+                    finalCity = parts[parts.length - 2].trim().replace(/\d+/g, '').trim();
+                }
+            }
             
             // Email: gerar do website se existir
             let email = '';
             if (website) {
-                try { email = `info@${new URL(website).hostname.replace('www.', '')}` } catch {}
+                try { 
+                    const domain = new URL(website).hostname.replace('www.', '');
+                    email = `info@${domain}`;
+                } catch {}
             }
 
             return {
                 id: `google_${place.place_id}`,
                 nome: d.name || 'Sem nome',
                 endereco,
-                cidade: city,
+                cidade: finalCity,
                 distrito_estado: '',
                 codigo_postal: '',
                 pais: 'Portugal',
@@ -375,7 +411,18 @@ export async function runScan(
         onProgress?.(`Processando ${Math.min(newPlaces.length, 20)} lugares...`);
         
         const leads = processPlaces(newPlaces.slice(0, 20), segment, lat, lon, city);
-        const validLeads = leads.filter((l: Lead | null): l is Lead => l !== null);
+        let validLeads = leads.filter((l: Lead | null): l is Lead => l !== null);
+        
+        // ========================================================================
+        // ENRICHMENT Phase - Auto-fetch details for top results
+        // ========================================================================
+        const toEnrich = validLeads.slice(0, 10);
+        if (toEnrich.length > 0) {
+            onProgress?.(`Enriquecendo dados de ${toEnrich.length} leads (Telefone, Website)...`);
+            const enriched = await Promise.all(toEnrich.map(l => enrichLead(l)));
+            validLeads = [...enriched, ...validLeads.slice(10)];
+        }
+
         console.log('[ScanService] Google Places retornou:', validLeads.length, 'leads');
 
         // Log first lead for verification
