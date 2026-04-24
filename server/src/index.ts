@@ -90,6 +90,35 @@ async function ensureSuperAdminOnce() {
   }
 }
 
+// DEBUG: Route to list all registered routes
+app.get('/api/debug-routes', (req: Request, res: Response) => {
+  const routes: any[] = [];
+  
+  function print(path: string[], layer: any) {
+    if (layer.route) {
+      layer.route.stack.forEach((s: any) => {
+        const method = s.method ? s.method.toUpperCase() : 'ANY';
+        routes.push(`${method} ${path.concat(layer.route.path).filter(Boolean).join('')}`);
+      });
+    } else if (layer.name === 'router' && layer.handle.stack) {
+      layer.handle.stack.forEach((l: any) => {
+        print(path.concat(layer.regexp.source.replace('^\\', '').replace('\\/?(?=\\/|$)', '').replace('\\/', '/')), l);
+      });
+    }
+  }
+
+  (app as any)._router.stack.forEach((layer: any) => {
+    print([], layer);
+  });
+
+  res.json({
+    routes,
+    baseUrl: req.baseUrl,
+    originalUrl: req.originalUrl,
+    path: req.path
+  });
+});
+
 app.get('/api/health', async (_req: Request, res: Response) => {
   try {
     await prisma.$connect();

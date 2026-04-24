@@ -20,7 +20,7 @@ export async function maintenanceMode(req: Request, res: Response, next: NextFun
 
       const isAuthRoute = req.path.includes('/auth/login') || req.originalUrl.includes('/api/auth/login');
       const isAdminConfigRoute = req.path.includes('/admin/config') || req.originalUrl.includes('/api/admin/config');
-      
+
       // If the user is already authenticated (available in req.user or req.userRole),
       // we check if they are super_admin.
       const userRole = (req as any).user?.role || (req as any).userRole;
