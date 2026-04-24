@@ -1351,14 +1351,21 @@ export default function LandingPage() {
 
             <style>{`
                 /* ===== LANDING PAGE STYLES ===== */
-                html, body { margin: 0; padding: 0; overflow-y: auto !important; scroll-behavior: smooth; }
+                html, body { 
+                    margin: 0 !important; 
+                    padding: 0 !important; 
+                    overflow-y: auto !important; 
+                    scroll-behavior: smooth;
+                    background: #0A0A0A;
+                }
                 
                 .landing-page {
                     background: #0A0A0A;
                     color: #EAF6FF;
                     font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
                     overflow-x: hidden;
-                    min-height: 100vh;
+                    margin: 0 !important;
+                    padding: 0 !important;
                 }
 
                 .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
@@ -1509,6 +1516,8 @@ export default function LandingPage() {
                 /* ===== HERO SECTION ===== */
                 .hero-section { 
                     position: relative; 
+                    height: 100vh;
+                    min-height: 650px;
                     overflow: hidden; 
                     display: flex; 
                     flex-direction: column;
@@ -1516,15 +1525,19 @@ export default function LandingPage() {
                     justify-content: center; 
                     background: #0A0A0A;
                     margin: 0;
-                    padding: 220px 24px 140px;
+                    padding: 64px 24px 0;
                     width: 100%;
                 }
                 .hero-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
                 .hero-video {
                     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-                    object-fit: cover; opacity: 0.5;
+                    object-fit: cover; opacity: 0.4;
                 }
-                .hero-gradient { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10, 10, 10, 0.6) 0%, rgba(10, 10, 10, 0.4) 30%, #0A0A0A 90%); z-index: 1; }
+                .hero-gradient { 
+                    position: absolute; inset: 0; 
+                    background: linear-gradient(180deg, rgba(10, 10, 10, 0.9) 0%, rgba(10, 10, 10, 0.4) 15%, rgba(10, 10, 10, 0) 50%, #0A0A0A 100%); 
+                    z-index: 1; 
+                }
                 .hero-particles {
                     position: absolute; inset: 0;
                     background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
