@@ -498,24 +498,37 @@ export default function LandingPage() {
                         ))}
                     </nav>
                     <div className="landing-header-actions">
-                        <a href="/login" className="btn btn-login">Login</a>
-                        <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Menu">
-                            <span /><span /><span />
+                        <button 
+                            className={`mobile-menu-btn ${mobileMenuOpen ? 'open' : ''}`} 
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            aria-label="Menu"
+                        >
+                            <span></span>
+                            <span></span>
+                            <span></span>
                         </button>
+
+                        <div className={`mobile-menu ${mobileMenuOpen ? 'active' : ''}`}>
+                            <div className="mobile-menu-inner">
+                                {navItems.map((item) => (
+                                    <button
+                                        key={item.id}
+                                        className={`mobile-nav-link${activeSection === item.id ? ' active' : ''}`}
+                                        onClick={() => {
+                                            scrollToSection(item.id);
+                                            setMobileMenuOpen(false);
+                                        }}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
+                                <button className="btn btn-primary w-full mobile-login" onClick={openDemoModal}>
+                                    Começar Grátis
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                {mobileMenuOpen && (
-                    <div className="mobile-menu">
-                        <nav>
-                            {navItems.map((item) => (
-                                <button key={item.id} className="mobile-nav-link" onClick={() => scrollToSection(item.id)}>
-                                    {item.label}
-                                </button>
-                            ))}
-                            <a href="/login" className="btn btn-login mobile-login">Login</a>
-                        </nav>
-                    </div>
-                )}
             </header>
 
             {/* ===== HERO SECTION ===== */}
@@ -1317,20 +1330,76 @@ export default function LandingPage() {
                     text-decoration: none; transition: all 0.2s ease;
                 }
                 .btn-login:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); }
-                .mobile-menu-btn { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 4px; }
-                .mobile-menu-btn span { width: 20px; height: 2px; background: #EAF6FF; transition: all 0.3s ease; }
-                .mobile-menu {
-                    display: none; position: absolute; top: 100%; left: 0; right: 0;
-                    background: rgba(5, 7, 10, 0.98); backdrop-filter: blur(20px);
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 24px;
+                .mobile-menu-btn { 
+                    display: none; 
+                    flex-direction: column; 
+                    gap: 5px; 
+                    background: none; 
+                    border: none; 
+                    cursor: pointer; 
+                    padding: 8px; 
+                    z-index: 100;
+                    position: relative;
                 }
-                .mobile-nav-link { display: block; width: 100%; text-align: left; background: none; border: none; color: rgba(234, 246, 255, 0.7); font-size: 16px; padding: 12px 0; cursor: pointer; }
-                .mobile-login { display: block; text-align: center; margin-top: 16px; }
+                .mobile-menu-btn span { 
+                    width: 24px; 
+                    height: 2px; 
+                    background: #EAF6FF; 
+                    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+                    transform-origin: center;
+                }
+                .mobile-menu-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+                .mobile-menu-btn.open span:nth-child(2) { opacity: 0; transform: translateX(-10px); }
+                .mobile-menu-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-                @media (max-width: 768px) {
+                .mobile-menu {
+                    position: absolute; 
+                    top: 100%; 
+                    left: 0; 
+                    right: 0;
+                    background: rgba(10, 10, 10, 0.98); 
+                    backdrop-filter: blur(20px);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+                    padding: 0 24px;
+                    max-height: 0;
+                    overflow: hidden;
+                    opacity: 0;
+                    visibility: hidden;
+                    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+                    transform: translateY(-10px);
+                }
+                .mobile-menu.active {
+                    max-height: 500px;
+                    opacity: 1;
+                    visibility: visible;
+                    transform: translateY(0);
+                    padding: 24px;
+                }
+                .mobile-menu-inner {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+                .mobile-nav-link { 
+                    display: block; 
+                    width: 100%; 
+                    text-align: left; 
+                    background: none; 
+                    border: none; 
+                    color: rgba(234, 246, 255, 0.6); 
+                    font-size: 16px; 
+                    font-weight: 500;
+                    padding: 14px 0; 
+                    cursor: pointer; 
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                    transition: color 0.3s ease;
+                }
+                .mobile-nav-link.active { color: var(--orca-text); }
+                .mobile-login { display: block; text-align: center; margin-top: 24px; }
+
+                @media (max-width: 900px) {
                     .landing-nav { display: none; }
                     .mobile-menu-btn { display: flex; }
-                    .mobile-menu { display: block; }
                 }
 
                 /* ===== HERO SECTION ===== */
@@ -1827,10 +1896,26 @@ export default function LandingPage() {
                 .contact-success p { font-size: 15px; color: rgba(234, 246, 255, 0.6); margin-bottom: 32px; }
 
                 @media (max-width: 900px) {
-                    .contact-grid { grid-template-columns: 1fr; gap: 60px; }
+                    .contact-grid { grid-template-columns: 1fr; gap: 48px; }
                     .contact-info { text-align: center; }
-                    .contact-methods { align-items: center; }
-                    .contact-method { text-align: left; }
+                    .contact-methods { 
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                        gap: 20px;
+                        margin-top: 40px;
+                    }
+                    .contact-method { 
+                        flex-direction: column;
+                        align-items: center;
+                        text-align: center;
+                        background: rgba(255, 255, 255, 0.03);
+                        padding: 24px;
+                        border-radius: 16px;
+                        border: 1px solid rgba(255, 255, 255, 0.05);
+                    }
+                    .contact-card-inner {
+                        padding: 30px 20px;
+                    }
                 }
 
                 /* ===== CONTACT MODAL ===== */
