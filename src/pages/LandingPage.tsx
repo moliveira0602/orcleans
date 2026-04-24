@@ -535,8 +535,7 @@ export default function LandingPage() {
                     <div className="landing-header-actions">
                         <button 
                             onClick={() => window.location.href = '/login'} 
-                            className="btn btn-ghost btn-sm" 
-                            style={{ color: '#EAF6FF', fontWeight: 600, border: '1px solid rgba(255,255,255,0.1)', padding: '6px 16px' }}
+                            className="btn-login"
                         >
                             Login
                         </button>
@@ -1449,14 +1448,31 @@ export default function LandingPage() {
                 }
                 .nav-link:hover, .nav-link.active { color: #EAF6FF; }
                 .nav-link:hover::after, .nav-link.active::after { width: 100%; }
-                .landing-header-actions { display: flex; align-items: center; gap: 16px; z-index: 10; }
-                .btn-login {
-                    background: rgba(255, 255, 255, 0.1); color: var(--orca-text);
-                    border: 1px solid rgba(255, 255, 255, 0.2); padding: 10px 24px;
-                    border-radius: 8px; font-size: 14px; font-weight: 600;
-                    text-decoration: none; transition: all 0.2s ease;
+                .landing-header-actions { 
+                    display: flex; 
+                    align-items: center; 
+                    gap: 16px; 
+                    z-index: 20;
+                    min-width: 120px;
+                    justify-content: flex-end;
                 }
-                .btn-login:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); }
+                .btn-login {
+                    background: #EAF6FF !important; 
+                    color: #0A0A0A !important;
+                    border: none !important; 
+                    padding: 8px 24px !important;
+                    border-radius: 6px !important; 
+                    font-size: 14px !important; 
+                    font-weight: 700 !important;
+                    text-decoration: none !important; 
+                    transition: all 0.2s ease !important;
+                    cursor: pointer !important;
+                }
+                .btn-login:hover { 
+                    background: #FFFFFF !important; 
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(234, 246, 255, 0.2);
+                }
                 .mobile-login { display: block; text-align: center; margin-top: 24px; }
                 .mobile-menu-btn { 
                     display: none; 
