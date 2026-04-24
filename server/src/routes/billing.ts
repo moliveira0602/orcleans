@@ -24,18 +24,24 @@ const PRICE_IDS: Record<string, string> = {
  * POST /billing/create-checkout-session
  */
 router.post('/create-checkout-session', authenticate, async (req: any, res) => {
+  console.log(`[Stripe] Request from user ${req.user?.id} for org ${req.organizationId}, plan: ${req.body.plan}`);
+  
   if (!stripe) {
+    console.error('[Stripe] Client not initialized');
     return res.status(503).json({ error: 'Funcionalidade de pagamento não configurada no servidor.' });
   }
   try {
     const { plan } = req.body;
+    if (!plan) throw new Error('Plano não especificado');
+    
     const priceId = PRICE_IDS[plan.toLowerCase()];
-
     if (!priceId) {
+      console.error(`[Stripe] Price ID not found for plan: ${plan}`);
       return res.status(400).json({ error: 'Plano inválido ou ID de preço não configurado' });
     }
 
     const orgId = req.organizationId;
+    if (!orgId) throw new Error('ID da organização não encontrado no pedido');
     const org = await prisma.organization.findUnique({ where: { id: orgId } });
 
     if (!org) {
@@ -62,6 +68,7 @@ router.post('/create-checkout-session', authenticate, async (req: any, res) => {
       },
     });
 
+    console.log(`[Stripe] Session created successfully: ${session.url}`);
     res.json({ url: session.url });
   } catch (error: any) {
     console.error('[Stripe] Error creating session:', error);
