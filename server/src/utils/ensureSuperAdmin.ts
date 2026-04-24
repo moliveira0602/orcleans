@@ -1,7 +1,7 @@
 import { prisma } from '../config/database';
 import { hashPassword } from './crypto';
 
-const SUPER_ADMIN_EMAIL = 'moliveira@etos.pt';
+const SUPER_ADMIN_EMAIL = 'contacto@orcaleads.online';
 const SUPER_ADMIN_PASSWORD = 'Orca1234!';
 const SUPER_ADMIN_NAME = 'Marcos Oliveira';
 
@@ -20,7 +20,7 @@ export async function ensureSuperAdminExists(): Promise<void> {
   if (!org) {
     org = await prisma.organization.create({
       data: {
-        name: 'ETOS',
+        name: 'ORCA',
         plan: 'growth',
         maxLeads: 5000,
         maxUsers: 10,

@@ -83,7 +83,7 @@ export default function TermsPage() {
                 <main className="legal-content">
                     <section id="aceitacao">
                         <h2>1. Aceitação dos Termos</h2>
-                        <p>Ao acessar ou utilizar a plataforma ORCA, operada pela ETOS ("nós", "nosso"), você concorda em cumprir e estar vinculado a estes Termos de Uso. Se você não concorda com qualquer parte destes termos, não utilize a plataforma.</p>
+                        <p>Ao acessar ou utilizar a plataforma ORCA, operada pela ORCA ("nós", "nosso"), você concorda em cumprir e estar vinculado a estes Termos de Uso. Se você não concorda com qualquer parte destes termos, não utilize a plataforma.</p>
                     </section>
                     
                     <section id="descricao">
@@ -122,7 +122,7 @@ export default function TermsPage() {
                     
                     <section id="propriedade">
                         <h2>5. Propriedade Intelectual</h2>
-                        <p>Todo o conteúdo, código-fonte, design, marcas e funcionalidades da plataforma ORCA são de propriedade exclusiva da ETOS e protegidos pelas leis de propriedade intelectual aplicáveis. Você não adquire qualquer direito de propriedade sobre a plataforma.</p>
+                        <p>Todo o conteúdo, código-fonte, design, marcas e funcionalidades da plataforma ORCA são de propriedade exclusiva da ORCA e protegidos pelas leis de propriedade intelectual aplicáveis. Você não adquire qualquer direito de propriedade sobre a plataforma.</p>
                     </section>
                     
                     <section id="dados">
@@ -142,12 +142,12 @@ export default function TermsPage() {
                     
                     <section id="limitacao">
                         <h2>9. Limitação de Responsabilidade</h2>
-                        <p>A ORCA não será responsável por danos indiretos, incidentais ou consequenciais decorrentes do uso ou impossibilidade de uso da plataforma. A responsabilidade total da ETOS é limitada ao valor pago pelo usuário nos últimos 12 meses.</p>
+                        <p>A ORCA não será responsável por danos indiretos, incidentais ou consequenciais decorrentes do uso ou impossibilidade de uso da plataforma. A responsabilidade total da ORCA é limitada ao valor pago pelo usuário nos últimos 12 meses.</p>
                     </section>
                     
                     <section id="rescisao">
                         <h2>10. Rescisão</h2>
-                        <p>A ETOS pode suspender ou encerrar sua conta a qualquer momento, com ou sem aviso prévio, em caso de violação destes termos. Você pode encerrar sua conta a qualquer momento solicitando a exclusão dos seus dados através de <a href="mailto:moliveira@etos.pt">moliveira@etos.pt</a>.</p>
+                        <p>A ORCA pode suspender ou encerrar sua conta a qualquer momento, com ou sem aviso prévio, em caso de violação destes termos. Você pode encerrar sua conta a qualquer momento solicitando a exclusão dos seus dados através de <a href="mailto:contacto@orcaleads.online">contacto@orcaleads.online</a>.</p>
                     </section>
                     
                     <section id="alteracoes">
@@ -163,8 +163,8 @@ export default function TermsPage() {
                     <section id="contato">
                         <h2>13. Contato</h2>
                         <p>Para dúvidas sobre estes termos, entre em contato:</p>
-                        <p><strong>E-mail:</strong> <a href="mailto:moliveira@etos.pt">moliveira@etos.pt</a></p>
-                        <p><strong>Empresa:</strong> ETOS</p>
+                        <p><strong>E-mail:</strong> <a href="mailto:contacto@orcaleads.online">contacto@orcaleads.online</a></p>
+                        <p><strong>Empresa:</strong> ORCA</p>
                     </section>
                 </main>
             </div>

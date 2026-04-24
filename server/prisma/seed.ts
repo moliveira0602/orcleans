@@ -11,7 +11,7 @@ async function seed() {
 
     org = await prisma.organization.create({
       data: {
-        name: 'ETOS Admin',
+        name: 'ORCA Admin',
         plan: 'growth',
         maxLeads: 5000,
         maxUsers: 10,
@@ -22,7 +22,7 @@ async function seed() {
       data: {
         organizationId: org.id,
         name: 'Super Admin',
-        email: 'test@etos.pt',
+        email: 'contacto@orcaleads.online',
         passwordHash,
         role: 'super_admin',
       },
@@ -32,7 +32,7 @@ async function seed() {
       data: {
         organizationId: org.id,
         name: 'Demo User',
-        email: 'demo@etos.pt',
+        email: 'contacto@orcaleads.online',
         passwordHash,
         role: 'admin',
       },
@@ -175,7 +175,7 @@ async function seed() {
   }
 
   // Always ensure the super admin exists, even if DB was previously seeded
-  const SUPER_ADMIN_EMAIL = 'moliveira@etos.pt';
+  const SUPER_ADMIN_EMAIL = 'contacto@orcaleads.online';
   const existingSuperAdmin = await prisma.user.findUnique({
     where: { email: SUPER_ADMIN_EMAIL },
   });

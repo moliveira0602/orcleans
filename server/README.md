@@ -81,7 +81,7 @@ This starts PostgreSQL and the API with auto-migration.
 ## Demo Credentials
 
 After seeding:
-- **Email**: demo@etos.pt
+- **Email**: contacto@orcaleads.online
 - **Password**: Orca1234!
 
 ## Project Structure

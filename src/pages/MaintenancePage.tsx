@@ -22,7 +22,7 @@ const MaintenancePage: React.FC = () => {
           </div>
           <div className="detail-item">
             <MessageSquare size={20} />
-            <span>Suporte: suporte@etos.pt</span>
+            <span>Suporte: contacto@orcaleads.online</span>
           </div>
         </div>
         

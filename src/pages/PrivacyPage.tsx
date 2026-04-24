@@ -142,7 +142,7 @@ export default function PrivacyPage() {
                             <li>Opor-se ao tratamento dos seus dados.</li>
                             <li>Retirar o consentimento a qualquer momento.</li>
                         </ul>
-                        <p>Para exercer seus direitos, entre em contato: <a href="mailto:moliveira@etos.pt">moliveira@etos.pt</a></p>
+                        <p>Para exercer seus direitos, entre em contato: <a href="mailto:contacto@orcaleads.online">contacto@orcaleads.online</a></p>
                     </section>
                     
                     <section id="cookies">
@@ -158,8 +158,8 @@ export default function PrivacyPage() {
                     <section id="contato">
                         <h2>10. Contato</h2>
                         <p>Para dúvidas sobre esta política ou sobre seus dados pessoais, entre em contato:</p>
-                        <p><strong>E-mail:</strong> <a href="mailto:moliveira@etos.pt">moliveira@etos.pt</a></p>
-                        <p><strong>Empresa:</strong> ETOS</p>
+                        <p><strong>E-mail:</strong> <a href="mailto:contacto@orcaleads.online">contacto@orcaleads.online</a></p>
+                        <p><strong>Empresa:</strong> ORCA</p>
                     </section>
                 </main>
             </div>

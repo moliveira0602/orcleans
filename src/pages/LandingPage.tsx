@@ -419,10 +419,10 @@ export default function LandingPage() {
             if (data.success) {
                 setFormSubmitted(true);
             } else {
-                alert('Erro ao enviar mensagem. Tente novamente ou escreva para moliveira@etos.pt');
+                alert('Erro ao enviar mensagem. Tente novamente ou escreva para contacto@orcaleads.online');
             }
         } catch (err: any) {
-            alert(err.message || 'Erro de conexão. Tente novamente ou escreva para moliveira@etos.pt');
+            alert(err.message || 'Erro de conexão. Tente novamente ou escreva para contacto@orcaleads.online');
         }
         setIsSubmitting(false);
     };
@@ -953,7 +953,7 @@ export default function LandingPage() {
                                     <div className="method-icon"><Mail size={20} /></div>
                                     <div className="method-content">
                                         <h4>Email</h4>
-                                        <p>moliveira@etos.pt</p>
+                                        <p>contacto@orcaleads.online</p>
                                     </div>
                                 </div>
                                 <div className="contact-method">

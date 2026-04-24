@@ -87,7 +87,7 @@ npm run db:seed
 npm run dev
 ```
 
-> **Credenciais demo:** `demo@etos.pt` / `Orca1234!`
+> **Credenciais demo:** `contacto@orcaleads.online` / `Orca1234!`
 
 ### 2. Frontend — Aplicação Web
 

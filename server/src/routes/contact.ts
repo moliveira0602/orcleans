@@ -35,7 +35,7 @@ router.post('/', async (req: Request, res: Response) => {
 
     const mailOptions = {
       from: `"ORCA Lens" <${process.env.SMTP_USER || 'no-reply@orcalens.com'}>`,
-      to: 'moliveira@etos.pt',
+      to: 'contacto@orcaleads.online',
       subject: `Novo Contacto - ORCA Lens Landing Page - ${name}`,
       text: `
         Recebeu uma nova mensagem do formulário de contacto da ORCA Lens:
@@ -85,7 +85,7 @@ router.post('/', async (req: Request, res: Response) => {
     console.error('[CONTACT] Error sending email:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Ocorreu um erro ao processar o seu contacto. Por favor, tente novamente mais tarde ou escreva diretamente para moliveira@etos.pt.' 
+      message: 'Ocorreu um erro ao processar o seu contacto. Por favor, tente novamente mais tarde ou escreva diretamente para contacto@orcaleads.online.' 
     });
   }
 });
