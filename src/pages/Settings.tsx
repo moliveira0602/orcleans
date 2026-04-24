@@ -377,7 +377,7 @@ export default function SettingsPage() {
                 <div style={{ marginTop: 20, padding: 16, background: 'rgba(0,0,0,0.1)', borderRadius: 12, border: '1px solid var(--border)' }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', marginBottom: 8 }}>Guia Rápido de Ingestão</div>
                     <pre style={{ fontSize: 11, color: 'var(--t2)', overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
-{`curl -X POST ${import.meta.env.VITE_API_BASE_URL}/leads/ingest \\
+{`curl -X POST ${import.meta.env.VITE_API_URL}/leads/ingest \\
   -H "X-API-KEY: YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
