@@ -557,9 +557,6 @@ export default function LandingPage() {
                                         {item.label}
                                     </button>
                                 ))}
-                                <button className="btn btn-primary w-full mobile-login" onClick={openDemoModal}>
-                                    Começar Grátis
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -1358,6 +1355,7 @@ export default function LandingPage() {
                     scroll-behavior: smooth;
                     background: #0A0A0A !important;
                     height: 100% !important;
+                    width: 100% !important;
                 }
                 
                 .landing-page {
@@ -1369,6 +1367,13 @@ export default function LandingPage() {
                     padding: 0 !important;
                     width: 100%;
                     min-height: 100vh;
+                    position: relative;
+                }
+
+                main {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    display: block;
                 }
 
                 .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
@@ -1436,13 +1441,6 @@ export default function LandingPage() {
                 .nav-link:hover, .nav-link.active { color: #EAF6FF; }
                 .nav-link:hover::after, .nav-link.active::after { width: 100%; }
                 .landing-header-actions { display: flex; align-items: center; gap: 16px; z-index: 10; }
-                .btn-login {
-                    background: rgba(255, 255, 255, 0.1); color: var(--orca-text);
-                    border: 1px solid rgba(255, 255, 255, 0.2); padding: 10px 24px;
-                    border-radius: 8px; font-size: 14px; font-weight: 600;
-                    text-decoration: none; transition: all 0.2s ease;
-                }
-                .btn-login:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); }
                 .mobile-menu-btn { 
                     display: none; 
                     flex-direction: column; 
@@ -1519,16 +1517,16 @@ export default function LandingPage() {
                 /* ===== HERO SECTION ===== */
                 .hero-section { 
                     position: relative; 
-                    height: 100vh !important;
+                    min-height: 100vh !important;
                     width: 100% !important;
                     overflow: hidden; 
                     display: flex !important; 
                     flex-direction: column;
                     align-items: center !important; 
-                    justify-content: center !important; 
+                    justify-content: flex-start !important; 
                     background: #0A0A0A;
                     margin: 0 !important;
-                    padding: 0 24px !important;
+                    padding: 160px 24px 100px !important;
                     z-index: 1;
                 }
                 .hero-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
@@ -1538,7 +1536,7 @@ export default function LandingPage() {
                 }
                 .hero-gradient { 
                     position: absolute; inset: 0; 
-                    background: linear-gradient(180deg, rgba(10, 10, 10, 0.95) 0%, rgba(10, 10, 10, 0.4) 15%, rgba(10, 10, 10, 0) 50%, #0A0A0A 100%); 
+                    background: linear-gradient(180deg, rgba(10, 10, 10, 1) 0%, rgba(10, 10, 10, 0.4) 15%, rgba(10, 10, 10, 0) 50%, #0A0A0A 100%); 
                     z-index: 1; 
                 }
                 .hero-particles {
