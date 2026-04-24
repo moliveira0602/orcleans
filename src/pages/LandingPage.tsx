@@ -1516,26 +1516,26 @@ export default function LandingPage() {
                 /* ===== HERO SECTION ===== */
                 .hero-section { 
                     position: relative; 
-                    height: 100vh;
-                    min-height: 650px;
+                    height: 100vh !important;
+                    width: 100% !important;
                     overflow: hidden; 
-                    display: flex; 
+                    display: flex !important; 
                     flex-direction: column;
-                    align-items: center; 
-                    justify-content: center; 
+                    align-items: center !important; 
+                    justify-content: center !important; 
                     background: #0A0A0A;
-                    margin: 0;
-                    padding: 64px 24px 0;
-                    width: 100%;
+                    margin: 0 !important;
+                    padding: 0 24px !important;
+                    z-index: 1;
                 }
                 .hero-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
                 .hero-video {
                     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-                    object-fit: cover; opacity: 0.4;
+                    object-fit: cover; opacity: 0.45;
                 }
                 .hero-gradient { 
                     position: absolute; inset: 0; 
-                    background: linear-gradient(180deg, rgba(10, 10, 10, 0.9) 0%, rgba(10, 10, 10, 0.4) 15%, rgba(10, 10, 10, 0) 50%, #0A0A0A 100%); 
+                    background: linear-gradient(180deg, rgba(10, 10, 10, 0.95) 0%, rgba(10, 10, 10, 0.4) 15%, rgba(10, 10, 10, 0) 50%, #0A0A0A 100%); 
                     z-index: 1; 
                 }
                 .hero-particles {
