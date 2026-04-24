@@ -1534,13 +1534,16 @@ export default function LandingPage() {
                     display: flex !important; 
                     flex-direction: column;
                     align-items: center !important; 
-                    justify-content: center !important; 
-                    background: #0A0A0A;
+                    justify-content: flex-start !important; 
+                    background: transparent;
                     margin: 0 !important;
-                    padding: 100px 24px 60px !important;
+                    padding: 0 !important;
                     z-index: 1;
                 }
-                .hero-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+                .hero-bg { 
+                    position: absolute; inset: 0; z-index: 0; overflow: hidden;
+                    background: transparent !important;
+                }
                 .hero-video {
                     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
                     object-fit: cover; opacity: 0.45;
@@ -1557,7 +1560,7 @@ export default function LandingPage() {
                 }
                 .hero-content { 
                     position: relative; z-index: 10; text-align: center; max-width: 900px; margin: 0 auto;
-                    margin-top: 0 !important;
+                    padding-top: 120px !important;
                 }
                 .hero-badge {
                     display: inline-block; padding: 6px 16px; background: rgba(255, 255, 255, 0.1);
