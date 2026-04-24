@@ -9,9 +9,7 @@ const auth_1 = require("../middleware/auth");
 const database_1 = require("../config/database");
 const router = (0, express_1.Router)();
 const stripe = process.env.STRIPE_SECRET_KEY
-    ? new stripe_1.default(process.env.STRIPE_SECRET_KEY, {
-        apiVersion: '2025-01-27',
-    })
+    ? new stripe_1.default(process.env.STRIPE_SECRET_KEY)
     : null;
 if (!stripe) {
     console.warn('[Stripe] STRIPE_SECRET_KEY is missing. Billing features will be disabled.');
