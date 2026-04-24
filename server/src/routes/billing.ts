@@ -117,6 +117,7 @@ router.post('/webhook', async (req, res) => {
           data: {
             plan: plan,
             maxLeads: PLAN_LIMITS[plan] || 50,
+            stripeId: session.customer as string, // Save for future webhooks
           }
         });
         console.log(`[Stripe] Org ${orgId} upgraded to ${plan} (Limit: ${PLAN_LIMITS[plan] || 50})`);
@@ -124,14 +125,14 @@ router.post('/webhook', async (req, res) => {
       break;
 
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
+        const subscription = event.data.object as any;
         const customerId = subscription.customer as string;
 
         console.log(`[Stripe Webhook] Subscription deleted for customer: ${customerId}`);
 
         // Reset organization to trial plan and limits
         await prisma.organization.updateMany({
-          where: { stripeCustomerId: customerId },
+          where: { stripeId: customerId },
           data: {
             plan: 'trial',
             maxLeads: 50,
