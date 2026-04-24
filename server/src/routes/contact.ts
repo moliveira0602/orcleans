@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import nodemailer from 'nodemailer';
+import { getBaseTemplate } from '../utils/emailTemplates';
 
 const router = Router();
 
@@ -20,80 +21,70 @@ router.post('/', async (req: Request, res: Response) => {
     });
   }
 
-  // Validate email format
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return res.status(400).json({ success: false, message: 'Formato de email inválido.' });
-  }
-
   try {
-    // Configure transporter using environment variables
-    // These should be configured in Vercel/Environment Variables
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT || 587),
-      secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+      secure: process.env.SMTP_SECURE === 'true',
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
     });
 
-    const mailOptions = {
-      from: `"ORCA Lens" <${process.env.SMTP_USER || 'no-reply@orcalens.com'}>`,
-      to: 'contacto@orcaleads.online',
-      subject: `Novo Contacto - ORCA Lens Landing Page - ${name}`,
-      text: `
-        Recebeu uma nova mensagem do formulário de contacto da ORCA Lens:
+    const isDemo = message && message.includes('[PEDIDO DE DEMO]');
+    const subject = isDemo ? `Novo Pedido de Demo - ${name}` : `Novo Contacto - ${name}`;
 
-        Nome: ${name}
-        Email: ${email}
-        Empresa: ${company}
-        Telefone: ${phone || 'Não fornecido'}
-        
-        Mensagem:
-        ${message || 'Sem mensagem adicional.'}
-      `,
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-          <h2 style="color: #333; border-bottom: 2px solid #00ff80; padding-bottom: 10px;">Novo Contacto - ORCA Lens</h2>
-          <p style="font-size: 16px; color: #555;">Recebeu uma nova mensagem do formulário de contacto da Landing Page:</p>
-          
-          <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 20px;">
-            <p><strong>Nome:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Empresa:</strong> ${company}</p>
-            <p><strong>Telefone:</strong> ${phone || 'Não fornecido'}</p>
-          </div>
-          
-          <div style="margin-top: 20px;">
-            <p><strong>Mensagem:</strong></p>
-            <p style="background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 8px; line-height: 1.6;">${(message || 'Sem mensagem adicional.').replace(/\n/g, '<br>')}</p>
-          </div>
-          
-          <p style="font-size: 12px; color: #999; margin-top: 30px; text-align: center;">
-            Este é um email automático enviado pelo servidor da ORCA Lens.
-          </p>
-        </div>
-      `,
+    // 1. Internal notification for ORCA Team
+    const adminMailOptions = {
+      from: `"ORCA Lens" <${process.env.SMTP_USER || 'no-reply@orcaleads.online'}>`,
+      to: 'contacto@orcaleads.online',
+      subject: subject,
+      html: getBaseTemplate({
+        title: subject,
+        content: `Recebeu uma nova submissão do formulário de ${isDemo ? 'demo' : 'contacto'} na Landing Page.`,
+        details: [
+          { label: 'Nome', value: name },
+          { label: 'Email', value: email },
+          { label: 'Empresa', value: company },
+          { label: 'Telefone', value: phone || 'Não fornecido' },
+          { label: 'Mensagem', value: message || 'Sem mensagem adicional.' }
+        ]
+      }),
       replyTo: email,
     };
 
-    // Verify transporter configuration
-    // This is optional but helpful for debugging
-    // await transporter.verify();
+    // 2. Confirmation for the Client
+    const clientMailOptions = {
+      from: `"ORCA Lens" <${process.env.SMTP_USER || 'no-reply@orcaleads.online'}>`,
+      to: email,
+      subject: isDemo ? 'O seu pedido de demo na ORCA' : 'Obrigado pelo seu contacto - ORCA',
+      html: getBaseTemplate({
+        title: isDemo ? 'Quase lá!' : 'Recebemos a sua mensagem',
+        content: isDemo 
+          ? `Olá ${name.split(' ')[0]},\n\nObrigado pelo seu interesse na ORCA. Recebemos o seu pedido de demo e a nossa equipa de especialistas irá analisar o perfil da sua empresa.\n\nEntraremos em contacto em breve para agendar uma demonstração personalizada das nossas ferramentas de inteligência comercial.`
+          : `Olá ${name.split(' ')[0]},\n\nRecebemos a sua mensagem e agradecemos o seu contacto. A nossa equipa irá analisar a sua solicitação e responderemos o mais breve possível (geralmente em menos de 24 horas).`,
+        ctaText: 'Ver plataforma',
+        ctaUrl: 'https://orcaleads.online'
+      })
+    };
 
-    await transporter.sendMail(mailOptions);
+    // Send both emails
+    await Promise.all([
+      transporter.sendMail(adminMailOptions),
+      transporter.sendMail(clientMailOptions)
+    ]);
     
-    console.log(`[CONTACT] Email sent successfully from ${email}`);
+    console.log(`[CONTACT] Emails sent successfully to team and client (${email})`);
     res.status(200).json({ success: true, message: 'Mensagem enviada com sucesso.' });
   } catch (error) {
     console.error('[CONTACT] Error sending email:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Ocorreu um erro ao processar o seu contacto. Por favor, tente novamente mais tarde ou escreva diretamente para contacto@orcaleads.online.' 
+      message: 'Ocorreu um erro ao processar o seu contacto. Por favor, tente novamente mais tarde.' 
     });
   }
 });
+
 
 export default router;
