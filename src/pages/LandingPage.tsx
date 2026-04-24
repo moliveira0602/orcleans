@@ -1284,11 +1284,11 @@ export default function LandingPage() {
                     transition: all 0.3s ease; background: transparent;
                 }
                 .landing-header.scrolled {
-                    background: rgba(5, 7, 10, 0.4);
-                    backdrop-filter: blur(16px) saturate(180%);
-                    -webkit-backdrop-filter: blur(16px) saturate(180%);
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-                    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+                    background: rgba(10, 10, 10, 0.7);
+                    backdrop-filter: blur(20px) saturate(180%);
+                    -webkit-backdrop-filter: blur(20px) saturate(180%);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
                 }
                 .landing-header-inner {
                     max-width: 1400px; margin: 0 auto; padding: 0 48px;
