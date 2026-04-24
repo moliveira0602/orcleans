@@ -198,6 +198,8 @@ export default function AdminPage() {
     const [tenants, setTenants] = useState<Tenant[]>([]);
     const [orcaLeads, setOrcaLeads] = useState<OrcaLead[]>([]);
     const [logs, setLogs] = useState<AuditLog[]>([]);
+    const [selectedOrcaLead, setSelectedOrcaLead] = useState<OrcaLead | null>(null);
+    const [showMessageModal, setShowMessageModal] = useState(false);
     const [logTotal, setLogTotal] = useState(0);
     const [diagnostics, setDiagnostics] = useState<Diagnostics | null>(null);
     const [systemConfig, setSystemConfig] = useState<SystemConfig | null>(null);
@@ -894,15 +896,16 @@ export default function AdminPage() {
                                             <button 
                                                 className="btn btn-ghost btn-sm" 
                                                 onClick={() => {
-                                                    if (lead.message) alert(`Mensagem de ${lead.name}:\n\n${lead.message}`);
-                                                    else alert('Este lead não deixou mensagem.');
+                                                    setSelectedOrcaLead(lead);
+                                                    setShowMessageModal(true);
                                                 }}
-                                                title="Ver Mensagem"
+                                                title="Ver Detalhes"
                                             >
                                                 <Search size={14} />
                                             </button>
                                             <button 
-                                                className="btn btn-ghost btn-sm text-red" 
+                                                className="btn btn-ghost btn-sm" 
+                                                style={{ color: 'var(--red)', background: 'rgba(239, 68, 68, 0.05)' }}
                                                 onClick={() => handleDeleteOrcaLead(lead.id)}
                                                 title="Remover"
                                             >
@@ -1720,6 +1723,71 @@ export default function AdminPage() {
                             <button className="btn btn-primary" onClick={handleEditTenant} disabled={saving}>
                                 {saving ? 'A guardar...' : 'Guardar Alterações'}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showMessageModal && selectedOrcaLead && (
+                <div className="modal-overlay open" onClick={() => setShowMessageModal(false)}>
+                    <div className="modal" style={{ maxWidth: 500 }} onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div className="modal-title">Detalhes do Lead ORCA</div>
+                            <button className="modal-close" onClick={() => setShowMessageModal(false)}><X size={18} /></button>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                <div>
+                                    <div style={{ fontSize: 11, color: 'var(--t3)', textTransform: 'uppercase' }}>Nome</div>
+                                    <div style={{ fontWeight: 600 }}>{selectedOrcaLead.name}</div>
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: 11, color: 'var(--t3)', textTransform: 'uppercase' }}>Tipo</div>
+                                    <div style={{ fontWeight: 600, color: selectedOrcaLead.type === 'demo' ? 'var(--blue)' : 'var(--purple)' }}>
+                                        {selectedOrcaLead.type === 'demo' ? 'Pedido de Demo' : 'Contacto Geral'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: 11, color: 'var(--t3)', textTransform: 'uppercase' }}>Email</div>
+                                    <div>{selectedOrcaLead.email}</div>
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: 11, color: 'var(--t3)', textTransform: 'uppercase' }}>Telefone</div>
+                                    <div>{selectedOrcaLead.phone || '—'}</div>
+                                </div>
+                            </div>
+                            
+                            {selectedOrcaLead.company && (
+                                <div>
+                                    <div style={{ fontSize: 11, color: 'var(--t3)', textTransform: 'uppercase' }}>Empresa</div>
+                                    <div style={{ fontWeight: 600 }}>{selectedOrcaLead.company}</div>
+                                </div>
+                            )}
+
+                            <div>
+                                <div style={{ fontSize: 11, color: 'var(--t3)', textTransform: 'uppercase', marginBottom: 8 }}>Mensagem / Requisitos</div>
+                                <div style={{ 
+                                    padding: 16, 
+                                    background: 'rgba(255,255,255,0.03)', 
+                                    borderRadius: 8, 
+                                    border: '1px solid var(--border)',
+                                    fontSize: 14,
+                                    lineHeight: 1.5,
+                                    whiteSpace: 'pre-wrap'
+                                }}>
+                                    {selectedOrcaLead.message || 'O lead não deixou uma mensagem adicional.'}
+                                </div>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>
+                            <button className="btn btn-ghost" onClick={() => setShowMessageModal(false)}>Fechar</button>
+                            <a 
+                                href={`mailto:${selectedOrcaLead.email}`} 
+                                className="btn btn-primary"
+                                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                            >
+                                <Mail size={16} /> Responder via Email
+                            </a>
                         </div>
                     </div>
                 </div>

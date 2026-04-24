@@ -107,6 +107,8 @@ async function enrichLead(lead: Lead): Promise<Lead> {
     const placeId = lead.id.replace('google_', '');
     
     try {
+        if (!trackApiCall('details')) return lead;
+
         const data: any = await api.get(`${API_BASES.google}/details`, {
             params: { 
                 place_id: placeId,
@@ -140,6 +142,7 @@ async function enrichLead(lead: Lead): Promise<Lead> {
         }
         return lead;
     } catch (err) {
+        console.error('[ScanService] Error enriching lead:', lead.nome, err);
         return lead;
     }
 }
@@ -169,17 +172,24 @@ function processPlaces(
 
             // Detect city from address if the input city was coordinates
             let finalCity = city;
-            if (city.includes(',') && endereco) {
+            if ((city.includes(',') || /^-?[0-9.]+$/.test(city)) && endereco) {
                 const parts = endereco.split(',').map(p => p.trim());
                 if (parts.length >= 2) {
-                    // In Portugal, city is often in the last part: "8700-240 Olhão"
+                    // Try to find a part that looks like a city
+                    // 1. Check for Portuguese format: "XXXX-XXX City" (at the end)
                     const lastPart = parts[parts.length - 1];
                     const cityMatch = lastPart.match(/(?:\d{4}-\d{3})\s+(.+)$/);
                     if (cityMatch) {
                         finalCity = cityMatch[1].trim();
                     } else {
-                        // Fallback: use the second to last part
-                        finalCity = parts[parts.length - 2].replace(/\d+/g, '').trim();
+                        // 2. Check for "City, Country"
+                        const penultimate = parts[parts.length - 2];
+                        if (penultimate && !/\d/.test(penultimate)) {
+                            finalCity = penultimate;
+                        } else {
+                            // 3. Fallback: Take the second part if available, or stay with original
+                            finalCity = parts[1] || parts[0];
+                        }
                     }
                 }
             }
@@ -231,6 +241,20 @@ function processPlaces(
             return null;
         }
     });
+}
+
+async function fetchPlaceDetails(placeId: string): Promise<any | null> {
+    if (!trackApiCall('details')) return null;
+    
+    try {
+        const response = await api.get<any>(`${API_BASES.google}/details`, {
+            params: { place_id: placeId }
+        });
+        return response.result || null;
+    } catch (err) {
+        console.error('[GOOGLE DEBUG] Error fetching details for:', placeId, err);
+        return null;
+    }
 }
 
 // ============================================================================
@@ -331,18 +355,24 @@ export async function runScan(
             onProgress?.(`${duplicateCount} duplicados removidos.`);
             onProgress?.(`Processando ${Math.min(newPlaces.length, 20)} lugares...`);
             
-            const leads = processPlaces(newPlaces.slice(0, 20), segment, lat, lon, city);
-            const validLeads = leads.filter((l: Lead | null): l is Lead => l !== null);
+            const searchResults = newPlaces.slice(0, 20);
+            onProgress?.(`Enriquecendo dados de ${searchResults.length} leads do cache (Telefone, Website)...`);
+            
+            const leads = processPlaces(searchResults, segment, lat, lon, city);
+            const validLeadsFromCache = leads.filter((l: Lead | null): l is Lead => l !== null);
+            
+            // Enrich results even if they come from cache
+            const enrichedLeads = await Promise.all(validLeadsFromCache.map(l => enrichLead(l)));
             
             return {
                 success: true,
                 totalFound: searchData.results.length,
-                imported: validLeads.length,
+                imported: enrichedLeads.length,
                 duplicates: duplicateCount,
                 errors: 0,
-                leads: validLeads,
+                leads: enrichedLeads,
                 cached: true,
-                message: `Scan concluído: ${validLeads.length} leads do cache.`,
+                message: `Scan concluído: ${enrichedLeads.length} leads do cache enriquecidos.`,
             };
         }
 

@@ -514,7 +514,7 @@ export default function LandingPage() {
     return (
         <div className="landing-page">
             <MistBackground />
-            <div id="scroll-sentinel" style={{ position: 'absolute', top: 10, left: 0, width: 1, height: 1 }} />
+            <div id="scroll-sentinel" style={{ position: 'absolute', top: 0, left: 0, width: 1, height: 1 }} />
             {/* ===== NAVBAR ===== */}
             <header className={`landing-header${scrolled ? ' scrolled' : ''}`}>
                 <div className="landing-header-inner">
@@ -1029,6 +1029,18 @@ export default function LandingPage() {
                                             {formErrors.company && <span className="error-text">{formErrors.company}</span>}
                                         </div>
                                         <div className="form-group">
+                                            <label htmlFor="phone-inline">Telefone / WhatsApp</label>
+                                            <input 
+                                                type="tel" 
+                                                id="phone-inline" 
+                                                name="phone" 
+                                                value={formData.phone} 
+                                                onChange={handlePhoneChange} 
+                                                placeholder="+351 9XX XXX XXX" 
+                                            />
+                                            {formErrors.phone && <span className="error-text">{formErrors.phone}</span>}
+                                        </div>
+                                        <div className="form-group">
                                             <label htmlFor="message-inline">Como podemos ajudar?</label>
                                             <textarea 
                                                 id="message-inline" 
@@ -1339,7 +1351,7 @@ export default function LandingPage() {
 
             <style>{`
                 /* ===== LANDING PAGE STYLES ===== */
-                html, body { overflow-y: auto !important; scroll-behavior: smooth; }
+                html, body { margin: 0; padding: 0; overflow-y: auto !important; scroll-behavior: smooth; }
                 
                 .landing-page {
                     background: #0A0A0A;
@@ -1502,7 +1514,9 @@ export default function LandingPage() {
                     display: flex; 
                     align-items: center; 
                     justify-content: center; 
-                    background: transparent; 
+                    background: transparent;
+                    margin: 0;
+                    padding: 0;
                 }
                 .hero-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
                 .hero-video {
@@ -1510,7 +1524,7 @@ export default function LandingPage() {
                     width: auto; height: auto; transform: translate(-50%, -50%);
                     object-fit: cover; opacity: 0.4;
                 }
-                .hero-gradient { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(51, 51, 51, 0.4) 0%, #0A0A0A 80%); z-index: 1; }
+                .hero-gradient { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(10, 10, 10, 0.4) 0%, #0A0A0A 80%); z-index: 1; }
                 .hero-particles {
                     position: absolute; inset: 0;
                     background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);

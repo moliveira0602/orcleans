@@ -305,41 +305,146 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
             <div className="grid-2 mb-24">
                 <div className="card">
                     <div className="sec-header">
-                        <div>
-                            <div className="sec-title">Distribuição de Qualidade</div>
-                            <div className="sec-sub">Qualificação térmica da base</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ padding: 8, background: 'var(--green-dim)', borderRadius: 8, color: 'var(--green)' }}>
+                                <Activity size={20} />
+                            </div>
+                            <div>
+                                <div className="sec-title">Qualidade da Base</div>
+                                <div className="sec-sub">Análise térmica de conversão</div>
+                            </div>
                         </div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32, padding: '20px 0' }}>
                         <PieChart 
-                            size={160} 
-                            innerRadius={50}
+                            size={180} 
+                            innerRadius={65}
                             data={[
                                 { label: 'Quentes', value: hot.length, color: 'var(--green)' },
                                 { label: 'Mornos', value: warm.length, color: 'var(--amber)' },
                                 { label: 'Frios', value: cold.length, color: 'var(--red)' },
                             ]} 
                         />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <div style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--green)' }} />
+                                <div style={{ fontSize: 12, color: 'var(--t2)' }}>Quentes ({hot.length})</div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <div style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--amber)' }} />
+                                <div style={{ fontSize: 12, color: 'var(--t2)' }}>Mornos ({warm.length})</div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <div style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--red)' }} />
+                                <div style={{ fontSize: 12, color: 'var(--t2)' }}>Frios ({cold.length})</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div className="card">
                     <div className="sec-header">
-                        <div>
-                            <div className="sec-title">Status do Pipeline</div>
-                            <div className="sec-sub">Volume por etapa do funil</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ padding: 8, background: 'var(--blue-dim)', borderRadius: 8, color: 'var(--blue)' }}>
+                                <Columns3 size={20} />
+                            </div>
+                            <div>
+                                <div className="sec-title">Status do Funil</div>
+                                <div className="sec-sub">Volume por etapa operacional</div>
+                            </div>
                         </div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32, padding: '20px 0' }}>
                         <PieChart 
-                            size={160} 
+                            size={180} 
                             innerRadius={0}
                             data={funnelData.slice(0, 5).map(d => ({ label: d.label, value: d.value, color: d.color }))} 
                         />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {funnelData.slice(0, 5).map((d, i) => (
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <div style={{ width: 8, height: 8, borderRadius: 2, background: d.color }} />
+                                    <div style={{ fontSize: 11, color: 'var(--t2)', whiteSpace: 'nowrap' }}>{d.label}: {d.value}</div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* ===== ROW 3: Engagement & Performance ===== */}
+            {/* ===== ROW 3: Terminal & Activity Feed ===== */}
+            <div className="grid-3 mb-24">
+                <div className="card col-span-2" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', background: '#000' }}>
+                    <div style={{ 
+                        padding: '10px 16px', 
+                        background: 'rgba(255,255,255,0.02)', 
+                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                    }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <Terminal size={12} /> Activity Console [v2.4]
+                        </div>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ADE80' }} className="pulse-dot" />
+                    </div>
+                    <div style={{ 
+                        height: 200, 
+                        padding: 16, 
+                        fontFamily: 'monospace', 
+                        fontSize: 12, 
+                        color: '#4ADE80', 
+                        overflowY: 'auto',
+                        background: 'radial-gradient(circle at center, rgba(0,255,0,0.02) 0%, transparent 100%)'
+                    }}>
+                        {activities.length > 0 ? activities.slice(0, 10).map((a, i) => (
+                            <div key={i} style={{ marginBottom: 6, opacity: 1 - (i * 0.1) }}>
+                                <span style={{ color: 'rgba(255,255,255,0.2)' }}>[{new Date(a.time).toLocaleTimeString()}]</span>
+                                <span style={{ color: 'var(--blue)', marginLeft: 8 }}>{a.type.toUpperCase()}</span>
+                                <span style={{ color: '#FFF', marginLeft: 8 }}>{a.content}</span>
+                            </div>
+                        )) : (
+                            <div style={{ color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 80 }}>Aguardando atividades do sistema...</div>
+                        )}
+                        <div style={{ color: '#4ADE80', opacity: 0.5 }}>_ sys: monitoring_leads_stream...</div>
+                    </div>
+                </div>
+                <div className="card">
+                    <div className="sec-header">
+                        <div className="sec-title">Performance</div>
+                    </div>
+                    <div style={{ marginTop: 12 }}>
+                        <div style={{ marginBottom: 16 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 }}>
+                                <span style={{ color: 'var(--t3)' }}>Taxa de Conversão</span>
+                                <span style={{ color: 'var(--green)' }}>{conversionRate}%</span>
+                            </div>
+                            <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+                                <div style={{ height: '100%', width: `${conversionRate}%`, background: 'var(--green)', borderRadius: 2 }} />
+                            </div>
+                        </div>
+                        <div style={{ marginBottom: 16 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 }}>
+                                <span style={{ color: 'var(--t3)' }}>Taxa de Perda</span>
+                                <span style={{ color: 'var(--red)' }}>{lossRate}%</span>
+                            </div>
+                            <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+                                <div style={{ height: '100%', width: `${lossRate}%`, background: 'var(--red)', borderRadius: 2 }} />
+                            </div>
+                        </div>
+                        <div style={{ marginBottom: 16 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 }}>
+                                <span style={{ color: 'var(--t3)' }}>Eficiência de Resposta</span>
+                                <span style={{ color: 'var(--blue)' }}>84%</span>
+                            </div>
+                            <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+                                <div style={{ height: '100%', width: '84%', background: 'var(--blue)', borderRadius: 2 }} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ===== ROW 4: Engagement & Performance ===== */}
             <div className="kpi-grid" style={{ marginBottom: 24 }}>
                 <div className="kpi">
                     <div className="kpi-label">Em Negociação</div>
