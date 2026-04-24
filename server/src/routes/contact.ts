@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import nodemailer from 'nodemailer';
 import { getBaseTemplate } from '../utils/emailTemplates';
+import { prisma } from '../config/database';
 
 const router = Router();
 
@@ -46,7 +47,6 @@ router.post('/', async (req: Request, res: Response) => {
       },
     });
 
-    const isDemo = message && message.includes('[PEDIDO DE DEMO]');
     const subject = isDemo ? `Novo Pedido de Demo - ${name}` : `Novo Contacto - ${name}`;
 
     // 1. Internal notification for ORCA Team
