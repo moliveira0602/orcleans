@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+// Force V6 Deploy
 const stripe_1 = __importDefault(require("stripe"));
 const auth_1 = require("../middleware/auth");
 const database_1 = require("../config/database");
