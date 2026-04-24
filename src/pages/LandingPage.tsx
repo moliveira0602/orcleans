@@ -2268,19 +2268,27 @@ export default function LandingPage() {
                     width: 44px;
                     height: 44px;
                     border-radius: 50%;
-                    background: rgba(255, 255, 255, 0.08);
-                    border: 1px solid rgba(255, 255, 255, 0.15);
-                    color: #EAF6FF;
+                    background: #1A1A1A;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    color: #FFFFFF;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
-                    transition: all 0.3s ease;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                     backdrop-filter: blur(12px);
+                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+                    animation: floatIn 0.3s ease-out;
+                }
+                @keyframes floatIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
                 }
                 .scroll-to-top:hover {
-                    background: rgba(255, 255, 255, 0.15);
-                    transform: translateY(-2px);
+                    background: #333;
+                    border-color: rgba(255, 255, 255, 0.4);
+                    transform: translateY(-4px);
+                    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
                 }
                 
                 @media (max-width: 768px) {
