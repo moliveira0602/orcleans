@@ -1,0 +1,38 @@
+name: VPS Deployment
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Executing remote ssh commands
+      uses: appleboy/ssh-action@master
+      with:
+        host: 162.240.163.208
+        username: orcaleads
+        password: ${{ secrets.VPS_PASSWORD }}
+        port: 22022
+        script: |
+          cd /home/orcaleads/orcleans
+          git fetch origin main
+          git reset --hard origin/main
+          git clean -fd
+          git update-index --assume-unchanged package-lock.json
+          
+          # Frontend Build
+          npm install
+          npm run build
+          
+          # Deploy to public_html
+          cp -R dist/* /home/orcaleads/public_html/
+          
+          # Backend Update
+          cd server
+          npm install
+          npx prisma generate
+          
+          # Restart API
+          pm2 restart orca-api || pm2 start src/index.ts --name orca-api
