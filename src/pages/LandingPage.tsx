@@ -1509,22 +1509,22 @@ export default function LandingPage() {
                 /* ===== HERO SECTION ===== */
                 .hero-section { 
                     position: relative; 
-                    min-height: 100vh; 
                     overflow: hidden; 
                     display: flex; 
-                    align-items: flex-start; 
+                    flex-direction: column;
+                    align-items: center; 
                     justify-content: center; 
-                    background: transparent;
+                    background: #0A0A0A;
                     margin: 0;
-                    padding: 140px 0 60px;
+                    padding: 220px 24px 140px;
+                    width: 100%;
                 }
                 .hero-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
                 .hero-video {
-                    position: absolute; top: 0; left: 50%; min-width: 100%; min-height: 100%;
-                    width: auto; height: auto; transform: translateX(-50%);
-                    object-fit: cover; opacity: 0.35;
+                    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                    object-fit: cover; opacity: 0.5;
                 }
-                .hero-gradient { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 20%, rgba(10, 10, 10, 0.2) 0%, #0A0A0A 85%); z-index: 1; }
+                .hero-gradient { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10, 10, 10, 0.6) 0%, rgba(10, 10, 10, 0.4) 30%, #0A0A0A 90%); z-index: 1; }
                 .hero-particles {
                     position: absolute; inset: 0;
                     background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
