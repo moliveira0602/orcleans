@@ -1356,16 +1356,19 @@ export default function LandingPage() {
                     padding: 0 !important; 
                     overflow-y: auto !important; 
                     scroll-behavior: smooth;
-                    background: #0A0A0A;
+                    background: #0A0A0A !important;
+                    height: 100% !important;
                 }
                 
                 .landing-page {
-                    background: #0A0A0A;
+                    background: transparent !important;
                     color: #EAF6FF;
                     font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
                     overflow-x: hidden;
                     margin: 0 !important;
                     padding: 0 !important;
+                    width: 100%;
+                    min-height: 100vh;
                 }
 
                 .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
