@@ -1,10 +1,8 @@
----
 deployment:
   tasks:
     - export PATH=$PATH:/usr/local/bin
-    - cd /home/orcaleads/orcleans
     - npm install
     - npm run build
-    - /bin/cp -R dist/* /home/orcaleads/public_html
+    - cp -R dist/* /home/orcaleads/public_html
     - cd server && npm install && npx prisma generate
     - pm2 restart orca-api
