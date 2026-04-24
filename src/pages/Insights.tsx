@@ -215,7 +215,7 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
         const fetchSuggestions = async () => {
             setLoadingSuggestions(true);
             try {
-                const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/sonar/suggestions`, {
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/sonar/suggestions`, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('orca_token')}` }
                 });
                 const data = await res.json();

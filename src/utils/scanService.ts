@@ -11,6 +11,7 @@ import { getCached, setCached, generateCacheKey } from '../services/placesCache'
 import api from '../services/api';
 
 const IS_PRODUCTION = import.meta.env.PROD || false;
+const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_API_KEY || ''; 
 
 // Always use backend proxy to avoid CORS issues
 const API_BASES = {
@@ -94,7 +95,6 @@ export async function loadLeadPhotos(placeId: string): Promise<string[]> {
         // Note: photos are still displayed via direct Google URL but the reference is fetched via proxy
         // To fully hide the key, we'd need a proxy for photos too, but that's bandwidth heavy.
         // For now, we protect the textsearch/details keys.
-        const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_API_KEY || ''; 
         
         const fotos = (data.result?.photos || []).slice(0, 3).map(
             (ph: any) => `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${ph.photo_reference}&key=${GOOGLE_KEY}`
@@ -255,7 +255,7 @@ export async function runScan(
         onProgress?.(`Iniciando scan: ${segment} em ${city}...`);
         onProgress?.(`Fonte: Google Places API (Proxy)`);
 
-        console.log('[GOOGLE DEBUG] Key exists:', !!GOOGLE_KEY, '| prefix:', GOOGLE_KEY?.substring(0, 10));
+        console.log('[GOOGLE DEBUG] Proxy usage enabled | prefix:', GOOGLE_KEY ? GOOGLE_KEY.substring(0, 8) + '...' : 'MISSING');
 
         // ========================================================================
         // ESTRATÉGIA 1 — CACHE CHECK antes de chamar API
