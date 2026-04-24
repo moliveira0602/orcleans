@@ -72,6 +72,10 @@ const apiLimiter = rateLimit({
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api', apiLimiter);
+
+// Import tryAuthenticate from auth middleware
+import { tryAuthenticate } from './middleware/auth';
+app.use('/api', tryAuthenticate);
 app.use('/api', maintenanceMode);
 // ─────────────────────────────────────────────────────────────────────────────
 

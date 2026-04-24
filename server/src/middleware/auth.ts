@@ -42,6 +42,39 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
   }
 }
 
+export async function tryAuthenticate(req: AuthRequest, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader?.startsWith('Bearer ')) {
+    return next();
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = jwt.verify(token, jwtConfig.accessSecret) as {
+      sub: string;
+      organizationId: string;
+      role: string;
+    };
+
+    req.userId = decoded.sub;
+    req.organizationId = decoded.organizationId;
+    req.userRole = decoded.role as Role;
+    
+    // Compatibility with other middleware expectations
+    (req as any).user = {
+      id: decoded.sub,
+      role: decoded.role,
+      organizationId: decoded.organizationId
+    };
+  } catch {
+    // Ignore errors for tryAuthenticate
+  }
+
+  next();
+}
+
 export function authorize(...allowedRoles: Role[]) {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.userRole || !allowedRoles.includes(req.userRole)) {
