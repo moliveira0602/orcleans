@@ -14,6 +14,8 @@ export const envSchema = z.object({
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(100),
   LOG_LEVEL: z.string().default('info'),
   GOOGLE_API_KEY: z.string().default(''),
+  STRIPE_SECRET_KEY: z.string().default(''),
+  STRIPE_WEBHOOK_SECRET: z.string().default(''),
 });
 
 const result = envSchema.safeParse(process.env);

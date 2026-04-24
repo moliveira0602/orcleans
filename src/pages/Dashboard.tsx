@@ -213,8 +213,73 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
 
     return (
         <>
+            {/* ===== ROW 0: Plan Status Alert (if near limit) ===== */}
+            {user?.organization && (
+                <div style={{ marginBottom: 20 }}>
+                    {(() => {
+                        const PLAN_LIMITS: Record<string, number> = {
+                            'trial': 50,
+                            'starter': 500,
+                            'pro': 2000,
+                            'enterprise': 10000
+                        };
+                        const org = user.organization;
+                        const effectiveMax = org.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[org.plan?.toLowerCase()] || 50);
+                        const consumption = org.leadsConsumed || leads.length;
+                        const usagePct = (consumption / effectiveMax) * 100;
+                        
+                        if (usagePct >= 80) {
+                            return (
+                                <div className="card" style={{ 
+                                    background: usagePct >= 100 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)', 
+                                    border: `1px solid ${usagePct >= 100 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    padding: '12px 20px',
+                                    borderRadius: 12
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                        <div style={{ 
+                                            width: 40, height: 40, borderRadius: '50%', 
+                                            background: usagePct >= 100 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            color: usagePct >= 100 ? '#EF4444' : '#F59E0B'
+                                        }}>
+                                            <AlertTriangle size={20} />
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: 14, fontWeight: 700, color: '#FFF' }}>
+                                                {usagePct >= 100 ? 'Limite de Leads Atingido' : 'Limite de Leads Próximo'}
+                                            </div>
+                                            <div style={{ fontSize: 12, color: 'var(--t3)' }}>
+                                                Você usou {consumption} de {effectiveMax} leads do seu plano {org.plan}.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button className="btn btn-primary btn-sm" onClick={() => onNavigate('settings')}>
+                                        Fazer Upgrade
+                                    </button>
+                                </div>
+                            );
+                        }
+                        return null;
+                    })()}
+                </div>
+            )}
+
             {/* ===== ROW 1: Core Metrics (5 cols) ===== */}
             <div className="kpi-grid" style={{ marginBottom: 24 }}>
+                <div className="kpi">
+                    <div className="kpi-label">Uso do Plano</div>
+                    <div className="kpi-val" style={{ fontSize: 24 }}>
+                        {user?.organization?.leadsConsumed || leads.length} 
+                        <span style={{ fontSize: 14, color: 'var(--t3)', marginLeft: 4 }}>
+                            / {user?.organization?.maxLeads || 50}
+                        </span>
+                    </div>
+                    <div className="kpi-sub">leads capturados</div>
+                </div>
                 <div className="kpi">
                     <div className="kpi-label">Total de Leads</div>
                     <div className="kpi-val">{leads.length}</div>
@@ -566,29 +631,33 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                         </div>
 
                         <div style={{ marginBottom: 20 }}>
-                            <label className="input-label mb-8">Fonte de Dados</label>
-                            <select
-                                className="input"
-                                value={apiKey}
-                                onChange={(e) => setApiKey(e.target.value)}
-                                style={{ marginBottom: 4 }}
-                            >
-                                <option value="demo">Demo (dados fictícios)</option>
-                                <option value="google">Google Places API (dados reais)</option>
-                            </select>
+                            <label className="input-label mb-8">Modo de Scan</label>
+                            <div style={{ display: 'flex', gap: 10 }}>
+                                <button 
+                                    className={`btn ${apiKey === 'demo' ? 'btn-primary' : 'btn-ghost'} btn-sm`} 
+                                    style={{ flex: 1 }}
+                                    onClick={() => setApiKey('demo')}
+                                >
+                                    Modo Demo
+                                </button>
+                                <button 
+                                    className={`btn ${apiKey !== 'demo' ? 'btn-primary' : 'btn-ghost'} btn-sm`} 
+                                    style={{ flex: 1 }}
+                                    onClick={() => setApiKey('google')}
+                                >
+                                    Modo Real (Sonar)
+                                </button>
+                            </div>
                             {apiKey === 'google' && (
-                                <div>
-                                    <input
-                                        type="password"
-                                        className="input"
-                                        placeholder="Cole a tua Google API Key aqui"
-                                        value={customApiKey}
-                                        onChange={(e) => setCustomApiKey(e.target.value)}
-                                        style={{ marginTop: 8 }}
-                                    />
-                                    <div style={{ fontSize: 11, color: 'var(--t2)', marginTop: 4 }}>
-                                        ~$17/1000 buscas. Necessário API Key com Places API ativada.
+                                <div style={{ 
+                                    marginTop: 12, padding: 12, background: 'rgba(59, 130, 246, 0.05)', 
+                                    borderRadius: 8, border: '1px solid rgba(59, 130, 246, 0.1)',
+                                    fontSize: 12, color: 'var(--t2)'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, color: 'var(--blue)', fontWeight: 600 }}>
+                                        <Check size={14} /> Conexão Segura Ativa
                                     </div>
+                                    Utilizando a infraestrutura global da ORCA para busca de dados em tempo real.
                                 </div>
                             )}
                         </div>

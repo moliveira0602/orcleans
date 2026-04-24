@@ -8,15 +8,13 @@
 import type { Lead } from '../types';
 import { runDemoScan } from './demoDataService';
 import { getCached, setCached, generateCacheKey } from '../services/placesCache';
+import api from '../services/api';
 
-const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
-export { GOOGLE_KEY };
 const IS_PRODUCTION = import.meta.env.PROD || false;
 
 // Always use backend proxy to avoid CORS issues
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
 const API_BASES = {
-    google: `${API_BASE}/scan`,
+    google: `/scan`,
     nominatim: 'https://nominatim.openstreetmap.org',
 };
 
@@ -87,13 +85,17 @@ export async function loadLeadPhotos(placeId: string): Promise<string[]> {
         return [];
     }
 
-    if (!GOOGLE_KEY) return [];
-
     try {
-        const res = await fetch(
-            `${API_BASES.google}/details?place_id=${placeId}&fields=photos`
+        const data: any = await api.get(
+            `${API_BASES.google}/details`,
+            { params: { place_id: placeId, fields: 'photos' } }
         );
-        const data = await res.json();
+        
+        // Note: photos are still displayed via direct Google URL but the reference is fetched via proxy
+        // To fully hide the key, we'd need a proxy for photos too, but that's bandwidth heavy.
+        // For now, we protect the textsearch/details keys.
+        const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_API_KEY || ''; 
+        
         const fotos = (data.result?.photos || []).slice(0, 3).map(
             (ph: any) => `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${ph.photo_reference}&key=${GOOGLE_KEY}`
         );
@@ -251,22 +253,7 @@ export async function runScan(
         }
 
         onProgress?.(`Iniciando scan: ${segment} em ${city}...`);
-        onProgress?.(`Fonte: Google Places API`);
-
-        // Usar Google Places API como fonte principal
-        if (!GOOGLE_KEY) {
-            onProgress?.(`Erro: Chave Google API não configurada`);
-            return {
-                success: false,
-                totalFound: 0,
-                imported: 0,
-                duplicates: 0,
-                errors: 1,
-                leads: [],
-                cached: false,
-                message: `Chave Google API não configurada`,
-            };
-        }
+        onProgress?.(`Fonte: Google Places API (Proxy)`);
 
         console.log('[GOOGLE DEBUG] Key exists:', !!GOOGLE_KEY, '| prefix:', GOOGLE_KEY?.substring(0, 10));
 
@@ -317,36 +304,31 @@ export async function runScan(
             };
         }
 
-        // PASSO 1 — Text Search: retorna telefone, website e outros campos básicos
-        // $17/1000 mas SEM chamada details adicional (economia de $17/1000 por lead)
         const query = `${segment}`;
         onProgress?.(`Buscando "${query}" próximo a ${lat.toFixed(4)},${lon.toFixed(4)} no Google Places...`);
         
-        // Try with lat/lng first, if fails try city name
-        let searchRes;
-        let searchData;
+        let searchData: any;
         
-        searchRes = await fetch(
-            `${API_BASES.google}/textsearch?query=${encodeURIComponent(query)}&location=${lat},${lon}&radius=5000&language=pt`
-        );
-        searchData = await searchRes.json();
+        try {
+            searchData = await api.get(
+                `${API_BASES.google}/textsearch`,
+                { params: { query, location: `${lat},${lon}`, radius: '5000' } }
+            );
+        } catch (err) {
+            console.error('[ScanProxy] TextSearch error:', err);
+            searchData = { status: 'ERROR' };
+        }
         
         // If zero results, try nearbysearch instead
         if (searchData.status === 'ZERO_RESULTS' || !searchData.results?.length) {
-            console.log('[GOOGLE DEBUG] Text search returned no results, trying nearby search...');
+            console.log('[ScanProxy] Text search returned no results, trying nearby search...');
             try {
-                searchRes = await fetch(
-                    `${API_BASES.google}/nearby?location=${lat},${lon}&radius=5000&keyword=${encodeURIComponent(query)}&language=pt`
+                searchData = await api.get(
+                    `${API_BASES.google}/nearby`,
+                    { params: { location: `${lat},${lon}`, radius: '5000', keyword: query } }
                 );
-                const text = await searchRes.text();
-                console.log('[GOOGLE DEBUG] Nearby response text:', text.substring(0, 200));
-                try {
-                    searchData = JSON.parse(text);
-                } catch {
-                    searchData = { status: 'ERROR', results: [], error_message: 'Invalid JSON response from API' };
-                }
             } catch (err) {
-                console.error('[GOOGLE DEBUG] Nearby fetch error:', err);
+                console.error('[ScanProxy] Nearby fetch error:', err);
                 searchData = { status: 'ERROR', results: [], error_message: String(err) };
             }
         }

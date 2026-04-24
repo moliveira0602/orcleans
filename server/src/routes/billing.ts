@@ -123,13 +123,26 @@ router.post('/webhook', async (req, res) => {
       }
       break;
 
-    case 'customer.subscription.deleted':
-      const subscription = event.data.object as any;
-      // Handle cancellation logic (e.g., downgrade to trial or restricted mode)
-      break;
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const customerId = subscription.customer as string;
+
+        console.log(`[Stripe Webhook] Subscription deleted for customer: ${customerId}`);
+
+        // Reset organization to trial plan and limits
+        await prisma.organization.updateMany({
+          where: { stripeCustomerId: customerId },
+          data: {
+            plan: 'trial',
+            maxLeads: 50,
+            maxUsers: 1,
+          },
+        });
+        break;
+      }
 
     default:
-      console.log(`[Stripe] Unhandled event type ${event.type}`);
+      console.log(`[Stripe Webhook] Unhandled event type: ${event.type}`);
   }
 
   res.json({ received: true });
