@@ -1,13 +1,18 @@
 {
   "version": 2,
-  "rewrites": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index"
-    },
+      "src": "api/index.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["src/**", "prisma/**"]
+      }
+    }
+  ],
+  "routes": [
     {
-      "source": "/((?!api/).*)",
-      "destination": "/api/index"
+      "src": "/(.*)",
+      "dest": "api/index.ts"
     }
   ]
 }
