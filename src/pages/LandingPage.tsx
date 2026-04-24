@@ -533,6 +533,12 @@ export default function LandingPage() {
                         ))}
                     </nav>
                     <div className="landing-header-actions">
+                        <button onClick={() => window.location.href = '/login'} className="btn btn-ghost btn-sm desktop-only" style={{ color: 'var(--orca-text)' }}>
+                            Login
+                        </button>
+                        <button onClick={() => window.location.href = '/login'} className="btn btn-primary btn-sm desktop-only">
+                            Começar Agora
+                        </button>
                         <button 
                             className={`mobile-menu-btn ${mobileMenuOpen ? 'open' : ''}`} 
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -557,6 +563,9 @@ export default function LandingPage() {
                                         {item.label}
                                     </button>
                                 ))}
+                                <button className="btn btn-primary w-full mobile-login" style={{ marginTop: 24 }} onClick={() => window.location.href = '/login'}>
+                                    Começar Grátis
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1441,6 +1450,14 @@ export default function LandingPage() {
                 .nav-link:hover, .nav-link.active { color: #EAF6FF; }
                 .nav-link:hover::after, .nav-link.active::after { width: 100%; }
                 .landing-header-actions { display: flex; align-items: center; gap: 16px; z-index: 10; }
+                .btn-login {
+                    background: rgba(255, 255, 255, 0.1); color: var(--orca-text);
+                    border: 1px solid rgba(255, 255, 255, 0.2); padding: 10px 24px;
+                    border-radius: 8px; font-size: 14px; font-weight: 600;
+                    text-decoration: none; transition: all 0.2s ease;
+                }
+                .btn-login:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); }
+                .mobile-login { display: block; text-align: center; margin-top: 24px; }
                 .mobile-menu-btn { 
                     display: none; 
                     flex-direction: column; 
