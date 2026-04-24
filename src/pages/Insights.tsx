@@ -10,7 +10,7 @@ import { getLeadName, getLeadCategory, detectAddressCol, getLeadAddress, detectP
 import { scoreClass } from '../utils/scoring';
 import { geocodeAddress } from '../utils/geocoding';
 import { MapContainer, TileLayer, Circle, CircleMarker, Popup, useMap } from 'react-leaflet';
-import { runScan, getScanStatus, clearScanCache, GOOGLE_KEY } from '../utils/scanService';
+import { runScan, getScanStatus, clearScanCache } from '../utils/scanService';
 import { useToast } from '../components/Toast';
 import { createLeadsBulk } from '../services/leads';
 import 'leaflet/dist/leaflet.css';
@@ -154,8 +154,6 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
     const [customApiKey, setCustomApiKey] = useState('');
     const [scanSource, setScanSource] = useState<'demo' | 'google'>(() => {
         const saved = localStorage.getItem('orca_scan_source');
-        // Auto-detect Google if env key exists
-        if (!saved && GOOGLE_KEY) return 'google';
         return (saved as 'demo' | 'google') || 'google';
     });
     
@@ -462,8 +460,7 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
         // Determine effective API key
         const getApiKey = () => {
             if (scanSource === 'demo') return 'demo';
-            // Use custom key if provided, otherwise use env key
-            return customApiKey || GOOGLE_KEY || '';
+            return 'google'; // Backend handles the actual key
         };
         
         const effectiveApiKey = getApiKey();

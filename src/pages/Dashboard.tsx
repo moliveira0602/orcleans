@@ -8,7 +8,7 @@ import FunnelChart from '../components/FunnelChart';
 import DottedSurface from '../components/ui/DottedSurface';
 import SonarButton from '../components/SonarButton';
 import { formatTime } from '../utils/time';
-import { runScan, getScanStatus, SCAN_PRESETS, type ScanPresetKey, GOOGLE_KEY } from '../utils/scanService';
+import { runScan, getScanStatus, SCAN_PRESETS, type ScanPresetKey } from '../utils/scanService';
 import { useToast } from '../components/Toast';
 import type { Page } from '../components/Layout';
 import { PIPELINE_COLS } from '../types';
@@ -55,7 +55,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 {
                     segment: preset.segment,
                     city: preset.city,
-                    apiKey: apiKey === 'google' ? customApiKey || GOOGLE_KEY : apiKey,
+                    apiKey: apiKey === 'google' ? 'google' : apiKey,
                 },
                 leads,
                 (msg) => setScanProgress(msg)
