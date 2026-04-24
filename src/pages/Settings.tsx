@@ -145,8 +145,13 @@ export default function SettingsPage() {
 
         try {
             toast(`A preparar checkout para o plano ${planName}...`, 'info');
-            const { url } = await billingApi.createCheckoutSession(planName.toLowerCase());
-            window.location.href = url; // Redirect to Stripe
+            const data = await billingApi.createCheckoutSession(planName.toLowerCase());
+            
+            if (data && data.url) {
+                window.location.href = data.url; // Redirect to Stripe
+            } else {
+                throw new Error('Link de pagamento não encontrado na resposta.');
+            }
         } catch (err: any) {
             toast(err.message || 'Erro ao iniciar checkout', 'error');
         }
@@ -310,8 +315,9 @@ export default function SettingsPage() {
                                                 className={`btn ${p.hot ? 'btn-primary' : 'btn-ghost'} btn-sm`} 
                                                 style={{ padding: '4px 10px', height: 'auto', minHeight: 'unset', fontSize: 10 }}
                                                 onClick={() => handleUpgrade(p.id)}
+                                                disabled={org?.plan === p.id}
                                             >
-                                                {org?.plan === p.id ? 'Atual' : 'Assinar'}
+                                                {org?.plan === p.id ? 'Seu Plano' : 'Assinar'}
                                             </button>
                                         </div>
                                     ))}
