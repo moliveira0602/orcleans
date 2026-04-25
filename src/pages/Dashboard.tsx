@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Radar, Upload, Columns3, Activity, Trash2, Search, MapPin, Globe, Phone, Mail, Share2, Info, Star, X, AlertTriangle, ArrowUpRight, Check, MessageCircle } from 'lucide-react';
+import { Radar, Upload, Columns3, Activity, Trash2, Search, MapPin, Globe, Phone, Mail, Share2, Info, Star, X, AlertTriangle, ArrowUpRight, Check, MessageCircle, Terminal } from 'lucide-react';
 import { useAppState, useAppDispatch } from '../store';
 import { detectNameCol, detectCatCol, getLeadName, getLeadCategory } from '../utils/detect';
 import ScoreRing from '../components/ScoreRing';

@@ -23,9 +23,15 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
-.env*.local
 
 # Local Netlify folder
 .netlify
-.env
 .blackboxcli/
+
+# Environment files - NEVER commit secrets
+.env
+.env.local
+.env.production
+server/.env
+server/.env.local
+server/.env.production
