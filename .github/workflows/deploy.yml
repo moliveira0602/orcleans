@@ -8,13 +8,22 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+    - name: Check secret availability
+      run: |
+        if [ -z "${{ secrets.VPS_ROOT_PASSWORD }}" ]; then
+          echo "ERROR: VPS_ROOT_PASSWORD is not set"
+          exit 1
+        else
+          echo "OK: VPS_ROOT_PASSWORD is set (length hidden)"
+        fi
     - name: Executing remote ssh commands as ROOT
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@v1.0.0
       with:
         host: 162.240.163.208
         username: root
         password: ${{ secrets.VPS_ROOT_PASSWORD }}
         port: 22022
+        debug: true
         script: |
           # 1. Atualizar código fonte COMO ROOT
           echo "🔧 Iniciando deploy como root (shell do orcaleads desabilitado)..."
