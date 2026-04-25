@@ -22,12 +22,20 @@ jobs:
           # Mudar para pasta do projeto
           cd /home/orcaleads/orcleans
 
+          # Preservar envs antes do reset
+          [ -f .env.production ] && cp .env.production /tmp/orca_env_production.bak || true
+          [ -f server/.env ] && cp server/.env /tmp/orca_server_env.bak || true
+
           # Atualizar código
           echo "🔄 Atualizando código..."
           git fetch origin main
           git reset --hard origin/main
           git clean -fd
           git update-index --assume-unchanged package-lock.json
+
+          # Restaurar envs
+          [ -f /tmp/orca_env_production.bak ] && cp /tmp/orca_env_production.bak .env.production || true
+          [ -f /tmp/orca_server_env.bak ] && cp /tmp/orca_server_env.bak server/.env || true
 
           # 2. OTIMIZAÇÕES DE MEMÓRIA
           echo "⚙️ Configurando otimizações..."
@@ -85,19 +93,20 @@ jobs:
           echo "   Dono: $(stat -c %U /home/orcaleads/public_html/index.html 2>/dev/null || echo 'desconhecido')"
           echo "   Permissões: $(stat -c %a /home/orcaleads/public_html/index.html 2>/dev/null || echo 'desconhecido')"
 
-          # 8. BACKEND (API) - executar como orcaleads via sudo
+          # 8. BACKEND (API)
           echo "🔧 Configurando backend..."
           cd /home/orcaleads/orcleans/server
 
-          # Instalar dependências como root, mas executar como orcaleads
-          npm install --only=production
+          # Instalar dependências e buildar
+          npm install
+          npm run build
           npx prisma generate
 
-          # Reiniciar API via pm2
+          # Reiniciar API via pm2 (usa dist/index.js compilado)
           echo "🔄 Reiniciando API..."
           pm2 restart orca-api 2>/dev/null || {
             echo "🚀 Iniciando API..."
-            pm2 start src/index.ts --name orca-api || {
+            pm2 start dist/index.js --name orca-api --update-env || {
               echo "⚠️ Não foi possível iniciar API, verifique manualmente"
             }
           }
