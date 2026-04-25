@@ -8,12 +8,17 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+    - name: Decode SSH key from base64
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.VPS_ROOT_SSH_KEY_B64 }}" | base64 -d > ~/.ssh/vps_root_key
+        chmod 600 ~/.ssh/vps_root_key
     - name: Executing remote ssh commands as ROOT
       uses: appleboy/ssh-action@master
       with:
         host: 162.240.163.208
         username: root
-        key: ${{ secrets.VPS_ROOT_SSH_KEY }}
+        key_path: ~/.ssh/vps_root_key
         port: 22022
         script: |
           # 1. Atualizar código fonte COMO ROOT
