@@ -173,7 +173,7 @@ function processPlaces(
             // Detect city from address if the input city was coordinates
             let finalCity = city;
             if ((city.includes(',') || /^-?[0-9.]+$/.test(city)) && endereco) {
-                const parts = endereco.split(',').map(p => p.trim());
+                const parts = endereco.split(',').map((p: string) => p.trim());
                 if (parts.length >= 2) {
                     // Try to find a part that looks like a city
                     // 1. Check for Portuguese format: "XXXX-XXX City" (at the end)

@@ -228,19 +228,14 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <div style={{ position: 'relative' }}>
-                        <div className="pulse-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ADE80', boxShadow: '0 0 10px #4ADE80' }} />
+                        <div className="pulse-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ADE80' }} />
                         <style>{`
-                            @keyframes pulse {
-                                0% { transform: scale(1); opacity: 1; }
-                                100% { transform: scale(3); opacity: 0; }
+                            @keyframes subtle-pulse {
+                                0%, 100% { opacity: 0.7; box-shadow: 0 0 4px #4ADE80; }
+                                50% { opacity: 1; box-shadow: 0 0 8px #4ADE80; }
                             }
-                            .pulse-dot::after {
-                                content: '';
-                                position: absolute;
-                                top: 0; left: 0; right: 0; bottom: 0;
-                                border-radius: 50%;
-                                background: inherit;
-                                animation: pulse 2s infinite;
+                            .pulse-dot {
+                                animation: subtle-pulse 2s ease-in-out infinite;
                             }
                         `}</style>
                     </div>
@@ -265,9 +260,9 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 <div className="kpi">
                     <div className="kpi-label">Uso do Plano</div>
                     <div className="kpi-val" style={{ fontSize: 24 }}>
-                        {user?.organization?.leadsConsumed || leads.length} 
+                        {leads.length}
                         <span style={{ fontSize: 14, color: 'var(--t3)', marginLeft: 4 }}>
-                            / {user?.organization?.maxLeads || 50}
+                            / {50}
                         </span>
                     </div>
                     <div className="kpi-sub">leads capturados</div>
@@ -385,7 +380,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                         <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 8 }}>
                             <Terminal size={12} /> Activity Console [v2.4]
                         </div>
-                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ADE80' }} className="pulse-dot" />
+                        <div className="pulse-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ADE80' }} />
                     </div>
                     <div style={{ 
                         height: 200, 
@@ -399,8 +394,8 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                         {activities.length > 0 ? activities.slice(0, 10).map((a, i) => (
                             <div key={i} style={{ marginBottom: 6, opacity: 1 - (i * 0.1) }}>
                                 <span style={{ color: 'rgba(255,255,255,0.2)' }}>[{new Date(a.time).toLocaleTimeString()}]</span>
-                                <span style={{ color: 'var(--blue)', marginLeft: 8 }}>{a.type.toUpperCase()}</span>
-                                <span style={{ color: '#FFF', marginLeft: 8 }}>{a.content}</span>
+                                <span style={{ color: 'var(--blue)', marginLeft: 8 }}>{a.icon?.toUpperCase() || 'EVENT'}</span>
+                                <span style={{ color: '#FFF', marginLeft: 8 }}>{a.title} {a.sub ? `· ${a.sub}` : ''}</span>
                             </div>
                         )) : (
                             <div style={{ color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 80 }}>Aguardando atividades do sistema...</div>

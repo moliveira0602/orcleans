@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { useToast } from '../components/Toast';
 import { 
-    Users, 
-    Activity, 
-    Server, 
-    Wrench, 
+    Users,
+    Activity,
+    Server,
+    Wrench,
     Search,
     Plus,
     Edit,
@@ -19,7 +19,8 @@ import {
     Play,
     Pause,
     Check,
-    X
+    X,
+    Mail
 } from 'lucide-react';
 
 interface PlatformHealth {

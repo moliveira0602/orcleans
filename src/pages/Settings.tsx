@@ -5,7 +5,7 @@ import { exportLeadsCsv } from '../utils/export';
 import { api } from '../services/api';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../services/auth';
-import { Code, RefreshCw, Zap } from 'lucide-react';
+import { Code, RefreshCw, Zap, BarChart3, Users, Target, Clock } from 'lucide-react';
 import { billingApi } from '../services/billing';
 
 export default function SettingsPage() {
@@ -157,8 +157,60 @@ export default function SettingsPage() {
         }
     };
 
+    // Calcular métricas para cards informativos
+    const leadsCount = leads.length;
+    const hotLeads = leads.filter(l => (l.score ?? l._score ?? 0) >= settings.hotThreshold).length;
+    const warmLeads = leads.filter(l => (l.score ?? l._score ?? 0) >= settings.warmThreshold && (l.score ?? l._score ?? 0) < settings.hotThreshold).length;
+    const processingLeads = 0; // ImportRecord does not track processing status
+
     return (
         <>
+            {/* Cards de métricas */}
+            <div className="grid-4" style={{ marginBottom: '24px' }}>
+                <div className="card metric-card">
+                    <div className="metric-icon" style={{ background: 'rgba(59, 130, 246, 0.1)' }}>
+                        <Users size={20} color="#3b82f6" />
+                    </div>
+                    <div className="metric-content">
+                        <div className="metric-value">{leadsCount}</div>
+                        <div className="metric-label">Total de Leads</div>
+                    </div>
+                </div>
+
+                <div className="card metric-card">
+                    <div className="metric-icon" style={{ background: 'rgba(239, 68, 68, 0.1)' }}>
+                        <Target size={20} color="#ef4444" />
+                    </div>
+                    <div className="metric-content">
+                        <div className="metric-value">{hotLeads}</div>
+                        <div className="metric-label">Leads Quentes</div>
+                        <div className="metric-sub">Score ≥ {settings.hotThreshold}</div>
+                    </div>
+                </div>
+
+                <div className="card metric-card">
+                    <div className="metric-icon" style={{ background: 'rgba(249, 115, 22, 0.1)' }}>
+                        <BarChart3 size={20} color="#f97316" />
+                    </div>
+                    <div className="metric-content">
+                        <div className="metric-value">{warmLeads}</div>
+                        <div className="metric-label">Leaves Mornos</div>
+                        <div className="metric-sub">Score ≥ {settings.warmThreshold}</div>
+                    </div>
+                </div>
+
+                <div className="card metric-card">
+                    <div className="metric-icon" style={{ background: 'rgba(139, 92, 246, 0.1)' }}>
+                        <Clock size={20} color="#8b5cf6" />
+                    </div>
+                    <div className="metric-content">
+                        <div className="metric-value">{processingLeads}</div>
+                        <div className="metric-label">Em Processamento</div>
+                        <div className="metric-sub">Importações ativas</div>
+                    </div>
+                </div>
+            </div>
+
             <div className="grid-2">
                 <div>
                     <div className="card settings-section">
