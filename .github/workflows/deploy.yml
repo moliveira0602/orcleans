@@ -12,8 +12,8 @@ jobs:
       uses: appleboy/ssh-action@master
       with:
         host: 162.240.163.208
-        username: root  # Usar root pois orcaleads não tem shell
-        password: ${{ secrets.VPS_ROOT_PASSWORD }}  # Você precisará criar este secret
+        username: root
+        key: ${{ secrets.VPS_ROOT_SSH_KEY }}
         port: 22022
         script: |
           # 1. Atualizar código fonte COMO ROOT
