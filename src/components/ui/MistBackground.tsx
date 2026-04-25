@@ -5,7 +5,11 @@ import React, { useEffect, useRef } from 'react';
  * Technology: WebGL 2D Fragment Shaders (GLSL)
  * Style: Ethereal Generative Fluid / Mist
  */
-const MistBackground: React.FC = () => {
+interface MistBackgroundProps {
+  contained?: boolean;
+}
+
+const MistBackground: React.FC<MistBackgroundProps> = ({ contained = false }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -156,7 +160,10 @@ const MistBackground: React.FC = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 w-full h-full pointer-events-none z-[-1]"
+      className={contained
+        ? "absolute inset-0 w-full h-full pointer-events-none z-0"
+        : "fixed inset-0 w-full h-full pointer-events-none z-[-1]"
+      }
       style={{ background: 'transparent' }}
     />
   );

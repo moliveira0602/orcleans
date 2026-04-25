@@ -513,7 +513,6 @@ export default function LandingPage() {
 
     return (
         <div className="landing-page">
-            <MistBackground />
             <div id="scroll-sentinel" style={{ position: 'absolute', top: 0, left: 0, width: 1, height: 1 }} />
             {/* ===== NAVBAR ===== */}
             <header className={`landing-header${scrolled ? ' scrolled' : ''}`}>
@@ -1097,7 +1096,7 @@ export default function LandingPage() {
             {/* ===== CTA FINAL SECTION ===== */}
             <section className="cta-section">
                 <div className="cta-bg">
-                    <MistBackground />
+                    <MistBackground contained />
                     <div className="cta-gradient" />
                     <div className="cta-particles" />
                     <div className="cta-glow" />
@@ -1294,7 +1293,7 @@ export default function LandingPage() {
                 {scrolled && (
                     <button
                         className="scroll-to-top"
-                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        onClick={() => scrollToSection('inicio')}
                         aria-label="Voltar ao topo"
                     >
                         <ChevronUp size={24} />
@@ -1548,19 +1547,19 @@ export default function LandingPage() {
                 }
 
                 /* ===== HERO SECTION ===== */
-                .hero-section { 
-                    position: relative !important; 
+                .hero-section {
+                    position: relative !important;
                     top: 0 !important;
                     width: 100% !important;
                     min-height: 100vh !important;
-                    overflow: hidden; 
-                    display: flex !important; 
+                    overflow: hidden;
+                    display: flex !important;
                     flex-direction: column !important;
-                    align-items: center !important; 
-                    justify-content: flex-start !important; 
+                    align-items: center !important;
+                    justify-content: center !important;
                     background: transparent !important;
                     margin: 0 !important;
-                    padding: 0 !important;
+                    padding: 64px 0 60px !important;
                     z-index: 1;
                 }
                 .hero-bg { 
@@ -1569,7 +1568,7 @@ export default function LandingPage() {
                 }
                 .hero-video {
                     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-                    object-fit: cover; opacity: 0.45;
+                    object-fit: cover; opacity: 0.2;
                 }
                 .hero-gradient { 
                     position: absolute; inset: 0; 
@@ -1581,13 +1580,13 @@ export default function LandingPage() {
                     background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
                     background-size: 60px 60px; opacity: 0.3; z-index: 2;
                 }
-                .hero-content { 
-                    position: relative; 
-                    z-index: 10; 
-                    text-align: center; 
-                    max-width: 900px; 
+                .hero-content {
+                    position: relative;
+                    z-index: 10;
+                    text-align: center;
+                    max-width: 900px;
                     margin: 0 auto;
-                    padding-top: 80px !important;
+                    padding-top: 0 !important;
                     display: flex !important;
                     flex-direction: column !important;
                     align-items: center !important;
@@ -2204,11 +2203,8 @@ export default function LandingPage() {
 
                 /* ===== SCROLL TO TOP BUTTON ===== */
                 .scroll-to-top {
-                    position: fixed;
-                    bottom: 90px;
-                    right: 28px;
-                    width: 48px;
-                    height: 48px;
+                    width: 56px;
+                    height: 56px;
                     background: var(--orca-text);
                     color: #0A0A0A;
                     border: none;
@@ -2217,7 +2213,6 @@ export default function LandingPage() {
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
-                    z-index: 940;
                     transition: all 0.3s ease;
                     box-shadow: 0 4px 16px rgba(255, 255, 255, 0.3);
                 }
@@ -2228,14 +2223,6 @@ export default function LandingPage() {
                 }
                 .scroll-to-top:active {
                     transform: translateY(-1px);
-                }
-                @media (max-width: 768px) {
-                    .scroll-to-top {
-                        bottom: 72px;
-                        right: 16px;
-                        width: 44px;
-                        height: 44px;
-                    }
                 }
 
                 /* ===== HERO INLINE CAPTURE ===== */
@@ -2527,33 +2514,11 @@ export default function LandingPage() {
                     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
                 }
 
-                .scroll-to-top {
-                    width: 44px;
-                    height: 44px;
-                    border-radius: 50%;
-                    background: #1A1A1A;
-                    border: 1px solid rgba(255, 255, 255, 0.2);
-                    color: #FFFFFF;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    backdrop-filter: blur(12px);
-                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-                    animation: floatIn 0.3s ease-out;
-                }
                 @keyframes floatIn {
                     from { opacity: 0; transform: translateY(10px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
-                .scroll-to-top:hover {
-                    background: #333;
-                    border-color: rgba(255, 255, 255, 0.4);
-                    transform: translateY(-4px);
-                    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-                }
-                
+
                 @media (max-width: 768px) {
                     .float-actions {
                         bottom: 20px;
@@ -2564,10 +2529,10 @@ export default function LandingPage() {
                         height: 48px;
                     }
                     .scroll-to-top {
-                        width: 40px;
-                        height: 40px;
+                        width: 48px;
+                        height: 48px;
                     }
-                    .float-contact__bubble { display: none; } /* Remove bubble on mobile to avoid scroll issues */
+                    .float-contact__bubble { display: none; }
                 }
 
                 /* ===== DEMO MODAL ===== */
