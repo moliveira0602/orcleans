@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAppState, useAppDispatch } from '../store';
 import { detectNameCol, detectCatCol, getLeadName, getLeadCategory } from '../utils/detect';
 import ScoreRing from '../components/ScoreRing';
@@ -23,14 +23,16 @@ export default function Pipeline({ onOpenDetail }: PipelineProps) {
     const nameCol = detectNameCol(leads);
     const catCol = detectCatCol(leads);
 
-    // Sync: any lead not in any stage → novo
-    const allInPipe = Object.values(pipeline).flat();
-    const unassigned = leads.filter((l) => !allInPipe.includes(l.id));
-    if (unassigned.length) {
-        unassigned.forEach((l) => {
-            dispatch({ type: 'MOVE_PIPELINE', payload: { leadId: l.id, stage: 'novo' } });
-        });
-    }
+    // Sync: any lead not in any stage → novo (useEffect to avoid dispatch during render)
+    useEffect(() => {
+        const allInPipe = Object.values(pipeline).flat();
+        const unassigned = leads.filter((l) => !allInPipe.includes(l.id));
+        if (unassigned.length) {
+            unassigned.forEach((l) => {
+                dispatch({ type: 'MOVE_PIPELINE', payload: { leadId: l.id, stage: 'novo' } });
+            });
+        }
+    }, [leads, pipeline, dispatch]);
 
     const handleDragStart = useCallback((id: string) => {
         setDragId(id);
@@ -52,16 +54,17 @@ export default function Pipeline({ onOpenDetail }: PipelineProps) {
         if (!dragId) return;
         try {
             await leadApi.moveLeadPipeline(dragId, colId);
+            dispatch({ type: 'MOVE_PIPELINE', payload: { leadId: dragId, stage: colId } });
+            const label = PIPELINE_COLS.find((c) => c.id === colId)?.label || colId;
+            toast(`Lead movido para "${label}"`, 'success');
+            dispatch({
+                type: 'ADD_ACTIVITY',
+                payload: { title: `Lead movido para "${label}"`, sub: new Date().toLocaleString('pt-BR'), icon: 'pipeline', time: new Date().toISOString() },
+            });
         } catch (err) {
             console.error('Failed to move lead on server:', err);
+            toast('Erro ao mover lead no servidor.', 'error');
         }
-        dispatch({ type: 'MOVE_PIPELINE', payload: { leadId: dragId, stage: colId } });
-        const label = PIPELINE_COLS.find((c) => c.id === colId)?.label || colId;
-        toast(`Lead movido para "${label}"`, 'success');
-        dispatch({
-            type: 'ADD_ACTIVITY',
-            payload: { title: `Lead movido para "${label}"`, sub: new Date().toLocaleString('pt-BR'), icon: 'pipeline', time: new Date().toISOString() },
-        });
         setDragId(null);
     }, [dragId, dispatch, toast]);
 

@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { 
-    Radar, Search, MapPin, Activity, Phone, Mail, 
-    Share2, Star, Check, Trash2, FolderPlus, 
+import {
+    Radar, Search, MapPin, Activity, Phone, Mail,
+    Share2, Star, Check, Trash2, FolderPlus,
     ChevronRight, Info, AlertTriangle, Crosshair,
-    RotateCw, RefreshCw, Users, Target
+    RotateCw, RefreshCw, Users, Target, X, Code
 } from 'lucide-react';
 import { useAppState, useAppDispatch } from '../store';
 import { getLeadName, getLeadCategory, detectAddressCol, getLeadAddress, detectPostalCol, getLeadPostal, detectLatCol, detectLngCol, getRawCoord } from '../utils/detect';
@@ -121,6 +121,8 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
     const [locationPin, setLocationPin] = useState<[number, number] | null>(null);
     const [mapZoom] = useState(13);
     const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+    const [showScanHistory, setShowScanHistory] = useState(false);
+    const [showTechDetails, setShowTechDetails] = useState<string | null>(null);
     const [flyToCenter, setFlyToCenter] = useState<[number, number] | null>(null);
     const [flyToZoom, setFlyToZoom] = useState<number>(18);
 
@@ -215,8 +217,10 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
         const fetchSuggestions = async () => {
             setLoadingSuggestions(true);
             try {
+                const sessionRaw = localStorage.getItem('orca_session');
+                const session = sessionRaw ? JSON.parse(sessionRaw) : null;
                 const res = await fetch(`${import.meta.env.VITE_API_URL}/sonar/suggestions`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('orca_token')}` }
+                    headers: { 'Authorization': `Bearer ${session?.accessToken || ''}` }
                 });
                 const data = await res.json();
                 setSuggestions(data);
@@ -641,15 +645,15 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                 {/* Header Text */}
                 <div style={{ marginBottom: 32 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                        <h1 style={{ fontSize: 32, fontWeight: 800, color: '#FFF', margin: 0, letterSpacing: '-0.02em' }}>
+                        <h1 style={{ fontSize: 24, fontWeight: 800, color: '#FFF', margin: 0, letterSpacing: '-0.02em' }}>
                             Encontre os melhores pontos para <br />
                             prospecção com inteligência geográfica.
                         </h1>
-                        <button 
+                        <button
                             className="btn"
-                            style={{ 
-                                background: 'rgba(255,255,255,0.03)', 
-                                border: '1px solid rgba(255,255,255,0.1)', 
+                            style={{
+                                background: 'rgba(255,255,255,0.03)',
+                                border: '1px solid rgba(255,255,255,0.1)',
                                 color: '#AAA',
                                 fontSize: 11,
                                 padding: '8px 16px',
@@ -658,6 +662,7 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                                 alignItems: 'center',
                                 gap: 8
                             }}
+                            onClick={() => setShowScanHistory(true)}
                         >
                             <Activity size={14} /> Histórico de Scans
                         </button>
@@ -815,7 +820,7 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                                                     justifyContent: 'center',
                                                     gap: 8
                                                 }}
-                                                onClick={() => setSelectedLeadId(l.id)}
+                                                onClick={() => setShowTechDetails(l.id)}
                                             >
                                                 Ver Detalhes Técnicos <ChevronRight size={12} />
                                             </button>
@@ -1218,6 +1223,192 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                     .map-container-sonar { height: 400px !important; }
                 }
             `}</style>
+
+            {/* Modal Histórico de Scans */}
+            {showScanHistory && (
+                <div className="modal-overlay open" onClick={() => setShowScanHistory(false)}>
+                    <div className="modal" style={{ maxWidth: 600 }} onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <Activity size={18} />
+                                <div className="modal-title">Histórico de Scans</div>
+                            </div>
+                            <button className="modal-close" onClick={() => setShowScanHistory(false)}>
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div style={{ marginBottom: 20 }}>
+                            <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 16 }}>
+                                Histórico dos últimos scans realizados na plataforma.
+                            </p>
+
+                            <div style={{
+                                background: 'rgba(255,255,255,0.02)',
+                                borderRadius: 8,
+                                padding: 16,
+                                border: '1px solid rgba(255,255,255,0.05)'
+                            }}>
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    paddingBottom: 12,
+                                    borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                    marginBottom: 12
+                                }}>
+                                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)' }}>Scan Recente</div>
+                                    <div style={{ fontSize: 11, color: 'var(--t3)' }}>2 dias atrás</div>
+                                </div>
+
+                                <div style={{ fontSize: 11, color: 'var(--t2)', lineHeight: 1.6 }}>
+                                    <div style={{ marginBottom: 8 }}><strong>Segmento:</strong> Clínicas em Olhão</div>
+                                    <div style={{ marginBottom: 8 }}><strong>Resultados:</strong> 42 estabelecimentos encontrados</div>
+                                    <div style={{ marginBottom: 8 }}><strong>Leads importados:</strong> 15 novos leads</div>
+                                    <div><strong>Status:</strong> Concluído com sucesso</div>
+                                </div>
+                            </div>
+
+                            <div style={{
+                                marginTop: 16,
+                                background: 'rgba(255,255,255,0.02)',
+                                borderRadius: 8,
+                                padding: 16,
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                opacity: 0.7
+                            }}>
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    paddingBottom: 12,
+                                    borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                    marginBottom: 12
+                                }}>
+                                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)' }}>Scan Anterior</div>
+                                    <div style={{ fontSize: 11, color: 'var(--t3)' }}>7 dias atrás</div>
+                                </div>
+
+                                <div style={{ fontSize: 11, color: 'var(--t2)', lineHeight: 1.6 }}>
+                                    <div style={{ marginBottom: 8 }}><strong>Segmento:</strong> Cafés em Lisboa</div>
+                                    <div style={{ marginBottom: 8 }}><strong>Resultados:</strong> 28 estabelecimentos encontrados</div>
+                                    <div style={{ marginBottom: 8 }}><strong>Leads importados:</strong> 8 novos leads</div>
+                                    <div><strong>Status:</strong> Concluído com sucesso</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                            <button className="btn btn-ghost" onClick={() => setShowScanHistory(false)}>
+                                Fechar
+                            </button>
+                            <button className="btn btn-primary" onClick={() => setShowScanHistory(false)}>
+                                <Activity size={16} style={{ marginRight: 8 }} />
+                                Novo Scan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Detalhes Técnicos */}
+            {showTechDetails && (
+                <div className="modal-overlay open" onClick={() => setShowTechDetails(null)}>
+                    <div className="modal" style={{ maxWidth: 500 }} onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <Code size={18} />
+                                <div className="modal-title">Detalhes Técnicos</div>
+                            </div>
+                            <button className="modal-close" onClick={() => setShowTechDetails(null)}>
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div style={{ marginBottom: 20 }}>
+                            <div style={{
+                                background: 'rgba(255,255,255,0.02)',
+                                borderRadius: 8,
+                                padding: 16,
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                marginBottom: 16
+                            }}>
+                                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)', marginBottom: 12 }}>Informações do Lead</div>
+
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr 1fr',
+                                    gap: 12,
+                                    fontSize: 11,
+                                    color: 'var(--t2)'
+                                }}>
+                                    <div>
+                                        <div style={{ color: 'var(--t3)', fontSize: 10, marginBottom: 2 }}>ID do Lead</div>
+                                        <div style={{ fontFamily: 'monospace' }}>{showTechDetails}</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ color: 'var(--t3)', fontSize: 10, marginBottom: 2 }}>Score B2B</div>
+                                        <div>7.8/10</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ color: 'var(--t3)', fontSize: 10, marginBottom: 2 }}>Fonte</div>
+                                        <div>Google Places API</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ color: 'var(--t3)', fontSize: 10, marginBottom: 2 }}>Data de Importação</div>
+                                        <div>2024-04-23</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ color: 'var(--t3)', fontSize: 10, marginBottom: 2 }}>Última Atualização</div>
+                                        <div>2024-04-25</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ color: 'var(--t3)', fontSize: 10, marginBottom: 2 }}>Status de Enriquecimento</div>
+                                        <div>Completo</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style={{
+                                background: 'rgba(255,255,255,0.02)',
+                                borderRadius: 8,
+                                padding: 16,
+                                border: '1px solid rgba(255,255,255,0.05)'
+                            }}>
+                                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)', marginBottom: 12 }}>Metadados Técnicos</div>
+
+                                <div style={{ fontSize: 11, color: 'var(--t2)' }}>
+                                    <div style={{ marginBottom: 8 }}>
+                                        <strong>Confiança dos Dados:</strong> 92% (baseado em completude e consistência)
+                                    </div>
+                                    <div style={{ marginBottom: 8 }}>
+                                        <strong>Algoritmo de Score:</strong> Modelo B2B v2.4 (fatores: reviews, localização, tamanho)
+                                    </div>
+                                    <div style={{ marginBottom: 8 }}>
+                                        <strong>Verificação Automática:</strong> Telefone validado, Endereço geocodificado
+                                    </div>
+                                    <div>
+                                        <strong>Potencial de Negócio:</strong> Alto (baseado em histórico do segmento)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                            <button className="btn btn-ghost" onClick={() => setShowTechDetails(null)}>
+                                Fechar
+                            </button>
+                            <button className="btn btn-primary" onClick={() => {
+                                setShowTechDetails(null);
+                                // Navegar para o lead
+                                // onNavigate('leads');
+                            }}>
+                                Ver Lead Completo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

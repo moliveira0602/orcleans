@@ -553,7 +553,32 @@ export type ScanPresetKey = keyof typeof SCAN_PRESETS;
 // SCAN STATUS (for compatibility)
 // ============================================================================
 
-export function getScanStatus(_segment: string, _city: string) {
+export function getScanStatus(segment: string, city: string) {
+    // Check if we have cached results for this scan
+    const cacheKey = generateCacheKey(segment, 0, 0); // lat/lon not needed for key check
+    // Try to find cache by segment in the cache
+    try {
+        const keys = Object.keys(localStorage).filter(k => k.startsWith('cache_'));
+        for (const key of keys) {
+            const cached = getCached<any>(key.replace('cache_', ''));
+            if (cached && cached.results) {
+                // Check if this cache matches our segment
+                const keyData = key.replace('cache_', '');
+                if (keyData.includes(segment.toLowerCase().replace(/\s+/g, '_'))) {
+                    const ageMs = Date.now() - (cached.timestamp || 0);
+                    const ageDays = Math.floor(ageMs / (1000 * 60 * 60 * 24));
+                    return {
+                        hasCache: true,
+                        ageDays,
+                        cachedCount: cached.results.length || 0,
+                        canRefresh: ageDays >= 1, // Allow refresh after 1 day
+                    };
+                }
+            }
+        }
+    } catch (e) {
+        // ignore cache read errors
+    }
     return { hasCache: false, ageDays: null, cachedCount: 0, canRefresh: true };
 }
 

@@ -19,7 +19,7 @@ export async function register(input: RegisterInput) {
       data: {
         name: input.organizationName,
         plan: 'trial',
-        maxLeads: 50,
+        maxLeads: 25,
         maxUsers: 1,
         trialExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days trial
       },
@@ -225,7 +225,7 @@ export async function getProfile(userId: string) {
 
 export async function updateProfile(userId: string, data: { name?: string; email?: string; company?: string }) {
   const updateData: Record<string, unknown> = {};
-  
+
   if (data.name !== undefined) updateData.name = data.name;
   if (data.email !== undefined) updateData.email = data.email.toLowerCase();
   if (data.company !== undefined) updateData.company = data.company;
@@ -271,4 +271,37 @@ export async function updateProfile(userId: string, data: { name?: string; email
     createdAt: user.createdAt,
     organization: user.organization,
   };
+}
+
+export async function deleteAccount(userId: string, organizationId: string) {
+  // Delete in order to respect foreign key constraints
+  // 1. Delete refresh tokens
+  await prisma.refreshToken.deleteMany({
+    where: { userId },
+  });
+
+  // 2. Delete activities
+  await prisma.activity.deleteMany({
+    where: { userId },
+  });
+
+  // 3. Delete leads (and their notes via cascade)
+  await prisma.lead.deleteMany({
+    where: { organizationId },
+  });
+
+  // 4. Delete audit logs
+  await prisma.auditLog.deleteMany({
+    where: { organizationId },
+  });
+
+  // 5. Delete all users in the organization
+  await prisma.user.deleteMany({
+    where: { organizationId },
+  });
+
+  // 7. Finally, delete the organization
+  await prisma.organization.delete({
+    where: { id: organizationId },
+  });
 }

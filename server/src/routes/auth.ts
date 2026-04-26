@@ -12,5 +12,6 @@ router.post('/refresh', validate(refreshTokenSchema), authController.refreshToke
 router.post('/logout', authenticate, authController.logout);
 router.get('/me', authenticate, authController.getProfile);
 router.patch('/me', authenticate, authController.updateProfile);
+router.delete('/delete-account', authenticate, authController.deleteAccount);
 
 export default router;

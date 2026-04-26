@@ -11,6 +11,7 @@ import SettingsPage from '../pages/Settings';
 import AdminPage from '../pages/Admin';
 import LeadDetail from './LeadDetail';
 import { useAppState, useApp } from '../store';
+import { useAuth } from '../services/auth';
 import { EmptyState } from './ErrorBoundary';
 import { Onboarding, useOnboarding } from './Onboarding';
 import { FolderPlus, LayoutDashboard, Users, Columns3, Sparkles, Upload, Grid3X3, Settings, Crown } from 'lucide-react';
@@ -20,7 +21,7 @@ export type Page = 'dashboard' | 'leads' | 'pipeline' | 'insights' | 'import' | 
 const MOBILE_NAV_ITEMS: { id: Page; icon: React.ReactNode; label: string }[] = [
     { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Início' },
     { id: 'leads', icon: <Users size={18} />, label: 'Alvos' },
-    { id: 'pipeline', icon: <Columns3 size={18} />, label: 'Funil' },
+    { id: 'pipeline', icon: <Columns3 size={18} />, label: 'Pipeline' },
     { id: 'insights', icon: <Sparkles size={18} />, label: 'Sonar' },
     { id: 'import', icon: <Upload size={18} />, label: 'Importar' },
     { id: 'segments', icon: <Grid3X3 size={18} />, label: 'Segmentos' },
@@ -31,6 +32,7 @@ export default function Layout() {
     const { isLoading, leads } = useAppState();
     const { refreshLeads } = useApp();
     const { isDone: onboardingDone } = useOnboarding();
+    const { user, isSuperAdmin } = useAuth();
     const [showOnboarding, setShowOnboarding] = useState(!onboardingDone);
     const [currentPage, setCurrentPage] = useState<Page>('dashboard');
     const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
@@ -157,7 +159,13 @@ export default function Layout() {
                             {currentPage === 'import' && <ImportPage onNavigate={navigate} />}
                             {currentPage === 'segments' && <Segments onNavigate={navigate} />}
                             {currentPage === 'settings' && <SettingsPage />}
-                            {currentPage === 'admin' && <AdminPage />}
+                            {currentPage === 'admin' && isSuperAdmin && <AdminPage />}
+                            {currentPage === 'admin' && !isSuperAdmin && (
+                                <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)' }}>
+                                    <h3>Acesso Restrito</h3>
+                                    <p>Esta página é apenas para administradores.</p>
+                                </div>
+                            )}
                         </>
                     )}
                 </div>

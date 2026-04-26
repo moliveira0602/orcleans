@@ -5,7 +5,7 @@ import { exportLeadsCsv } from '../utils/export';
 import { api } from '../services/api';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../services/auth';
-import { Code, RefreshCw, Zap, BarChart3, Users, Target, Clock } from 'lucide-react';
+import { Code, RefreshCw, Zap, BarChart3, Users, Target, Clock, Trash2 } from 'lucide-react';
 import { billingApi } from '../services/billing';
 
 export default function SettingsPage() {
@@ -13,7 +13,7 @@ export default function SettingsPage() {
     const dispatch = useAppDispatch();
     const toast = useToast();
     const confirm = useConfirm();
-    const { refreshProfile } = useAuth();
+    const { user, deleteAccount, refreshProfile } = useAuth();
     const [isExporting, setIsExporting] = useState(false);
     const [isClearing, setIsClearing] = useState(false);
     const [savingProfile, setSavingProfile] = useState(false);
@@ -309,12 +309,12 @@ export default function SettingsPage() {
 
                             {(() => {
                                 const PLAN_LIMITS: Record<string, number> = {
-                                    'trial': 50,
+                                    'trial': 25,
                                     'starter': 500,
                                     'pro': 2000,
                                     'enterprise': 10000
                                 };
-                                const effectiveMax = org?.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[org?.plan?.toLowerCase()] || 50);
+                                const effectiveMax = org?.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[org?.plan?.toLowerCase()] || 25);
                                 // Use local lead count as authoritative fallback if server counter is 0
                                 const consumption = (org?.leadsConsumed && org.leadsConsumed > 0) ? org.leadsConsumed : leads.length;
                                 
@@ -363,8 +363,8 @@ export default function SettingsPage() {
                                                 <div style={{ fontSize: 12, fontWeight: 800, color: '#FFF' }}>€ {p.price}</div>
                                                 <div style={{ fontSize: 9, color: 'var(--t3)', textTransform: 'uppercase' }}>/ mês</div>
                                             </div>
-                                            <button 
-                                                className={`btn ${p.hot ? 'btn-primary' : 'btn-ghost'} btn-sm`} 
+                                            <button
+                                                className={`btn ${p.hot ? 'btn-primary' : 'btn-ghost'} btn-sm`}
                                                 style={{ padding: '4px 10px', height: 'auto', minHeight: 'unset', fontSize: 10 }}
                                                 onClick={() => handleUpgrade(p.id)}
                                                 disabled={org?.plan === p.id}
@@ -438,6 +438,35 @@ export default function SettingsPage() {
     "telefone": "912345678"
   }'`}
                     </pre>
+                </div>
+                <div style={{ marginTop: 20, padding: 16, background: 'rgba(239, 68, 68, 0.05)', borderRadius: 12, border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                    <div className="settings-title" style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#ef4444' }}>
+                        <Trash2 size={18} /> Excluir Conta
+                    </div>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, margin: '8px 0 16px' }}>
+                        Ao excluir sua conta, todos os seus dados (leads, importações, atividades e configurações) serão removidos permanentemente em conformidade com a LGPD. Esta ação não pode ser desfeita.
+                    </p>
+                    <button
+                        className="btn btn-danger btn-sm"
+                        onClick={async () => {
+                            const ok = await confirm({
+                                title: 'Excluir Conta e Dados',
+                                message: `Tem certeza, ${user?.name}? Todos os seus dados serão excluídos permanentemente (LGPD).`,
+                                confirmLabel: 'Excluir Tudo',
+                                variant: 'danger',
+                            });
+                            if (ok) {
+                                try {
+                                    await deleteAccount();
+                                    window.location.href = '/login';
+                                } catch (err: any) {
+                                    toast('Erro ao excluir conta: ' + (err.message || ''), 'error');
+                                }
+                            }
+                        }}
+                    >
+                        <Trash2 size={14} style={{ marginRight: 6 }} /> Excluir Minha Conta e Dados
+                    </button>
                 </div>
             </div>
         </>

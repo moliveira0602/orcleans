@@ -714,10 +714,21 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
                         </p>
                         <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
                             <button className="btn btn-ghost" onClick={() => setDeleteImportId(null)}>Cancelar</button>
-                            <button 
-                                className="btn" 
+                            <button
+                                className="btn"
                                 style={{ background: 'var(--red)', color: '#fff' }}
-                                onClick={() => {
+                                onClick={async () => {
+                                    const leadsToDelete = existingLeads.filter((l) => l._importId === deleteImportId).map((l) => l.id);
+                                    if (leadsToDelete.length > 0) {
+                                        try {
+                                            await leadApi.deleteLeadsBulk(leadsToDelete);
+                                            dispatch({ type: 'SET_LEADS', payload: existingLeads.filter((l) => l._importId !== deleteImportId) });
+                                        } catch (err: any) {
+                                            toast('Erro ao excluir leads: ' + (err.message || ''), 'error');
+                                            setDeleteImportId(null);
+                                            return;
+                                        }
+                                    }
                                     dispatch({ type: 'DELETE_IMPORT', payload: deleteImportId });
                                     toast('Importação e leads associados excluídos.', 'success');
                                     setDeleteImportId(null);

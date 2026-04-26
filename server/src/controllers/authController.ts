@@ -67,3 +67,18 @@ export async function updateProfile(req: Request, res: Response) {
     return res.status(400).json({ error: error.message });
   }
 }
+
+export async function deleteAccount(req: Request, res: Response) {
+  try {
+    const authReq = req as AuthRequest;
+    const { userId, organizationId } = authReq;
+
+    // Delete all user data (LGPD compliance)
+    // This will cascade delete leads, activities, imports, audit logs, etc.
+    await authService.deleteAccount(userId!, organizationId!);
+
+    return res.status(204).send();
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message });
+  }
+}

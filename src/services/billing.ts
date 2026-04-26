@@ -16,5 +16,19 @@ export const billingApi = {
       console.error('Failed to create checkout session:', error);
       throw new Error(error.message || 'Erro ao iniciar pagamento');
     }
-  }
+  },
+
+  /**
+   * Verify checkout session status after user returns from Stripe
+   */
+  verifyCheckoutSession: async (sessionId: string): Promise<{ status: string; payment_status: string; plan: string | null }> => {
+    return api.get(`/billing/checkout-status?session_id=${sessionId}`);
+  },
+
+  /**
+   * Get Stripe config (enabled status, available plans)
+   */
+  getConfig: async (): Promise<{ enabled: boolean; plans: string[] }> => {
+    return api.get('/billing/config');
+  },
 };

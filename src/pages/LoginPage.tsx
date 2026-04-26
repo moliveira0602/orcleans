@@ -39,9 +39,9 @@ export default function LoginPage() {
             }
         } catch (err: any) {
             setError(err.message || 'Erro ao autenticar.');
+        } finally {
+            setLoading(false);
         }
-
-        setLoading(false);
     };
 
     return (

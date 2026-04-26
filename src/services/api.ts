@@ -72,10 +72,12 @@ class ApiClient {
   }
 
   private async doRefresh(): Promise<{ accessToken: string; refreshToken: string }> {
+    // Store the refresh token we're using so we can detect if it changed during the request
+    const tokenInUse = this.refreshToken;
     const response = await fetch(`${this.baseUrl}/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken: this.refreshToken }),
+      body: JSON.stringify({ refreshToken: tokenInUse }),
     });
 
     if (!response.ok) {
@@ -83,7 +85,12 @@ class ApiClient {
       throw new Error('Refresh failed');
     }
 
-    return response.json();
+    const tokens = await response.json();
+    // Only save if the refresh token hasn't changed (no race condition)
+    if (this.refreshToken === tokenInUse) {
+      this.saveTokens(tokens.accessToken, tokens.refreshToken);
+    }
+    return tokens;
   }
 
   private async request<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {

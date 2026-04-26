@@ -87,7 +87,7 @@ export function Topbar({ currentPage, onNavigate, onSearch, onMobileMenuToggle }
                 <button className="btn-icon" onClick={showNotif}>
                     <Bell size={20} strokeWidth={1.75} />
                 </button>
-                <button className="btn-icon" onClick={logout} title="Sair">
+                <button className="btn-icon" onClick={() => { if (confirm('Tem certeza que deseja sair?')) logout(); }} title="Sair">
                     <LogOut size={20} strokeWidth={1.75} />
                 </button>
             </div>

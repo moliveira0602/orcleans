@@ -1,16 +1,16 @@
-import { useState, useEffect } from 'react';
-import { 
-    X, 
-    Database, 
-    Zap, 
-    FileText, 
-    Phone, 
-    Mail, 
-    MessageCircle, 
-    Trash2, 
-    Check, 
-    ExternalLink, 
-    AlertCircle, 
+import { useState, useEffect, useRef } from 'react';
+import {
+    X,
+    Database,
+    Zap,
+    FileText,
+    Phone,
+    Mail,
+    MessageCircle,
+    Trash2,
+    Check,
+    ExternalLink,
+    AlertCircle,
     RotateCw,
     Layout,
     Flame,
@@ -22,6 +22,7 @@ import {
     Code,
     Share2
 } from 'lucide-react';
+import ResponsiveDetailPanel from './ResponsiveDetailPanel';
 import { useAppState, useAppDispatch } from '../store';
 import { useToast } from './Toast';
 import { useConfirm } from './ConfirmModal';
@@ -57,26 +58,46 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     const [loadingHistory, setLoadingHistory] = useState(false);
 
     const [enriching, setEnriching] = useState(false);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     // Buscar lead
     const lead = leads.find((l) => l.id === leadId);
 
-    // Fetch contact history
+    // Fetch contact history with AbortController
     const refreshHistory = async () => {
         if (!leadId) return;
+
+        // Cancel previous request
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
         setLoadingHistory(true);
         try {
             const result = await leadApi.fetchLeadActivities(leadId, { limit: 10 });
-            setContactHistory(result.activities || []);
-        } catch (err) {
-            console.error('Failed to fetch activities:', err);
+            if (!controller.signal.aborted) {
+                setContactHistory(result.activities || []);
+            }
+        } catch (err: any) {
+            if (err.name !== 'AbortError' && !controller.signal.aborted) {
+                console.error('Failed to fetch activities:', err);
+            }
         } finally {
-            setLoadingHistory(false);
+            if (abortControllerRef.current === controller) {
+                setLoadingHistory(false);
+            }
         }
     };
 
     useEffect(() => {
         if (leadId) refreshHistory();
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        };
     }, [leadId]);
 
     // Reset activeTab
@@ -85,7 +106,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     }, [leadId]);
 
     if (!lead) {
-        return <div className={`detail-panel${leadId ? ' open' : ''}`} />;
+        return <ResponsiveDetailPanel leadId={leadId} onClose={onClose}>{null}</ResponsiveDetailPanel>;
     }
 
     const nameCol = detectNameCol(leads);
@@ -176,7 +197,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
         toast(`Lead movido para "${label}"`, 'success');
         dispatch({
             type: 'ADD_ACTIVITY',
-            payload: { title: `Funil: ${name}`, sub: `Movido para ${label}`, icon: 'pipeline', time: new Date().toISOString() },
+            payload: { title: `Pipeline: ${name}`, sub: `Movido para ${label}`, icon: 'pipeline', time: new Date().toISOString() },
         });
     };
 
@@ -281,14 +302,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     const enrichment = (lead.insight as any)?.enrichment;
 
     return (
-        <>
-            <div className={`detail-overlay ${leadId ? 'open' : ''}`} onClick={onClose} />
-            <div className={`detail-panel${leadId ? ' open' : ''}`} style={{ 
-                background: 'rgba(10, 11, 16, 0.95)', 
-                backdropFilter: 'blur(20px)',
-                borderLeft: '1px solid rgba(255, 255, 255, 0.08)',
-                boxShadow: '-10px 0 30px rgba(0,0,0,0.5)'
-            }}>
+        <ResponsiveDetailPanel leadId={leadId} onClose={onClose}>
                 <div className="detail-header" style={{ 
                     padding: '24px 20px', 
                     borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
@@ -413,7 +427,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                 </div>
                             </div>
 
-                            {/* Funil & Desfecho */}
+                            {/* Pipeline & Desfecho */}
                             <div className="detail-section" style={{ 
                                 background: 'rgba(255,255,255,0.02)',
                                 padding: '16px',
@@ -421,7 +435,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                 border: '1px dashed rgba(255,255,255,0.1)',
                                 marginBottom: '24px'
                             }}>
-                                <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Estado no Funil</div>
+                                <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Status no Pipeline</div>
                                 <div style={{ display: 'flex', gap: 10 }}>
                                     <select className="input" style={{ 
                                         flex: 1, 
@@ -595,8 +609,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
 
                 {emailModalOpen && <EmailTemplateModal lead={lead} onClose={() => setEmailModalOpen(false)} onSend={handleEmailSent} />}
                 {outcomeModalOpen && <OutcomeModal isOpen={outcomeModalOpen} onClose={() => setOutcomeModalOpen(false)} onSave={handleSaveOutcome} leadName={name} />}
-            </div>
-        </>
+        </ResponsiveDetailPanel>
     );
 }
 

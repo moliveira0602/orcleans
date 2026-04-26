@@ -4,6 +4,18 @@ import { useAppDispatch } from '../store';
 
 type Role = 'super_admin' | 'admin' | 'member';
 
+interface Organization {
+  id: string;
+  name: string;
+  plan: string;
+  maxLeads: number;
+  leadsConsumed: number;
+  maxUsers: number;
+  trialExpiresAt?: string;
+  lastBillingDate?: string;
+  stripeId?: string;
+}
+
 interface User {
   id: string;
   name: string;
@@ -11,6 +23,7 @@ interface User {
   role: Role;
   organizationId: string;
   organizationName: string;
+  organization?: Organization;
 }
 
 const ROLES = {
@@ -29,12 +42,14 @@ function isAdmin(role: Role): boolean {
 
 interface AuthContextType {
   user: User | null;
+  organization: Organization | null;
   isLoading: boolean;
   isSuperAdmin: boolean;
   isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, organizationName: string) => Promise<void>;
   logout: () => void;
+  deleteAccount: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -57,16 +72,23 @@ function clearSession() {
   localStorage.removeItem('orcalens_auth');
   localStorage.removeItem('orcalens_auth_users');
   localStorage.removeItem('orca_session');
+  localStorage.removeItem('orca_settings');
+  localStorage.removeItem('orca_onboarding_done');
+  localStorage.removeItem('orca_google_api_key');
+  localStorage.removeItem('orca_scan_demo');
+  localStorage.removeItem('orca_scan_source');
+  sessionStorage.removeItem('orca_api_calls_today');
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(loadSession);
+  const [organization, setOrganization] = useState<Organization | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const dispatch = useAppDispatch();
 
   useEffect(() => {
     // CRITICAL: Always validate session with server on page load.
-    // We CANNOT trust localStorage alone because the stored 'orca_user' 
+    // We CANNOT trust localStorage alone because the stored 'orca_user'
     // might belong to a DIFFERENT user than the current JWT token.
     // For example: Marcos logs in, then Michelle logs in on the same browser.
     // After Michelle's token expires and refreshes, the old 'orca_user' (Marcos)
@@ -81,8 +103,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             role: profile.role,
             organizationId: profile.organization.id,
             organizationName: profile.organization.name,
+            organization: profile.organization,
           };
           setUser(userData);
+          setOrganization(profile.organization);
           saveSession(userData);
           // Sync profile to app settings
           dispatch({ type: 'UPDATE_SETTINGS', payload: { name: profile.name, email: profile.email, company: profile.company || '' } });
@@ -92,12 +116,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           api.logout();
           clearSession();
           setUser(null);
+          setOrganization(null);
         })
         .finally(() => setIsLoading(false));
     } else {
       // No token at all - clear stale user data that might be from a previous user
       clearSession();
       setUser(null);
+      setOrganization(null);
       setIsLoading(false);
     }
   }, []);
@@ -129,16 +155,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     api.setTokens(result.accessToken, result.refreshToken);
     const userData: User = result.user;
     setUser(userData);
+    setOrganization(result.user.organization || null);
     saveSession(userData);
     // Sync profile to app settings
     dispatch({ type: 'UPDATE_SETTINGS', payload: { name: result.user.name, email: result.user.email, company: result.user.company || '' } });
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string, organizationName: string) => {
+    clearSession();
     const result = await api.post<any>('/auth/register', { name, email, password, organizationName });
     api.setTokens(result.accessToken, result.refreshToken);
     const userData: User = result.user;
     setUser(userData);
+    setOrganization(result.user.organization || null);
     saveSession(userData);
     // Sync profile to app settings
     dispatch({ type: 'UPDATE_SETTINGS', payload: { name: result.user.name, email: result.user.email, company: result.user.company || '' } });
@@ -148,7 +177,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     api.logout();
     clearSession();
     setUser(null);
+    setOrganization(null);
     // Clear settings on logout
+    dispatch({ type: 'UPDATE_SETTINGS', payload: { name: '', email: '', company: '' } });
+  }, []);
+
+  const deleteAccount = useCallback(async () => {
+    await api.delete('/auth/delete-account');
+    clearSession();
+    setUser(null);
+    setOrganization(null);
+    dispatch({ type: 'CLEAR_ALL' });
     dispatch({ type: 'UPDATE_SETTINGS', payload: { name: '', email: '', company: '' } });
   }, []);
 
@@ -162,26 +201,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: profile.role,
         organizationId: profile.organization.id,
         organizationName: profile.organization.name,
+        organization: profile.organization,
       };
       setUser(userData);
+      setOrganization(profile.organization);
       saveSession(userData);
       // Sync profile to app settings
       dispatch({ type: 'UPDATE_SETTINGS', payload: { name: profile.name, email: profile.email, company: profile.company || '' } });
-    } catch {
-      // ignore
+    } catch (err: any) {
+      console.error('[Auth] refreshProfile failed:', err.message || err);
     }
   }, []);
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      isLoading, 
+    <AuthContext.Provider value={{
+      user,
+      organization,
+      isLoading,
       isSuperAdmin: isSuperAdmin(user?.role as Role),
       isAdmin: isAdmin(user?.role as Role),
-      login, 
-      register, 
-      logout, 
-      refreshProfile 
+      login,
+      register,
+      logout,
+      deleteAccount,
+      refreshProfile
     }}>
       {children}
     </AuthContext.Provider>

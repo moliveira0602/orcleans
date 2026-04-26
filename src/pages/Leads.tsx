@@ -346,7 +346,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                                     {col.label} ↕
                                 </th>
                             ))}
-                            <th>Funil</th>
+                            <th>Status</th>
                             <th></th>
                         </tr>
                     </thead>

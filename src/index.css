@@ -556,9 +556,9 @@ body {
 /* ── KPI GRID ── */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 16px;
-  margin-bottom: 24px
+  margin-bottom: 16px
 }
 
 .kpi {
@@ -1447,6 +1447,91 @@ select.input {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px
+}
+
+@media (max-width: 1200px) {
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .grid-4,
+  .grid-3,
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.metric-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+}
+
+.metric-card:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.metric-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.metric-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.metric-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.metric-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 2px;
+}
+
+.metric-sub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 500;
+}
+
+/* Responsividade melhorada para cards de settings */
+@media (max-width: 1024px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .settings-section {
+    margin-top: 0 !important;
+  }
 }
 
 .flex {
@@ -2741,61 +2826,6 @@ select.input {
   width: 100%;
 }
 
-/* Dashboard KPI grid mobile improvements */
-.kpi-grid + .kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
-}
-
-@media(max-width:1200px) {
-  .kpi-grid + .kpi-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media(max-width:900px) {
-  .kpi-grid + .kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media(max-width:600px) {
-  .kpi-grid + .kpi-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  
-  .kpi-grid + .kpi-grid .kpi {
-    padding: 12px;
-  }
-  
-  .kpi-grid + .kpi-grid .kpi-val {
-    font-size: 20px;
-  }
-  
-  .kpi-grid + .kpi-grid .kpi-label {
-    font-size: 9px;
-  }
-  
-  .kpi-grid + .kpi-grid .kpi-sub {
-    font-size: 9px;
-  }
-}
-
-@media(max-width:480px) {
-  .kpi-grid + .kpi-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .kpi-grid + .kpi-grid .kpi {
-    padding: 10px;
-    border-radius: 8px;
-  }
-  
-  .kpi-grid + .kpi-grid .kpi-val {
-    font-size: 18px;
-  }
-}
 
 /* ── LEADS PAGE RESPONSIVE ── */
 .leads-toolbar {
@@ -3215,29 +3245,7 @@ select.input {
     font-size: 10px;
   }
 
-  /* Dashboard second KPI row mobile - key fix */
-  .kpi-grid + .kpi-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-  }
-
-  .kpi-grid + .kpi-grid .kpi {
-    padding: 10px;
-  }
-
-  .kpi-grid + .kpi-grid .kpi-val {
-    font-size: 18px;
-  }
-
-  .kpi-grid + .kpi-grid .kpi-label {
-    font-size: 8px;
-    letter-spacing: 0.02em;
-  }
-
-  .kpi-grid + .kpi-grid .kpi-sub {
-    font-size: 8px;
-  }
-
+  
   /* Dashboard priority leads mobile */
   .grid-2 .card > div:nth-child(2) {
     display: flex;

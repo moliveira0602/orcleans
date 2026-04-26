@@ -16,6 +16,13 @@ import { PIPELINE_COLS } from '../types';
 import { createLeadsBulk } from '../services/leads';
 import { useAuth } from '../services/auth';
 
+const PLAN_LIMITS: Record<string, number> = {
+    trial: 25,
+    starter: 500,
+    pro: 2000,
+    enterprise: 10000,
+};
+
 interface DashboardProps {
     onNavigate: (page: Page) => void;
     onOpenDetail: (id: string) => void;
@@ -25,7 +32,8 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
     const { leads, settings, activities } = useAppState();
     const dispatch = useAppDispatch();
     const toast = useToast();
-    const { user, refreshProfile } = useAuth();
+    const { user, organization, refreshProfile } = useAuth();
+    const maxLeads = organization?.maxLeads || PLAN_LIMITS[organization?.plan || 'trial'] || 50;
     const [scanModalOpen, setScanModalOpen] = useState(false);
     const [scanLoading, setScanLoading] = useState(false);
     const [scanProgress, setScanProgress] = useState('');
@@ -219,7 +227,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 display: 'flex', 
                 justifyContent: 'space-between', 
                 alignItems: 'center', 
-                marginBottom: 24,
+                marginBottom: 16,
                 padding: '12px 20px',
                 background: 'rgba(255, 255, 255, 0.02)',
                 border: '1px solid rgba(255, 255, 255, 0.05)',
@@ -262,7 +270,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                     <div className="kpi-val" style={{ fontSize: 24 }}>
                         {leads.length}
                         <span style={{ fontSize: 14, color: 'var(--t3)', marginLeft: 4 }}>
-                            / {50}
+                            / {maxLeads}
                         </span>
                     </div>
                     <div className="kpi-sub">leads capturados</div>
@@ -297,7 +305,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
             </div>
 
             {/* ===== ROW 2: Command Charts (Pie/Donut) ===== */}
-            <div className="grid-2 mb-24">
+            <div className="grid-2 mb-16">
                 <div className="card">
                     <div className="sec-header">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -343,7 +351,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                                 <Columns3 size={20} />
                             </div>
                             <div>
-                                <div className="sec-title">Status do Funil</div>
+                                <div className="sec-title">Status do Pipeline</div>
                                 <div className="sec-sub">Volume por etapa operacional</div>
                             </div>
                         </div>
@@ -367,8 +375,8 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
             </div>
 
             {/* ===== ROW 3: Terminal & Activity Feed ===== */}
-            <div className="grid-3 mb-24">
-                <div className="card col-span-2" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', background: '#000' }}>
+            <div className="grid-2 mb-16">
+                <div className="card" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', background: '#000' }}>
                     <div style={{ 
                         padding: '10px 16px', 
                         background: 'rgba(255,255,255,0.02)', 
@@ -475,7 +483,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
 
             {/* ===== ROW 5: Produtividade do Usuário Logado ===== */}
             {user && (
-                <div className="card mb-24">
+                <div className="card mb-16">
                     <div className="sec-header">
                         <div>
                             <div className="sec-title">Sua Produtividade</div>
@@ -529,7 +537,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                 <div className="card">
                     <div className="sec-header">
                         <div>
-                            <div className="sec-title">Funil de Vendas</div>
+                            <div className="sec-title">Pipeline de Vendas</div>
                             <div className="sec-sub">Conversão por etapa do pipeline</div>
                         </div>
                     </div>
@@ -547,7 +555,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
             </div>
 
             {/* ===== ROW 3: Priority Leads + Health Distribution ===== */}
-            <div className="grid-2 mb-24">
+            <div className="grid-2 mb-16">
                 <div className="card">
                     <div className="sec-header">
                         <div>
@@ -629,7 +637,7 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
             </div>
 
             {/* ===== ROW 4: Sources + Activity Velocity ===== */}
-            <div className="grid-2 mb-24">
+            <div className="grid-2 mb-16">
                 {/* Lead Sources */}
                 <div className="card">
                     <div className="sec-header">

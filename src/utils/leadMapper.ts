@@ -21,7 +21,7 @@ export const LEAD_COLUMNS = [
     { key: 'servicos',   label: 'Serviços',    width: 180 },
     { key: 'linkOrigem', label: 'Origem',      width: 80  },
     { key: '_score',     label: 'Score',       width: 80,  always: true },
-    { key: '_pipeline',  label: 'Funil',       width: 110, always: true },
+    { key: '_pipeline',  label: 'Pipeline',    width: 110, always: true },
 ] as const;
 
 /**

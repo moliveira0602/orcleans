@@ -64,22 +64,14 @@ function buildNavItems(isSuperAdmin: boolean): { section: string; items: { id: P
         return items;
 }
 
-import { api } from '../services/api';
-import { useEffect } from 'react';
-
 export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, mobileOpen }: SidebarProps) {
     const { leads, settings } = useAppState();
     const [scanModalOpen, setScanModalOpen] = useState(false);
-    const [org, setOrg] = useState<any>(null);
-    
-    useEffect(() => {
-        api.get('/organizations/me').then(setOrg).catch(console.error);
-    }, []);
-    
+
     // Get scan status for Sonar button
     const preset = SCAN_PRESETS['clinicasOlhao'];
     const scanStatus = getScanStatus(preset.segment, preset.city);
-    const { logout, isSuperAdmin } = useAuth();
+    const { logout, isSuperAdmin, organization } = useAuth();
 
     const navItems = buildNavItems(isSuperAdmin);
 
@@ -136,7 +128,7 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onToggle, 
                     <div>
                         <div className="user-name">{settings.name || 'Usuário'}</div>
                         <div className="user-role" style={{ textTransform: 'capitalize' }}>
-                            {org ? formatPlan(org.plan) : '...'}
+                            {organization ? formatPlan(organization.plan) : '...'}
                         </div>
                     </div>
                 )}

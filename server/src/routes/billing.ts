@@ -13,12 +13,36 @@ if (!stripe) {
   console.warn('[Stripe] STRIPE_SECRET_KEY is missing. Billing features will be disabled.');
 }
 
-// Map plans to Price IDs
+/**
+ * Get public Stripe config
+ * GET /billing/config
+ */
+router.get('/config', (_req, res) => {
+  res.json({
+    enabled: !!stripe,
+    plans: Object.keys(PRICE_IDS),
+  });
+});
+
+// Map plans to Price IDs (configured via environment variables)
+// IMPORTANT: Replace with real Price IDs from your Stripe Dashboard → Products → Pricing
 const PRICE_IDS: Record<string, string> = {
-  starter: 'price_1TPho6J3U3NJRDfEmGlYy3pA',
-  pro: 'price_1TPho3J3U3NJRDfE1AHivAkE',
-  enterprise: 'price_1TPho4J3U3NJRDfEjUz7xaMq',
+  starter: process.env.STRIPE_PRICE_STARTER || '',
+  pro: process.env.STRIPE_PRICE_PRO || '',
+  enterprise: process.env.STRIPE_PRICE_ENTERPRISE || '',
 };
+
+// Validate that price IDs are configured and valid format
+function getPriceId(plan: string): string {
+  const priceId = PRICE_IDS[plan.toLowerCase()];
+  if (!priceId) {
+    throw new Error(`Price ID not configured for plan: '${plan}'. Please set STRIPE_PRICE_${plan.toUpperCase()} in .env.production with a real Price ID from your Stripe Dashboard.`);
+  }
+  if (!priceId.startsWith('price_')) {
+    throw new Error(`Invalid Price ID format for plan '${plan}': '${priceId}'. Price IDs must start with 'price_'. Get real IDs from Stripe Dashboard → Products.`);
+  }
+  return priceId;
+}
 
 /**
  * Create a Stripe Checkout Session
@@ -34,12 +58,8 @@ router.post('/create-checkout-session', authenticate, async (req: any, res) => {
   try {
     const { plan } = req.body;
     if (!plan) throw new Error('Plano não especificado');
-    
-    const priceId = PRICE_IDS[plan.toLowerCase()];
-    if (!priceId) {
-      console.error(`[Stripe] Price ID not found for plan: ${plan}`);
-      return res.status(400).json({ error: 'Plano inválido ou ID de preço não configurado' });
-    }
+
+    const priceId = getPriceId(plan);
 
     const orgId = req.organizationId;
     if (!orgId) throw new Error('ID da organização não encontrado no pedido');
@@ -78,6 +98,31 @@ router.post('/create-checkout-session', authenticate, async (req: any, res) => {
 });
 
 /**
+ * Verify checkout session status
+ * GET /billing/checkout-status?session_id=xxx
+ */
+router.get('/checkout-status', authenticate, async (req: any, res) => {
+  if (!stripe) {
+    return res.status(503).json({ error: 'Stripe não configurado' });
+  }
+  try {
+    const { session_id } = req.query;
+    if (!session_id || typeof session_id !== 'string') {
+      return res.status(400).json({ error: 'session_id obrigatório' });
+    }
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+    res.json({
+      status: session.status,
+      payment_status: session.payment_status,
+      plan: session.metadata?.plan || null,
+    });
+  } catch (error: any) {
+    console.error('[Stripe] Error retrieving session:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * Handle Stripe Webhooks
  * POST /billing/webhook
  * NOTE: This route needs raw body to verify signature
@@ -102,7 +147,8 @@ router.post('/webhook', async (req, res) => {
     case 'checkout.session.completed':
       const session = event.data.object as any;
       const orgId = session.client_reference_id;
-      const plan = session.metadata?.plan || 'starter';
+      // In webhook handler, use the plan from metadata (still works)
+    const plan = session.metadata?.plan || 'starter';
 
       if (orgId) {
         const PLAN_LIMITS: Record<string, number> = {
