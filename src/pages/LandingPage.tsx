@@ -518,7 +518,11 @@ export default function LandingPage() {
             <header className={`landing-header${scrolled ? ' scrolled' : ''}`}>
                 <div className="landing-header-inner">
                     <div className="landing-logo" onClick={() => scrollToSection('inicio')}>
-                        <img src="/images/ORCA-white.png" alt="ORCA" />
+                        <img
+                            src="/images/ORCA-white.png"
+                            alt="ORCA"
+                            onLoad={(e) => (e.target as HTMLImageElement).classList.add('loaded')}
+                        />
                     </div>
                     <nav className="landing-nav desktop-only">
                         {navItems.map((item) => (
@@ -1544,6 +1548,17 @@ export default function LandingPage() {
                 @media (max-width: 900px) {
                     .landing-nav { display: none; }
                     .mobile-menu-btn { display: flex; }
+                    .hero-section { padding-top: 100px !important; }
+                    .hero-subtitle {
+                        max-width: 100% !important;
+                        padding: 0 20px !important;
+                        margin-bottom: 32px !important;
+                    }
+                    .hero-stats {
+                        flex-wrap: wrap !important;
+                        gap: 24px !important;
+                        padding: 0 20px !important;
+                    }
                 }
 
                 /* ===== HERO SECTION ===== */
@@ -1595,7 +1610,7 @@ export default function LandingPage() {
                     display: inline-block; padding: 6px 16px; background: rgba(255, 255, 255, 0.1);
                     border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px; font-size: 12px;
                     font-weight: 600; color: var(--orca-text); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 20px;
-                    margin-top: 0 !important;
+                     margin-top: 60px !important;
                 }
                 .hero-title {
                     font-size: clamp(32px, 5.5vw, 52px); font-weight: 900; line-height: 1.05;

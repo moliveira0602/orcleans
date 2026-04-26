@@ -14,7 +14,7 @@ echo "🚀 Deploy Local para VPS"
 echo "========================"
 
 # Pedir password
-echo -n "Password de root@$VPS_HOST:"
+echo -n "Password de root@$VPS_HOST: "
 read -s VPS_PASSWORD
 echo ""
 
@@ -22,6 +22,15 @@ if [ -z "$VPS_PASSWORD" ]; then
   echo "❌ Password não pode ser vazia"
   exit 1
 fi
+
+# Testar conexão primeiro
+echo "🔍 Testando conexão SSH..."
+if ! sshpass -p "$VPS_PASSWORD" ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no -p $VPS_PORT $VPS_USER@$VPS_HOST "echo '✅ Conexão OK'"; then
+  echo "❌ Falha na conexão SSH"
+  echo "Verifique a password ou configuração do servidor"
+  exit 1
+fi
+echo "✅ Conexão verificada"
 
 # Verificar se sshpass está instalado
 if ! command -v sshpass &> /dev/null; then
@@ -35,6 +44,7 @@ fi
 
 # Função para executar comandos remotos
 remote_exec() {
+  echo "Executando remoto: $1"
   sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no -p $VPS_PORT $VPS_USER@$VPS_HOST "$1"
 }
 
@@ -64,6 +74,10 @@ echo "✅ Frontend deployado"
 # 3. Build backend
 echo "🔧 Building backend..."
 remote_exec "cd $VPS_PATH/server && npm install && npm run build && npx prisma generate"
+
+# 3.5 Copy .env.production to server
+echo "📄 Copiando .env.production..."
+sshpass -p "$VPS_PASSWORD" scp -o StrictHostKeyChecking=no -P $VPS_PORT server/.env.production $VPS_USER@$VPS_HOST:$VPS_PATH/server/.env.production
 
 # 4. Restart API
 echo "🔄 Reiniciando API..."
