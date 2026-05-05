@@ -112,12 +112,16 @@ export interface ImportRecord {
     count: number;
 }
 
+export type ToneOfVoice = 'formal' | 'casual' | 'persuasivo' | 'tecnico';
+
 export interface AppSettings {
     name: string;
     email: string;
     company: string;
     hotThreshold: number;
     warmThreshold: number;
+    toneOfVoice?: ToneOfVoice;
+    socialEnrichment?: boolean;
     notifHot?: boolean;
     notifDaily?: boolean;
 }
@@ -181,6 +185,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     company: '',
     hotThreshold: 7,
     warmThreshold: 4,
+    toneOfVoice: 'casual',
+    socialEnrichment: true,
     notifHot: true,
     notifDaily: false,
 };

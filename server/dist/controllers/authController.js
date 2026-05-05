@@ -39,6 +39,7 @@ exports.refreshToken = refreshToken;
 exports.logout = logout;
 exports.getProfile = getProfile;
 exports.updateProfile = updateProfile;
+exports.deleteAccount = deleteAccount;
 const authService = __importStar(require("../services/authService"));
 const jwt_1 = require("../utils/jwt");
 async function register(req, res) {
@@ -101,6 +102,19 @@ async function updateProfile(req, res) {
         const { name, email, company } = req.body;
         const profile = await authService.updateProfile(authReq.userId, { name, email, company });
         return res.status(200).json(profile);
+    }
+    catch (error) {
+        return res.status(400).json({ error: error.message });
+    }
+}
+async function deleteAccount(req, res) {
+    try {
+        const authReq = req;
+        const { userId, organizationId } = authReq;
+        // Delete all user data (LGPD compliance)
+        // This will cascade delete leads, activities, imports, audit logs, etc.
+        await authService.deleteAccount(userId, organizationId);
+        return res.status(204).send();
     }
     catch (error) {
         return res.status(400).json({ error: error.message });

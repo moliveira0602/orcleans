@@ -3,7 +3,7 @@ import {
     Radar, Search, MapPin, Activity, Phone, Mail,
     Share2, Star, Check, Trash2, FolderPlus,
     ChevronRight, Info, AlertTriangle, Crosshair,
-    RotateCw, RefreshCw, Users, Target, X, Code
+    RotateCw, RefreshCw, Users, Target, X, Code, Layers
 } from 'lucide-react';
 import { useAppState, useAppDispatch } from '../store';
 import { getLeadName, getLeadCategory, detectAddressCol, getLeadAddress, detectPostalCol, getLeadPostal, detectLatCol, detectLngCol, getRawCoord } from '../utils/detect';
@@ -12,7 +12,8 @@ import { geocodeAddress } from '../utils/geocoding';
 import { MapContainer, TileLayer, Circle, CircleMarker, Popup, useMap } from 'react-leaflet';
 import { runScan, getScanStatus, clearScanCache } from '../utils/scanService';
 import { useToast } from '../components/Toast';
-import { createLeadsBulk } from '../services/leads';
+import { createLeadsBulk, fetchLeads } from '../services/leads';
+import { type Lead } from '../types';
 import 'leaflet/dist/leaflet.css';
 
 /**
@@ -111,9 +112,10 @@ function MapWithFlashlight({ children }: { children: React.ReactNode }) {
 interface InsightsProps {
     onOpenDetail?: (id: string) => void;
     highlightedLeadId?: string | null;
+    onShowInsights?: (leads: Lead[]) => void;
 }
 
-export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsProps) {
+export default function Insights({ onOpenDetail, highlightedLeadId, onShowInsights }: InsightsProps) {
     const { leads, settings } = useAppState();
     const dispatch = useAppDispatch();
     const toast = useToast();
@@ -125,6 +127,7 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
     const [showTechDetails, setShowTechDetails] = useState<string | null>(null);
     const [flyToCenter, setFlyToCenter] = useState<[number, number] | null>(null);
     const [flyToZoom, setFlyToZoom] = useState<number>(18);
+    const [showHeatmap, setShowHeatmap] = useState(false);
 
     // Get user's location on mount
     useEffect(() => {
@@ -578,8 +581,51 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                 // Sync to backend
                 try {
                     await createLeadsBulk(leadsWithCoords);
+                    
+                    // Trigger AI analysis panel if handler exists
+                    if (onShowInsights) {
+                        // Fetch the leads we just created to get their server IDs
+                        const freshLeads = await fetchLeads({ 
+                            page: 1, 
+                            limit: leadsWithCoords.length, 
+                            sortBy: 'createdAt', 
+                            sortOrder: 'desc' 
+                        });
+                        
+                        // Map them back to the full Lead format for the AI panel
+                        const leadsForAnalysis = freshLeads.leads.slice(0, leadsWithCoords.length).map((sl: any) => ({
+                            id: sl.id,
+                            nome: sl.nome,
+                            segmento: sl.segmento,
+                            avaliacao: sl.avaliacao,
+                            reviews: sl.reviews,
+                            preco: sl.preco || '',
+                            endereco: sl.endereco || '',
+                            cidade: sl.cidade || '',
+                            status: sl.status || '',
+                            horario: sl.horario || '',
+                            telefone: sl.telefone || '',
+                            website: sl.website || '',
+                            email: sl.email || '',
+                            servicos: sl.servicos || [],
+                            foto: sl.foto || '',
+                            fotos: sl.fotos || [],
+                            linkOrigem: sl.linkOrigem || '',
+                            linkPedido: sl.linkPedido || '',
+                            observacoes: sl.observacoes || '',
+                            _score: sl.score ?? 0,
+                            _pipeline: sl.pipelineStage ?? 'novo',
+                            _importedAt: sl.importDate ? new Date(sl.importDate).getTime() : Date.now(),
+                            _importFile: sl.importFile,
+                            _importDate: sl.importDate,
+                            _importId: sl.importId,
+                            _raw: sl.raw || {},
+                        } as Lead));
+                        
+                        onShowInsights(leadsForAnalysis);
+                    }
                 } catch (err) {
-                    console.error('[Insights] Failed to sync leads to backend:', err);
+                    console.error('[Insights] Failed to sync leads or start analysis:', err);
                 }
 
                 dispatch({
@@ -696,6 +742,21 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                             attribution='&copy; Google'
                         />
                         <MapFlyTo center={flyToCenter} zoom={flyToZoom} />
+                        
+                        {/* Heatmap Layer */}
+                        {showHeatmap && mappableLeads.map((l: any) => (
+                            <Circle
+                                key={`heat-${l.id}`}
+                                center={getLeadCoords(l) as [number, number]}
+                                radius={150}
+                                pathOptions={{
+                                    fillColor: l._score >= settings.hotThreshold ? 'var(--blue)' : 'rgba(255,255,255,0.2)',
+                                    fillOpacity: 0.15,
+                                    stroke: false,
+                                    weight: 0
+                                }}
+                            />
+                        ))}
                         
                         {/* Static Radar Center */}
                         <Circle
@@ -1077,6 +1138,27 @@ export default function Insights({ onOpenDetail, highlightedLeadId }: InsightsPr
                             />
                             <span style={{ fontSize: 11, color: '#AAA' }}>Apenas com telefone</span>
                         </label>
+                    </div>
+                </div>
+
+                <div style={{ marginBottom: 24, padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <Layers size={14} color={showHeatmap ? 'var(--blue)' : 'rgba(255,255,255,0.3)'} />
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#FFF' }}>Mapa de Calor</div>
+                        </div>
+                        <label className="toggle">
+                            <input 
+                                type="checkbox" 
+                                checked={showHeatmap} 
+                                onChange={(e) => setShowHeatmap(e.target.checked)} 
+                            />
+                            <div className="toggle-track" />
+                            <div className="toggle-thumb" />
+                        </label>
+                    </div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 8 }}>
+                        Visualiza a densidade de leads quentes para otimizar rotas de prospecção.
                     </div>
                 </div>
 

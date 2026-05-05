@@ -975,5 +975,48 @@ router.patch('/config', async (req, res) => {
         res.status(500).json({ error: 'Erro ao atualizar configuração' });
     }
 });
+// ORCA LEADS (Inbound from Landing Page)
+router.get('/orca-leads', async (_req, res) => {
+    try {
+        const leads = await database_1.prisma.orcaLead.findMany({
+            orderBy: { createdAt: 'desc' },
+        });
+        res.json(leads);
+    }
+    catch (error) {
+        console.error('Admin orca-leads error:', error);
+        res.status(500).json({ error: 'Erro ao listar leads da ORCA' });
+    }
+});
+router.patch('/orca-leads/:id/status', async (req, res) => {
+    try {
+        const id = getParamId(req.params);
+        const { status } = req.body;
+        if (!id)
+            return res.status(400).json({ error: 'ID é obrigatório' });
+        const lead = await database_1.prisma.orcaLead.update({
+            where: { id },
+            data: { status },
+        });
+        res.json(lead);
+    }
+    catch (error) {
+        console.error('Update orca-lead status error:', error);
+        res.status(500).json({ error: 'Erro ao atualizar status' });
+    }
+});
+router.delete('/orca-leads/:id', async (req, res) => {
+    try {
+        const id = getParamId(req.params);
+        if (!id)
+            return res.status(400).json({ error: 'ID é obrigatório' });
+        await database_1.prisma.orcaLead.delete({ where: { id } });
+        res.json({ success: true });
+    }
+    catch (error) {
+        console.error('Delete orca-lead error:', error);
+        res.status(500).json({ error: 'Erro ao remover lead' });
+    }
+});
 exports.default = router;
 //# sourceMappingURL=admin.js.map

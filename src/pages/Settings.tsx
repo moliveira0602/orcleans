@@ -66,7 +66,7 @@ export default function SettingsPage() {
     const updateSetting = (key: string, value: any) => {
         dispatch({ type: 'UPDATE_SETTINGS', payload: { [key]: value } });
         // Persist local settings (thresholds and notifications)
-        if (['hotThreshold', 'warmThreshold', 'notifHot', 'notifDaily'].includes(key)) {
+        if (['hotThreshold', 'warmThreshold', 'notifHot', 'notifDaily', 'toneOfVoice', 'socialEnrichment'].includes(key)) {
             const current = JSON.parse(localStorage.getItem('orca_settings') || '{}');
             localStorage.setItem('orca_settings', JSON.stringify({ ...current, [key]: value }));
         }
@@ -247,6 +247,46 @@ export default function SettingsPage() {
                                 <div className="settings-sub">Score mínimo para classificar como morno (0-10)</div>
                             </div>
                             <input className="input" type="number" min={1} max={10} value={settings.warmThreshold} style={{ width: 70, textAlign: 'center' }} onChange={(e) => updateSetting('warmThreshold', +e.target.value)} />
+                        </div>
+                    </div>
+
+                    <div className="card settings-section" style={{ marginTop: 16 }}>
+                        <div className="settings-title">Inteligência & IA</div>
+                        <div className="form-group">
+                            <label className="form-label">Tom de Voz da IA</label>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                                {[
+                                    { id: 'casual', label: 'Casual', sub: 'Amigável e direto' },
+                                    { id: 'formal', label: 'Formal', sub: 'Polido e profissional' },
+                                    { id: 'persuasivo', label: 'Persuasivo', sub: 'Focado em vendas' },
+                                    { id: 'tecnico', label: 'Técnico', sub: 'Especialista e preciso' },
+                                ].map(tone => (
+                                    <button
+                                        key={tone.id}
+                                        className={`btn btn-sm ${settings.toneOfVoice === tone.id ? 'btn-primary' : 'btn-ghost'}`}
+                                        style={{ height: 'auto', padding: '10px', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left' }}
+                                        onClick={() => updateSetting('toneOfVoice', tone.id)}
+                                    >
+                                        <div style={{ fontSize: 12, fontWeight: 700 }}>{tone.label}</div>
+                                        <div style={{ fontSize: 9, opacity: 0.6, marginTop: 2 }}>{tone.sub}</div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="settings-row" style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                            <div>
+                                <div className="settings-label">Enriquecimento Social</div>
+                                <div className="settings-sub">Tentar descobrir redes sociais automaticamente</div>
+                            </div>
+                            <label className="toggle">
+                                <input 
+                                    type="checkbox" 
+                                    checked={!!settings.socialEnrichment} 
+                                    onChange={(e) => updateSetting('socialEnrichment', e.target.checked)} 
+                                />
+                                <div className="toggle-track" />
+                                <div className="toggle-thumb" />
+                            </label>
                         </div>
                     </div>
                 </div>

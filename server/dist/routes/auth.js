@@ -45,5 +45,6 @@ router.post('/refresh', (0, validate_1.validate)(auth_1.refreshTokenSchema), aut
 router.post('/logout', auth_2.authenticate, authController.logout);
 router.get('/me', auth_2.authenticate, authController.getProfile);
 router.patch('/me', auth_2.authenticate, authController.updateProfile);
+router.delete('/delete-account', auth_2.authenticate, authController.deleteAccount);
 exports.default = router;
 //# sourceMappingURL=auth.js.map

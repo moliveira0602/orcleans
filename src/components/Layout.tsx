@@ -10,6 +10,10 @@ import Segments from '../pages/Segments';
 import SettingsPage from '../pages/Settings';
 import AdminPage from '../pages/Admin';
 import LeadDetail from './LeadDetail';
+import ImportInsightsPanel from './ImportInsightsPanel';
+import CommandBar from './CommandBar';
+import { analyzeLeadsWithAI, type LeadWithInsight, type AnalysisProgress } from '../services/aiAnalysis';
+import { updateLead } from '../services/leads';
 import { useAppState, useApp } from '../store';
 import { useAuth } from '../services/auth';
 import { EmptyState } from './ErrorBoundary';
@@ -40,6 +44,8 @@ export default function Layout() {
     const [searchQuery, setSearchQuery] = useState('');
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [insightLeads, setInsightLeads] = useState<any[] | null>(null);
+    const [commandBarOpen, setCommandBarOpen] = useState(false);
 
     // Refresh leads on mount (Layout only renders when user is authenticated)
     useEffect(() => {
@@ -62,14 +68,21 @@ export default function Layout() {
         } else if (path.endsWith('/admin')) {
             setCurrentPage('admin');
         }
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                setCommandBarOpen(prev => !prev);
+            }
+            if (e.key === 'Escape') {
+                setCommandBarOpen(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
     }, [refreshLeads]);
 
-    useEffect(() => {
-        if (!onboardingDone && leads.length > 0) {
-            setShowOnboarding(false);
-            localStorage.setItem('orca_onboarding_done', 'true');
-        }
-    }, [leads.length, onboardingDone]);
+
 
     const navigate = useCallback((page: Page) => {
         setCurrentPage(page);
@@ -102,6 +115,24 @@ export default function Layout() {
     const handleOnboardingComplete = useCallback(() => {
         setShowOnboarding(false);
         localStorage.setItem('orca_onboarding_done', 'true');
+    }, []);
+
+    const handleAnalyzeLeads = useCallback(async (
+        leads: any[],
+        onProgress: (progress: AnalysisProgress) => void,
+    ) => {
+        const results = await analyzeLeadsWithAI(leads, onProgress, 50, settings);
+
+        // Save insights back to backend for each lead (fire-and-forget)
+        for (const { lead, insight } of results) {
+            if (lead.id && !lead.id.startsWith('lead_')) {
+                updateLead(lead.id, { insight: insight as any }).catch(() => {
+                    // Ignore errors — insights are nice-to-have
+                });
+            }
+        }
+
+        return results;
     }, []);
 
     const showEmptyState = !isLoading && leads.length === 0 && currentPage !== 'admin' && currentPage !== 'leads' && currentPage !== 'import' && currentPage !== 'segments' && currentPage !== 'settings' && currentPage !== 'insights' && currentPage !== 'pipeline' && currentPage !== 'dashboard';
@@ -155,8 +186,8 @@ export default function Layout() {
                             {currentPage === 'pipeline' && (
                                 <Pipeline onOpenDetail={openDetail} />
                             )}
-                            {currentPage === 'insights' && <Insights onOpenDetail={openDetail} highlightedLeadId={mapLeadId} />}
-                            {currentPage === 'import' && <ImportPage onNavigate={navigate} />}
+                            {currentPage === 'insights' && <Insights onOpenDetail={openDetail} highlightedLeadId={mapLeadId} onShowInsights={setInsightLeads} />}
+                            {currentPage === 'import' && <ImportPage onNavigate={navigate} onOpenDetail={openDetail} onShowInsights={setInsightLeads} />}
                             {currentPage === 'segments' && <Segments onNavigate={navigate} />}
                             {currentPage === 'settings' && <SettingsPage />}
                             {currentPage === 'admin' && isSuperAdmin && <AdminPage />}
@@ -174,6 +205,21 @@ export default function Layout() {
                 leadId={selectedLeadId}
                 onClose={closeDetail}
                 onNavigate={setCurrentPage}
+            />
+            {insightLeads && (
+                <ImportInsightsPanel
+                    importedLeads={insightLeads}
+                    onClose={() => setInsightLeads(null)}
+                    onOpenDetail={openDetail}
+                    analyzeLeads={handleAnalyzeLeads}
+                />
+            )}
+
+            <CommandBar 
+                isOpen={commandBarOpen} 
+                onClose={() => setCommandBarOpen(false)}
+                onNavigate={navigate}
+                onOpenLead={openDetail}
             />
             <div className="mobile-bottom-nav">
                 {MOBILE_NAV_ITEMS.slice(0, 6).map((item) => (

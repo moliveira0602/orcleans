@@ -15,12 +15,34 @@ const stripe = process.env.STRIPE_SECRET_KEY
 if (!stripe) {
     console.warn('[Stripe] STRIPE_SECRET_KEY is missing. Billing features will be disabled.');
 }
-// Map plans to Price IDs
+/**
+ * Get public Stripe config
+ * GET /billing/config
+ */
+router.get('/config', (_req, res) => {
+    res.json({
+        enabled: !!stripe,
+        plans: Object.keys(PRICE_IDS),
+    });
+});
+// Map plans to Price IDs (configured via environment variables)
+// IMPORTANT: Replace with real Price IDs from your Stripe Dashboard → Products → Pricing
 const PRICE_IDS = {
-    starter: 'price_1TPWCQJq2n16iSORo91dl3VH',
-    pro: 'price_1TPWDzJq2n16iSORxWQiY7RN',
-    enterprise: 'price_1TPWEkJq2n16iSORKZmEqbc7',
+    starter: process.env.STRIPE_PRICE_STARTER || '',
+    pro: process.env.STRIPE_PRICE_PRO || '',
+    enterprise: process.env.STRIPE_PRICE_ENTERPRISE || '',
 };
+// Validate that price IDs are configured and valid format
+function getPriceId(plan) {
+    const priceId = PRICE_IDS[plan.toLowerCase()];
+    if (!priceId) {
+        throw new Error(`Price ID not configured for plan: '${plan}'. Please set STRIPE_PRICE_${plan.toUpperCase()} in .env.production with a real Price ID from your Stripe Dashboard.`);
+    }
+    if (!priceId.startsWith('price_')) {
+        throw new Error(`Invalid Price ID format for plan '${plan}': '${priceId}'. Price IDs must start with 'price_'. Get real IDs from Stripe Dashboard → Products.`);
+    }
+    return priceId;
+}
 /**
  * Create a Stripe Checkout Session
  * POST /billing/create-checkout-session
@@ -35,11 +57,7 @@ router.post('/create-checkout-session', auth_1.authenticate, async (req, res) =>
         const { plan } = req.body;
         if (!plan)
             throw new Error('Plano não especificado');
-        const priceId = PRICE_IDS[plan.toLowerCase()];
-        if (!priceId) {
-            console.error(`[Stripe] Price ID not found for plan: ${plan}`);
-            return res.status(400).json({ error: 'Plano inválido ou ID de preço não configurado' });
-        }
+        const priceId = getPriceId(plan);
         const orgId = req.organizationId;
         if (!orgId)
             throw new Error('ID da organização não encontrado no pedido');
@@ -75,6 +93,31 @@ router.post('/create-checkout-session', auth_1.authenticate, async (req, res) =>
     }
 });
 /**
+ * Verify checkout session status
+ * GET /billing/checkout-status?session_id=xxx
+ */
+router.get('/checkout-status', auth_1.authenticate, async (req, res) => {
+    if (!stripe) {
+        return res.status(503).json({ error: 'Stripe não configurado' });
+    }
+    try {
+        const { session_id } = req.query;
+        if (!session_id || typeof session_id !== 'string') {
+            return res.status(400).json({ error: 'session_id obrigatório' });
+        }
+        const session = await stripe.checkout.sessions.retrieve(session_id);
+        res.json({
+            status: session.status,
+            payment_status: session.payment_status,
+            plan: session.metadata?.plan || null,
+        });
+    }
+    catch (error) {
+        console.error('[Stripe] Error retrieving session:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+/**
  * Handle Stripe Webhooks
  * POST /billing/webhook
  * NOTE: This route needs raw body to verify signature
@@ -95,6 +138,7 @@ router.post('/webhook', async (req, res) => {
         case 'checkout.session.completed':
             const session = event.data.object;
             const orgId = session.client_reference_id;
+            // In webhook handler, use the plan from metadata (still works)
             const plan = session.metadata?.plan || 'starter';
             if (orgId) {
                 const PLAN_LIMITS = {
@@ -108,17 +152,29 @@ router.post('/webhook', async (req, res) => {
                     data: {
                         plan: plan,
                         maxLeads: PLAN_LIMITS[plan] || 50,
+                        stripeId: session.customer, // Save for future webhooks
                     }
                 });
                 console.log(`[Stripe] Org ${orgId} upgraded to ${plan} (Limit: ${PLAN_LIMITS[plan] || 50})`);
             }
             break;
-        case 'customer.subscription.deleted':
+        case 'customer.subscription.deleted': {
             const subscription = event.data.object;
-            // Handle cancellation logic (e.g., downgrade to trial or restricted mode)
+            const customerId = subscription.customer;
+            console.log(`[Stripe Webhook] Subscription deleted for customer: ${customerId}`);
+            // Reset organization to trial plan and limits
+            await database_1.prisma.organization.updateMany({
+                where: { stripeId: customerId },
+                data: {
+                    plan: 'trial',
+                    maxLeads: 50,
+                    maxUsers: 1,
+                },
+            });
             break;
+        }
         default:
-            console.log(`[Stripe] Unhandled event type ${event.type}`);
+            console.log(`[Stripe Webhook] Unhandled event type: ${event.type}`);
     }
     res.json({ received: true });
 });

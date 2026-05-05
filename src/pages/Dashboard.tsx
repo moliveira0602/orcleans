@@ -188,9 +188,17 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
     // Revenue potential (estimated from pipeline)
     const pipelineValue = leads.reduce((sum, l) => {
         const multipliers: Record<string, number> = { 'ganho': 1.0, 'proposta': 0.7, 'negociacao': 0.5, 'contato': 0.3, 'novo': 0.1, 'perdido': 0 };
-        return sum + (multipliers[l._pipeline] || 0.1) * 5000; // Estimated R$5k per lead
+        return sum + (multipliers[l._pipeline] || 0.1) * 5000; // Estimated €5k per lead
     }, 0);
     const wonValue = won * 5000;
+
+    const aiForecastValue = leads.reduce((sum, l) => {
+        // Probability based on both score and pipeline stage
+        const scoreWeight = (l._score || 5) / 10;
+        const stageMultipliers: Record<string, number> = { 'ganho': 1.0, 'proposta': 0.8, 'negociacao': 0.6, 'contato': 0.4, 'novo': 0.2, 'perdido': 0 };
+        const prob = (scoreWeight + (stageMultipliers[l._pipeline] || 0.1)) / 2;
+        return sum + (prob * 5000);
+    }, 0);
 
     // Activity velocity
     const recentActivities = activities.filter((a) => {
@@ -469,14 +477,19 @@ export default function Dashboard({ onNavigate, onOpenDetail }: DashboardProps) 
                     <div className="kpi-val" style={{ fontSize: 28, color: 'var(--red)' }}>{lossRate}%</div>
                     <div className="kpi-sub">{lost} leads perdidos</div>
                 </div>
+                <div className="kpi amber">
+                    <div className="kpi-label">Previsão AI</div>
+                    <div className="kpi-val" style={{ fontSize: 24, color: 'var(--amber)' }}>€ {Math.round(aiForecastValue / 1000)}k</div>
+                    <div className="kpi-sub">baseado em score</div>
+                </div>
                 <div className="kpi">
                     <div className="kpi-label">Potencial Pipeline</div>
-                    <div className="kpi-val" style={{ fontSize: 24, color: 'var(--orca-accent)' }}>R$ {Math.round(pipelineValue / 1000)}k</div>
+                    <div className="kpi-val" style={{ fontSize: 24, color: 'var(--orca-accent)' }}>€ {Math.round(pipelineValue / 1000)}k</div>
                     <div className="kpi-sub">estimado</div>
                 </div>
                 <div className="kpi">
                     <div className="kpi-label">Valor Fechado</div>
-                    <div className="kpi-val" style={{ fontSize: 24, color: 'var(--green)' }}>R$ {Math.round(wonValue / 1000)}k</div>
+                    <div className="kpi-val" style={{ fontSize: 24, color: 'var(--green)' }}>€ {Math.round(wonValue / 1000)}k</div>
                     <div className="kpi-sub">confirmado</div>
                 </div>
             </div>

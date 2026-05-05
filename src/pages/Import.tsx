@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo, useEffect } from 'react';
+import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
 import { UploadCloud, FileSpreadsheet, Trash2, ClipboardList, Check, X, AlertTriangle, Sparkles, Info, ArrowRight } from 'lucide-react';
 import * as ExcelJS from 'exceljs';
 import { useAppState, useAppDispatch, leadFingerprint, useApp } from '../store';
@@ -9,14 +9,16 @@ import { analyzeColumns, getColumnAnalysisSummary, STANDARD_COLUMNS, type Column
 import { sanitizeImportedData, getSanitizationSummary, type SanitizationSummary, type SanitizedLeadData } from '../utils/dataSanitizer';
 import type { Lead } from '../types';
 import type { Page } from '../components/Layout';
-import { createLeadsBulk } from '../services/leads';
+import { createLeadsBulk, updateLead } from '../services/leads';
 import * as leadApi from '../services/leads';
 
 interface ImportPageProps {
     onNavigate?: (page: Page) => void;
+    onOpenDetail?: (leadId: string) => void;
+    onShowInsights?: (leads: Lead[]) => void;
 }
 
-export default function ImportPage({ onNavigate }: ImportPageProps) {
+export default function ImportPage({ onNavigate, onOpenDetail, onShowInsights }: ImportPageProps) {
     const { imports, leads: existingLeads } = useAppState();
     const dispatch = useAppDispatch();
     const { refreshLeads } = useApp();
@@ -351,7 +353,44 @@ export default function ImportPage({ onNavigate }: ImportPageProps) {
         setDupeMode('skip');
         if (fileInput.current) fileInput.current.value = '';
 
-        // Navigate to leads so user can view the newly imported targets
+        // Trigger AI analysis panel with the imported leads
+        // Use serverLeads (with real IDs) if available, otherwise fall back to local leads
+        const leadsForAnalysis = serverLeads.length > 0
+            ? serverLeads.map((sl: any) => ({
+                id: sl.id,
+                nome: sl.nome,
+                segmento: sl.segmento,
+                avaliacao: sl.avaliacao,
+                reviews: sl.reviews,
+                preco: sl.preco || '',
+                endereco: sl.endereco || '',
+                cidade: sl.cidade || '',
+                status: sl.status || '',
+                horario: sl.horario || '',
+                telefone: sl.telefone || '',
+                website: sl.website || '',
+                email: sl.email || '',
+                servicos: sl.servicos || [],
+                foto: sl.foto || '',
+                fotos: sl.fotos || [],
+                linkOrigem: sl.linkOrigem || '',
+                linkPedido: sl.linkPedido || '',
+                observacoes: sl.observacoes || '',
+                _score: sl.score ?? 0,
+                _pipeline: sl.pipelineStage ?? 'novo',
+                _importedAt: sl.importDate ? new Date(sl.importDate).getTime() : Date.now(),
+                _importFile: sl.importFile,
+                _importDate: sl.importDate,
+                _importId: sl.importId,
+                _raw: sl.raw || {},
+            } as Lead))
+            : newLeads;
+
+        if (onShowInsights) {
+            onShowInsights(leadsForAnalysis);
+        }
+
+        // Navigate to leads in background so the list is ready when panel closes
         if (onNavigate) {
             onNavigate('leads');
         }

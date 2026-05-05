@@ -50,6 +50,7 @@ const admin_1 = __importDefault(require("./routes/admin"));
 const scan_1 = __importDefault(require("./routes/scan"));
 const organizations_1 = __importDefault(require("./routes/organizations"));
 const billing_1 = __importDefault(require("./routes/billing"));
+const contact_1 = __importDefault(require("./routes/contact"));
 const maintenance_1 = require("./middleware/maintenance");
 const auth_2 = require("./middleware/auth");
 const app = (0, express_1.default)();
@@ -176,6 +177,7 @@ app.use('/api/leads', leads_1.default);
 app.use('/api/scan', scan_1.default);
 app.use('/api/organizations', organizations_1.default);
 app.use('/api/billing', billing_1.default);
+app.use('/api/contact', contact_1.default);
 // Error handling middleware - MUST BE LAST
 app.use((err, _req, res, _next) => {
     console.error('Unhandled error:', err);

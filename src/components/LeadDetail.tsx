@@ -20,7 +20,11 @@ import {
     ShieldCheck,
     Globe,
     Code,
-    Share2
+    Share2,
+    Sparkles,
+    Clock,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import ResponsiveDetailPanel from './ResponsiveDetailPanel';
 import { useAppState, useAppDispatch } from '../store';
@@ -56,6 +60,7 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     const [outcomeModalOpen, setOutcomeModalOpen] = useState(false);
     const [contactHistory, setContactHistory] = useState<Array<{ id: string; channel: string; title: string; sub: string; icon: string; createdAt: string; userName: string }>>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
+    const [focusMode, setFocusMode] = useState(false);
 
     const [enriching, setEnriching] = useState(false);
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -331,14 +336,30 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                             {cat || 'Sem categoria'}
                         </div>
                     </div>
-                    <button className="btn-icon" onClick={onClose} style={{ 
-                        background: 'rgba(255,255,255,0.05)', 
-                        borderRadius: '12px',
-                        padding: '8px',
-                        transition: 'all 0.2s ease'
-                    }}>
-                        <X size={20} color="rgba(255,255,255,0.6)" />
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <button 
+                            className={`btn btn-sm ${focusMode ? 'btn-primary' : 'btn-ghost'}`} 
+                            style={{ 
+                                gap: 8, 
+                                height: 36, 
+                                borderRadius: 12,
+                                background: focusMode ? '#FFF' : 'rgba(255,255,255,0.05)',
+                                borderColor: focusMode ? '#FFF' : 'rgba(255,255,255,0.1)'
+                            }}
+                            onClick={() => setFocusMode(!focusMode)}
+                        >
+                            {focusMode ? <EyeOff size={14} /> : <Eye size={14} />}
+                            <span style={{ fontSize: 11, fontWeight: 700 }}>{focusMode ? 'Sair' : 'Modo Foco'}</span>
+                        </button>
+                        <button className="btn-icon" onClick={onClose} style={{ 
+                            background: 'rgba(255,255,255,0.05)', 
+                            borderRadius: '12px',
+                            padding: '8px',
+                            transition: 'all 0.2s ease'
+                        }}>
+                            <X size={20} color="rgba(255,255,255,0.6)" />
+                        </button>
+                    </div>
                 </div>
 
                 <div className="detail-tabs" style={{ 
@@ -377,9 +398,53 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                     ))}
                 </div>
 
-                <div className="detail-body" style={{ padding: '20px' }}>
-                    {activeTab === 'info' && (
+                <div className="detail-body" style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
+                    {focusMode ? (
+                        <div className="animate-in" style={{ padding: '20px 0' }}>
+                            <div style={{ textAlign: 'center', marginBottom: 40 }}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--blue)', textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: 8 }}>Em Atendimento</div>
+                                <h1 style={{ fontSize: 32, fontWeight: 800, color: '#FFF', marginBottom: 4 }}>{name}</h1>
+                                <div style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)' }}>{cat} · {lead.telefone}</div>
+                            </div>
+
+                            {lead.insight ? (
+                                <div className="glass" style={{ padding: 40, borderRadius: 32, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 32px 64px rgba(0,0,0,0.4)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+                                        <Sparkles size={20} color="var(--blue)" />
+                                        <div style={{ fontSize: 14, fontWeight: 700, color: '#FFF' }}>Guião de Abordagem Personalizado</div>
+                                    </div>
+                                    <div style={{ 
+                                        fontSize: 22, 
+                                        lineHeight: 1.6, 
+                                        color: '#EEE', 
+                                        whiteSpace: 'pre-wrap',
+                                        fontFamily: 'serif',
+                                        fontStyle: 'italic',
+                                        padding: '0 24px',
+                                        borderLeft: '4px solid var(--blue)'
+                                    }}>
+                                        "{(lead.insight as any).abordagem}"
+                                    </div>
+                                    <div style={{ marginTop: 40, display: 'flex', gap: 16 }}>
+                                        <button className="btn btn-primary" style={{ flex: 1, height: 56, fontSize: 16 }} onClick={() => handleContact((lead.insight as any).canal)}>
+                                            Iniciar {(lead.insight as any).canal}
+                                        </button>
+                                        <button className="btn btn-ghost" style={{ flex: 1, height: 56, fontSize: 16 }} onClick={() => setOutcomeModalOpen(true)}>
+                                            Registar Desfecho
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.02)', borderRadius: 24 }}>
+                                    <Sparkles size={32} style={{ marginBottom: 16, opacity: 0.5 }} />
+                                    <div>Gere insights inteligentes na aba "Intel" para usar o modo foco.</div>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
                         <>
+                            {activeTab === 'info' && (
+                                <>
                             {/* Performance Card */}
                             <div className="detail-section" style={{ 
                                 background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
@@ -426,6 +491,78 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                     </div>
                                 </div>
                             </div>
+
+                            {/* AI Quick Insight (from Import) */}
+                            {lead.insight && (lead.insight as any).canal && (
+                                <div className="detail-section" style={{ 
+                                    background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.1) 0%, rgba(167, 139, 250, 0.05) 100%)',
+                                    padding: '20px',
+                                    borderRadius: '16px',
+                                    border: '1px solid rgba(167, 139, 250, 0.2)',
+                                    marginBottom: '20px'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <Sparkles size={14} color="#A78BFA" />
+                                            <span style={{ fontSize: '10px', fontWeight: 800, color: '#A78BFA', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                                                Estratégia Recomendada
+                                            </span>
+                                        </div>
+                                        <div style={{ 
+                                            fontSize: '10px', 
+                                            fontWeight: 700, 
+                                            color: '#A78BFA', 
+                                            background: 'rgba(167, 139, 250, 0.1)', 
+                                            padding: '2px 8px', 
+                                            borderRadius: '100px' 
+                                        }}>
+                                            Score IA: {(lead.insight as any).score_oportunidade}/10
+                                        </div>
+                                    </div>
+                                    
+                                    <div style={{ marginBottom: 16 }}>
+                                        <div style={{ fontSize: 13, color: '#FFF', fontWeight: 700, marginBottom: 4 }}>
+                                            💡 {(lead.insight as any).motivo}
+                                        </div>
+                                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, fontStyle: 'italic' }}>
+                                            "{(lead.insight as any).abordagem}"
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                                        <button 
+                                            className="btn btn-sm" 
+                                            style={{ 
+                                                flex: 1, 
+                                                background: 'rgba(167, 139, 250, 0.2)', 
+                                                color: '#DDD', 
+                                                border: '1px solid rgba(167, 139, 250, 0.3)',
+                                                fontSize: '11px',
+                                                height: '32px',
+                                                minWidth: '140px'
+                                            }}
+                                            onClick={() => handleContact((lead.insight as any).canal)}
+                                        >
+                                            {(lead.insight as any).canal === 'whatsapp' ? <MessageCircle size={14} /> : (lead.insight as any).canal === 'email' ? <Mail size={14} /> : <Phone size={14} />}
+                                            Contactar via {(lead.insight as any).canal}
+                                        </button>
+                                        <div style={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: 6, 
+                                            fontSize: '11px', 
+                                            color: 'rgba(255,255,255,0.4)',
+                                            background: 'rgba(0,0,0,0.2)',
+                                            padding: '0 12px',
+                                            borderRadius: '8px',
+                                            height: '32px'
+                                        }}>
+                                            <Clock size={12} />
+                                            {(lead.insight as any).melhor_horario}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Pipeline & Desfecho */}
                             <div className="detail-section" style={{ 
@@ -563,6 +700,8 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                 ))}
                             </div>
                         </div>
+                    )}
+                        </>
                     )}
                 </div>
 

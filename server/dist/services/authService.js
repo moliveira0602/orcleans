@@ -6,6 +6,7 @@ exports.refreshTokens = refreshTokens;
 exports.logout = logout;
 exports.getProfile = getProfile;
 exports.updateProfile = updateProfile;
+exports.deleteAccount = deleteAccount;
 const database_1 = require("../config/database");
 const crypto_1 = require("../utils/crypto");
 const jwt_1 = require("../utils/jwt");
@@ -22,7 +23,7 @@ async function register(input) {
             data: {
                 name: input.organizationName,
                 plan: 'trial',
-                maxLeads: 50,
+                maxLeads: 25,
                 maxUsers: 1,
                 trialExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days trial
             },
@@ -243,5 +244,32 @@ async function updateProfile(userId, data) {
         createdAt: user.createdAt,
         organization: user.organization,
     };
+}
+async function deleteAccount(userId, organizationId) {
+    // Delete in order to respect foreign key constraints
+    // 1. Delete refresh tokens
+    await database_1.prisma.refreshToken.deleteMany({
+        where: { userId },
+    });
+    // 2. Delete activities
+    await database_1.prisma.activity.deleteMany({
+        where: { userId },
+    });
+    // 3. Delete leads (and their notes via cascade)
+    await database_1.prisma.lead.deleteMany({
+        where: { organizationId },
+    });
+    // 4. Delete audit logs
+    await database_1.prisma.auditLog.deleteMany({
+        where: { organizationId },
+    });
+    // 5. Delete all users in the organization
+    await database_1.prisma.user.deleteMany({
+        where: { organizationId },
+    });
+    // 7. Finally, delete the organization
+    await database_1.prisma.organization.delete({
+        where: { id: organizationId },
+    });
 }
 //# sourceMappingURL=authService.js.map

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, MapPin, Star, Trash2, Download, ExternalLink, ChevronRight, Filter, MoreHorizontal, ArrowRight, XCircle, CheckCircle, Info } from 'lucide-react';
+import { Search, MapPin, Star, Trash2, Download, ExternalLink, ChevronRight, Filter, MoreHorizontal, ArrowRight, XCircle, CheckCircle, Info, Zap, Clock, Target } from 'lucide-react';
 import { useAppState, useAppDispatch, useApp } from '../store';
 import { LEAD_COLUMNS } from '../utils/leadMapper';
 import ScoreRing from '../components/ScoreRing';
@@ -35,6 +35,7 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
     const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
     const [isDeleting, setIsDeleting] = useState(false);
     const [bulkPipelineStage, setBulkPipelineStage] = useState<PipelineStage | ''>('');
+    const [smartFilter, setSmartFilter] = useState<string | null>(null);
     const perPage = 25;
 
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -80,6 +81,21 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
             if (scoreFilter === 'cold' && l._score >= warm) return false;
             if (catFilter && l.segmento && l.segmento !== catFilter) return false;
             if (importFilter && l._importId !== importFilter) return false;
+            
+            // Smart Filters
+            if (smartFilter === 'provaveis') {
+                if (l._score < 8 || !l.website) return false;
+            }
+            if (smartFilter === 'esquecidos') {
+                const isNegotiating = l._pipeline === 'negociacao' || l._pipeline === 'proposta';
+                const lastContact = l._lastContact ? new Date(l._lastContact).getTime() : 0;
+                const daysSinceContact = (Date.now() - lastContact) / (1000 * 60 * 60 * 24);
+                if (!isNegotiating || daysSinceContact < 3) return false;
+            }
+            if (smartFilter === 'novos_quentes') {
+                if (l._pipeline !== 'novo' || l._score < 7) return false;
+            }
+
             if (search) {
                 const str = `${l.nome} ${l.segmento} ${l.endereco} ${l.cidade || ''} ${l.telefone} ${l.email}`.toLowerCase();
                 if (!str.includes(search.toLowerCase())) return false;
@@ -304,6 +320,50 @@ export default function Leads({ searchQuery = '', onSearch, onOpenDetail, onOpen
                         </>
                     )}
                 </div>
+            </div>
+
+            {/* Smart Filters Bar */}
+            <div style={{ display: 'flex', gap: 12, marginBottom: 20, overflowX: 'auto', paddingBottom: 4 }}>
+                <button 
+                    className={`btn btn-sm ${smartFilter === null ? 'btn-primary' : 'btn-ghost'}`}
+                    onClick={() => setSmartFilter(null)}
+                    style={{ fontSize: 11, whiteSpace: 'nowrap' }}
+                >
+                    Todos Leads
+                </button>
+                <button 
+                    className={`btn btn-sm ${smartFilter === 'provaveis' ? 'btn-primary' : 'btn-ghost'}`}
+                    onClick={() => setSmartFilter('provaveis')}
+                    style={{ 
+                        fontSize: 11, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6,
+                        background: smartFilter === 'provaveis' ? 'var(--blue)' : 'rgba(59, 130, 246, 0.05)',
+                        color: smartFilter === 'provaveis' ? '#FFF' : 'var(--blue)'
+                    }}
+                >
+                    <Zap size={12} /> Mais Prováveis
+                </button>
+                <button 
+                    className={`btn btn-sm ${smartFilter === 'esquecidos' ? 'btn-primary' : 'btn-ghost'}`}
+                    onClick={() => setSmartFilter('esquecidos')}
+                    style={{ 
+                        fontSize: 11, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6,
+                        background: smartFilter === 'esquecidos' ? 'var(--amber)' : 'rgba(245, 158, 11, 0.05)',
+                        color: smartFilter === 'esquecidos' ? '#FFF' : 'var(--amber)'
+                    }}
+                >
+                    <Clock size={12} /> Esquecidos (+3d)
+                </button>
+                <button 
+                    className={`btn btn-sm ${smartFilter === 'novos_quentes' ? 'btn-primary' : 'btn-ghost'}`}
+                    onClick={() => setSmartFilter('novos_quentes')}
+                    style={{ 
+                        fontSize: 11, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6,
+                        background: smartFilter === 'novos_quentes' ? 'var(--green)' : 'rgba(34, 197, 94, 0.05)',
+                        color: smartFilter === 'novos_quentes' ? '#FFF' : 'var(--green)'
+                    }}
+                >
+                    <Target size={12} /> Novos Quentes
+                </button>
             </div>
 
             <div 

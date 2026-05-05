@@ -1035,54 +1035,45 @@ select.input {
   border-color: rgba(255,255,255,0.15);
 }
 
-/* ── TOAST ── */
+/* ── TOAST (NOTIFICATION STACK) ── */
 .toast-wrap {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  z-index: 9999;
+  z-index: 10000;
   display: flex;
   flex-direction: column;
-  gap: 8px
+  gap: 12px;
+  pointer-events: none;
 }
 
 .toast {
-  background: var(--bg3);
-  border: 1px solid var(--border2);
-  border-radius: 10px;
-  padding: 12px 18px;
+  pointer-events: auto;
+  min-width: 280px;
+  background: rgba(10, 11, 16, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 14px 20px;
   font-size: 13px;
-  color: var(--t1);
-  box-shadow: var(--shadow);
-  animation: slideUp .25s ease;
-  max-width: 320px;
+  font-weight: 500;
+  color: #FFF;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  animation: slideInStack 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  transition: all 0.3s ease;
 }
 
-.toast.success {
-  border-left: 3px solid var(--green)
-}
+.toast.success { border-left: 4px solid var(--blue); }
+.toast.error { border-left: 4px solid #EF4444; }
+.toast.info { border-left: 4px solid rgba(255,255,255,0.4); }
 
-.toast.error {
-  border-left: 3px solid var(--red)
-}
-
-.toast.info {
-  border-left: 3px solid var(--blue)
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px)
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0)
-  }
+@keyframes slideInStack {
+  from { opacity: 0; transform: translateX(40px) scale(0.9); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
 }
 
 /* ── MODAL ── */
@@ -3327,4 +3318,79 @@ select.input {
     font-size: 12px;
     padding: 8px 10px;
   }
+}
+
+/* ── PREMIUM ENHANCEMENTS (ORCALENS ELITE) ── */
+
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.glass-heavy {
+  background: rgba(10, 11, 16, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hover-glow {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-glow:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.03) 45%, 
+    rgba(255, 255, 255, 0.08) 50%, 
+    rgba(255, 255, 255, 0.03) 55%, 
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite linear;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #FFF 0%, rgba(255,255,255,0.4) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Better Scrollbars for all containers */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
