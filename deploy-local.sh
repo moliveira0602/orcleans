@@ -14,8 +14,8 @@ echo "🚀 Deploy Local para VPS"
 echo "========================"
 
 # Pedir password
-echo -n "Password de root@$VPS_HOST: "
-read -s VPS_PASSWORD
+echo -n "Password para $VPS_USER@$VPS_HOST: "
+read -r -s VPS_PASSWORD
 echo ""
 
 if [ -z "$VPS_PASSWORD" ]; then
@@ -25,9 +25,12 @@ fi
 
 # Testar conexão primeiro
 echo "🔍 Testando conexão SSH..."
-if ! sshpass -p "$VPS_PASSWORD" ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no -p $VPS_PORT $VPS_USER@$VPS_HOST "echo '✅ Conexão OK'"; then
+if ! sshpass -p "$VPS_PASSWORD" ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o PreferredAuthentications=password -p $VPS_PORT $VPS_USER@$VPS_HOST "echo '✅ Conexão OK'"; then
   echo "❌ Falha na conexão SSH"
-  echo "Verifique a password ou configuração do servidor"
+  echo "Possíveis causas:"
+  echo "1. Password incorreta."
+  echo "2. O utilizador '$VPS_USER' não tem permissão para login via password."
+  echo "3. Tente mudar o VPS_USER para 'orcaleads' no topo deste script se a password for desse utilizador."
   exit 1
 fi
 echo "✅ Conexão verificada"

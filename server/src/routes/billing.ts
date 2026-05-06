@@ -181,7 +181,7 @@ router.post('/webhook', async (req, res) => {
           where: { stripeId: customerId },
           data: {
             plan: 'trial',
-            maxLeads: 50,
+            maxLeads: 20,
             maxUsers: 1,
           },
         });

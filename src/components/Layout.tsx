@@ -33,7 +33,7 @@ const MOBILE_NAV_ITEMS: { id: Page; icon: React.ReactNode; label: string }[] = [
 ];
 
 export default function Layout() {
-    const { isLoading, leads } = useAppState();
+    const { isLoading, leads, settings } = useAppState();
     const { refreshLeads } = useApp();
     const { isDone: onboardingDone } = useOnboarding();
     const { user, isSuperAdmin } = useAuth();

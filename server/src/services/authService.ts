@@ -19,7 +19,7 @@ export async function register(input: RegisterInput) {
       data: {
         name: input.organizationName,
         plan: 'trial',
-        maxLeads: 25,
+        maxLeads: 20,
         maxUsers: 1,
         trialExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days trial
       },

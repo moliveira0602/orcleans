@@ -40,6 +40,7 @@ exports.server = exports.app = void 0;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const helmet_1 = __importDefault(require("helmet"));
 // Load environment variables
 require("./config/env");
 const env_1 = require("./config/env");
@@ -51,10 +52,13 @@ const scan_1 = __importDefault(require("./routes/scan"));
 const organizations_1 = __importDefault(require("./routes/organizations"));
 const billing_1 = __importDefault(require("./routes/billing"));
 const contact_1 = __importDefault(require("./routes/contact"));
+const ai_1 = __importDefault(require("./routes/ai"));
 const maintenance_1 = require("./middleware/maintenance");
 const auth_2 = require("./middleware/auth");
 const app = (0, express_1.default)();
 exports.app = app;
+// Enable secure HTTP headers via Helmet
+app.use((0, helmet_1.default)());
 const corsOrigins = env_1.env.CORS_ORIGIN
     .split(',')
     .map(s => s.replaceAll('\\n', '').replaceAll('\n', '').trim())
@@ -124,31 +128,33 @@ async function ensureSuperAdminOnce() {
     }
 }
 // DEBUG: Route to list all registered routes
-app.get('/api/debug-routes', (req, res) => {
-    const routes = [];
-    function print(path, layer) {
-        if (layer.route) {
-            layer.route.stack.forEach((s) => {
-                const method = s.method ? s.method.toUpperCase() : 'ANY';
-                routes.push(`${method} ${path.concat(layer.route.path).filter(Boolean).join('')}`);
-            });
+if (process.env.NODE_ENV !== 'production') {
+    app.get('/api/debug-routes', (req, res) => {
+        const routes = [];
+        function print(path, layer) {
+            if (layer.route) {
+                layer.route.stack.forEach((s) => {
+                    const method = s.method ? s.method.toUpperCase() : 'ANY';
+                    routes.push(`${method} ${path.concat(layer.route.path).filter(Boolean).join('')}`);
+                });
+            }
+            else if (layer.name === 'router' && layer.handle.stack) {
+                layer.handle.stack.forEach((l) => {
+                    print(path.concat(layer.regexp.source.replace('^\\', '').replace('\\/?(?=\\/|$)', '').replace('\\/', '/')), l);
+                });
+            }
         }
-        else if (layer.name === 'router' && layer.handle.stack) {
-            layer.handle.stack.forEach((l) => {
-                print(path.concat(layer.regexp.source.replace('^\\', '').replace('\\/?(?=\\/|$)', '').replace('\\/', '/')), l);
-            });
-        }
-    }
-    app._router.stack.forEach((layer) => {
-        print([], layer);
+        app._router.stack.forEach((layer) => {
+            print([], layer);
+        });
+        res.json({
+            routes,
+            baseUrl: req.baseUrl,
+            originalUrl: req.originalUrl,
+            path: req.path
+        });
     });
-    res.json({
-        routes,
-        baseUrl: req.baseUrl,
-        originalUrl: req.originalUrl,
-        path: req.path
-    });
-});
+}
 app.get('/ping', (_req, res) => {
     res.send(`pong - ${new Date().toISOString()} - v3`);
 });
@@ -178,6 +184,7 @@ app.use('/api/scan', scan_1.default);
 app.use('/api/organizations', organizations_1.default);
 app.use('/api/billing', billing_1.default);
 app.use('/api/contact', contact_1.default);
+app.use('/api/ai', ai_1.default);
 // Error handling middleware - MUST BE LAST
 app.use((err, _req, res, _next) => {
     console.error('Unhandled error:', err);

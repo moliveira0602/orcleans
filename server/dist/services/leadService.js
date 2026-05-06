@@ -30,6 +30,9 @@ async function createLead(organizationId, userId, data) {
             throw new Error('Organização não encontrada');
         }
         if (org.leadsConsumed >= org.maxLeads) {
+            if (org.plan === 'trial') {
+                throw new Error('Você atingiu o limite de importação gratuita de 20 leads do período de teste. Por favor, entre em contato com a equipe de suporte para liberar mais espaço.');
+            }
             throw new Error('Limite de leads atingido. Faça upgrade do seu plano.');
         }
         const lead = await tx.lead.create({
@@ -63,13 +66,16 @@ async function createLeadsBulk(organizationId, userId, leads) {
             throw new Error(`Importação excede o limite de ${maxBatch} leads por vez. Divida o arquivo em partes menores.`);
         }
         const PLAN_LIMITS = {
-            'trial': 50,
+            'trial': 20,
             'starter': 500,
             'pro': 2000,
             'enterprise': 10000
         };
-        const effectiveMaxLeads = org.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[(org.plan || '').toLowerCase()] || 50);
+        const effectiveMaxLeads = org.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[(org.plan || '').toLowerCase()] || 20);
         if (org.leadsConsumed + leads.length > effectiveMaxLeads) {
+            if (org.plan === 'trial') {
+                throw new Error('Você atingiu o limite de importação gratuita de 20 leads do período de teste. Por favor, entre em contato com a equipe de suporte para liberar mais espaço.');
+            }
             throw new Error(`Limite de leads atingido. Espaço disponível: ${effectiveMaxLeads - org.leadsConsumed} leads.`);
         }
         const data = leads.map((lead) => ({

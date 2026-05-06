@@ -68,6 +68,30 @@ router.post('/users/:id/heartbeat', auth_1.authenticate, async (req, res) => {
         res.status(500).json({ error: 'Erro ao atualizar presença' });
     }
 });
+// Debug endpoint: Get current user's organization settings (requires authentication, but not super admin)
+router.get('/debug/org-settings', auth_1.authenticate, async (req, res) => {
+    try {
+        if (!req.organizationId) {
+            return res.status(400).json({ error: 'Organização não encontrada' });
+        }
+        const org = await database_1.prisma.organization.findUnique({
+            where: { id: req.organizationId },
+            select: {
+                id: true,
+                name: true,
+                plan: true,
+                maxLeads: true,
+                maxImportBatch: true,
+                maxUsers: true,
+            },
+        });
+        res.json(org);
+    }
+    catch (error) {
+        console.error('Debug org settings error:', error);
+        res.status(500).json({ error: 'Erro ao obter settings' });
+    }
+});
 // All routes below require super_admin
 router.use(auth_1.authenticate);
 router.use(auth_1.requireSuperAdmin);
@@ -125,30 +149,7 @@ router.get('/stats', async (_req, res) => {
         res.status(500).json({ error: 'Erro ao obter estatísticas' });
     }
 });
-// Debug endpoint: Get current user's organization settings
-router.get('/debug/org-settings', auth_1.authenticate, async (req, res) => {
-    try {
-        if (!req.organizationId) {
-            return res.status(400).json({ error: 'Organização não encontrada' });
-        }
-        const org = await database_1.prisma.organization.findUnique({
-            where: { id: req.organizationId },
-            select: {
-                id: true,
-                name: true,
-                plan: true,
-                maxLeads: true,
-                maxImportBatch: true,
-                maxUsers: true,
-            },
-        });
-        res.json(org);
-    }
-    catch (error) {
-        console.error('Debug org settings error:', error);
-        res.status(500).json({ error: 'Erro ao obter settings' });
-    }
-});
+// Moved above requireSuperAdmin middleware to allow access for regular authenticated users
 // Advanced stats for Super Admin - métricas detalhadas de uso
 router.get('/stats/advanced', async (_req, res) => {
     try {

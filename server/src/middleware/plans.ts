@@ -39,18 +39,22 @@ export async function checkPlanLimits(req: AuthRequest, res: Response, next: Nex
 
     // 2. Determine max leads based on plan if not explicitly set
     const PLAN_LIMITS: Record<string, number> = {
-      'trial': 50,
+      'trial': 20,
       'starter': 500,
       'pro': 2000,
       'enterprise': 10000
     };
 
-    const effectiveMaxLeads = org.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[org.plan.toLowerCase()] || 50);
+    const effectiveMaxLeads = org.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[org.plan.toLowerCase()] || 20);
 
     // 3. Check Lead Consumption Limit
     if (org.leadsConsumed >= effectiveMaxLeads) {
+      const errorMsg = org.plan === 'trial'
+        ? 'Você atingiu o limite de importação gratuita de 20 leads do período de teste. Por favor, entre em contato com a equipe de suporte para liberar mais espaço.'
+        : 'Você atingiu o limite de leads do seu plano atual.';
+
       return res.status(403).json({ 
-        error: 'Você atingiu o limite de leads do seu plano atual.',
+        error: errorMsg,
         code: 'LIMIT_REACHED',
         upgradeRequired: true,
         currentUsage: org.leadsConsumed,

@@ -1,6 +1,7 @@
 import express, { type Request, type Response, type NextFunction } from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 
 // Load environment variables
 import './config/env';
@@ -14,10 +15,14 @@ import scanRoutes from './routes/scan';
 import organizationRoutes from './routes/organizations';
 import billingRoutes from './routes/billing';
 import contactRoutes from './routes/contact';
+import aiRoutes from './routes/ai';
 import { maintenanceMode } from './middleware/maintenance';
 import { tryAuthenticate } from './middleware/auth';
 
 const app = express();
+
+// Enable secure HTTP headers via Helmet
+app.use(helmet());
 
 const corsOrigins = env.CORS_ORIGIN
   .split(',')
@@ -92,33 +97,35 @@ async function ensureSuperAdminOnce() {
 }
 
 // DEBUG: Route to list all registered routes
-app.get('/api/debug-routes', (req: Request, res: Response) => {
-  const routes: any[] = [];
-  
-  function print(path: string[], layer: any) {
-    if (layer.route) {
-      layer.route.stack.forEach((s: any) => {
-        const method = s.method ? s.method.toUpperCase() : 'ANY';
-        routes.push(`${method} ${path.concat(layer.route.path).filter(Boolean).join('')}`);
-      });
-    } else if (layer.name === 'router' && layer.handle.stack) {
-      layer.handle.stack.forEach((l: any) => {
-        print(path.concat(layer.regexp.source.replace('^\\', '').replace('\\/?(?=\\/|$)', '').replace('\\/', '/')), l);
-      });
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/api/debug-routes', (req: Request, res: Response) => {
+    const routes: any[] = [];
+    
+    function print(path: string[], layer: any) {
+      if (layer.route) {
+        layer.route.stack.forEach((s: any) => {
+          const method = s.method ? s.method.toUpperCase() : 'ANY';
+          routes.push(`${method} ${path.concat(layer.route.path).filter(Boolean).join('')}`);
+        });
+      } else if (layer.name === 'router' && layer.handle.stack) {
+        layer.handle.stack.forEach((l: any) => {
+          print(path.concat(layer.regexp.source.replace('^\\', '').replace('\\/?(?=\\/|$)', '').replace('\\/', '/')), l);
+        });
+      }
     }
-  }
 
-  (app as any)._router.stack.forEach((layer: any) => {
-    print([], layer);
-  });
+    (app as any)._router.stack.forEach((layer: any) => {
+      print([], layer);
+    });
 
-  res.json({
-    routes,
-    baseUrl: req.baseUrl,
-    originalUrl: req.originalUrl,
-    path: req.path
+    res.json({
+      routes,
+      baseUrl: req.baseUrl,
+      originalUrl: req.originalUrl,
+      path: req.path
+    });
   });
-});
+}
 
 app.get('/ping', (_req: Request, res: Response) => {
   res.send(`pong - ${new Date().toISOString()} - v3`);
@@ -152,6 +159,7 @@ app.use('/api/scan', scanRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Error handling middleware - MUST BE LAST
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {

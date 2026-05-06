@@ -3,6 +3,7 @@ import { UploadCloud, FileSpreadsheet, Trash2, ClipboardList, Check, X, AlertTri
 import * as ExcelJS from 'exceljs';
 import { useAppState, useAppDispatch, leadFingerprint, useApp } from '../store';
 import { useToast } from '../components/Toast';
+import { useAuth } from '../services/auth';
 import { computeScore } from '../utils/scoring';
 import { detectSourceType, mapRowToLead } from '../utils/leadMapper';
 import { analyzeColumns, getColumnAnalysisSummary, STANDARD_COLUMNS, type ColumnMapping, type StandardColumnKey } from '../utils/columnMapper';
@@ -23,6 +24,8 @@ export default function ImportPage({ onNavigate, onOpenDetail, onShowInsights }:
     const dispatch = useAppDispatch();
     const { refreshLeads } = useApp();
     const toast = useToast();
+    const { organization, refreshProfile } = useAuth();
+    const [showSupportAlert, setShowSupportAlert] = useState(false);
     const fileInput = useRef<HTMLInputElement>(null);
     const [dragOver, setDragOver] = useState(false);
     const [deleteImportId, setDeleteImportId] = useState<string | null>(null);
@@ -167,6 +170,13 @@ export default function ImportPage({ onNavigate, onOpenDetail, onShowInsights }:
 
     const confirmImport = async () => {
         if (!pending) return;
+
+        const totalAfterImport = existingLeads.length + pending.rows;
+        if (isTrial && totalAfterImport > 20) {
+            setShowSupportAlert(true);
+            return;
+        }
+
         const { data, file, cols } = pending;
         const numCol = scoreCol || null;
         const importId = 'imp_' + Date.now();
@@ -427,6 +437,29 @@ export default function ImportPage({ onNavigate, onOpenDetail, onShowInsights }:
         setEditValue('');
     };
 
+    const isTrial = organization?.plan === 'trial';
+    const leadsCount = existingLeads.length;
+    const hasReachedLimit = isTrial && leadsCount >= 20;
+
+    const handleUploadClick = () => {
+        if (hasReachedLimit) {
+            setShowSupportAlert(true);
+            return;
+        }
+        fileInput.current?.click();
+    };
+
+    const handleFileDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setDragOver(false);
+        if (hasReachedLimit) {
+            setShowSupportAlert(true);
+            return;
+        }
+        const f = e.dataTransfer.files[0];
+        if (f) processFile(f);
+    };
+
     // Get column analysis summary for alerts
     const columnSummary = pending ? getColumnAnalysisSummary(pending.cols) : null;
 
@@ -435,15 +468,10 @@ export default function ImportPage({ onNavigate, onOpenDetail, onShowInsights }:
             {!pending && (
                 <div
                     className={`upload-zone${dragOver ? ' over' : ''}`}
-                    onClick={() => fileInput.current?.click()}
+                    onClick={handleUploadClick}
                     onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                     onDragLeave={() => setDragOver(false)}
-                    onDrop={(e) => {
-                        e.preventDefault();
-                        setDragOver(false);
-                        const f = e.dataTransfer.files[0];
-                        if (f) processFile(f);
-                    }}
+                    onDrop={handleFileDrop}
                 >
                     <input
                         ref={fileInput}
@@ -775,6 +803,64 @@ export default function ImportPage({ onNavigate, onOpenDetail, onShowInsights }:
                             >
                                 Excluir
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showSupportAlert && (
+                <div className="modal-overlay open" onClick={() => setShowSupportAlert(false)}>
+                    <div className="modal" style={{ maxWidth: 450, padding: '32px' }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 16 }}>
+                            <div style={{
+                                background: 'rgba(239, 68, 68, 0.15)',
+                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                width: 64,
+                                height: 64,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: '50%',
+                                boxShadow: '0 0 20px rgba(239, 68, 68, 0.1)',
+                                marginBottom: 8
+                            }}>
+                                <AlertTriangle size={32} color="#EF4444" />
+                            </div>
+                            <h3 style={{ fontSize: 20, fontWeight: 700, color: '#FFF', margin: 0 }}>Limite de Leads Atingido</h3>
+                            <p style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.7)', lineHeight: 1.6, margin: 0 }}>
+                                Todos os novos utilizadores têm um limite inicial de importação gratuita de <strong>20 leads</strong>. 
+                                <br /><br />
+                                Para importar mais leads e desbloquear todo o potencial da plataforma, entre em contacto com a nossa equipa de suporte para atualizar o seu plano.
+                            </p>
+                            <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 10, marginTop: 12 }}>
+                                <a 
+                                    href="mailto:contacto@orcaleads.online?subject=Upgrade%20de%20Plano%20-%20ORCA" 
+                                    className="btn" 
+                                    style={{ 
+                                        background: 'var(--orca-accent, #00C2FF)', 
+                                        color: '#0A0A0A', 
+                                        fontWeight: 700,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: 8,
+                                        padding: '12px',
+                                        borderRadius: '10px',
+                                        textDecoration: 'none',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    <span>Contactar Suporte</span>
+                                    <ArrowRight size={16} />
+                                </a>
+                                <button 
+                                    className="btn btn-ghost" 
+                                    onClick={() => setShowSupportAlert(false)}
+                                    style={{ padding: '12px', borderRadius: '10px' }}
+                                >
+                                    Voltar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

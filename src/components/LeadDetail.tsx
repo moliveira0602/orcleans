@@ -471,23 +471,83 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                                         {enriching ? 'Scouting...' : 'Enriquecer'}
                                     </button>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                                    <div className={`score-ring score-${cls}`} style={{ 
-                                        width: 64, 
-                                        height: 64, 
-                                        fontSize: 22,
-                                        fontWeight: 800,
-                                        background: 'rgba(0,0,0,0.3)',
-                                        boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)'
-                                    }}>
-                                        {lead._score.toFixed(1)}
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ fontSize: 14, fontWeight: 700, color: '#FFF', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                            {cls === 'hot' ? <Flame size={16} color="#4ADE80" /> : cls === 'warm' ? <Thermometer size={16} color="#FBBF24" /> : <Snowflake size={16} color="rgba(255,255,255,0.4)" />}
-                                            {scoreLabel(lead._score, settings.hotThreshold, settings.warmThreshold)}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                                    <div style={{ position: 'relative', width: 88, height: 88, flexShrink: 0 }}>
+                                        {/* Background Ring */}
+                                        <svg width="88" height="88" viewBox="0 0 88 88">
+                                            <circle cx="44" cy="44" r="40" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="6" />
+                                            {/* Glow effect for the ring */}
+                                            <circle 
+                                                cx="44" cy="44" r="40" 
+                                                fill="none" 
+                                                stroke={cls === 'hot' ? '#4ADE80' : cls === 'warm' ? '#FBBF24' : 'rgba(255,255,255,0.2)'} 
+                                                strokeWidth="6" 
+                                                strokeDasharray={2 * Math.PI * 40} 
+                                                strokeDashoffset={2 * Math.PI * 40 * (1 - Math.min(lead._score, 10) / 10)} 
+                                                strokeLinecap="round" 
+                                                transform="rotate(-90 44 44)" 
+                                                style={{ 
+                                                    filter: `drop-shadow(0 0 8px ${cls === 'hot' ? 'rgba(74, 222, 128, 0.5)' : cls === 'warm' ? 'rgba(251, 191, 36, 0.5)' : 'transparent'})`,
+                                                    transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)' 
+                                                }} 
+                                            />
+                                        </svg>
+                                        <div style={{ 
+                                            position: 'absolute', 
+                                            inset: 0, 
+                                            display: 'flex', 
+                                            flexDirection: 'column', 
+                                            alignItems: 'center', 
+                                            justifyContent: 'center',
+                                            paddingTop: 0,
+                                            background: 'radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%)',
+                                            borderRadius: '50%'
+                                        }}>
+                                            <div style={{ 
+                                                fontSize: lead._score >= 100 ? 22 : 26, 
+                                                fontWeight: 900, 
+                                                color: '#FFF', 
+                                                lineHeight: 1, 
+                                                letterSpacing: '-0.03em',
+                                                textShadow: '0 2px 10px rgba(0,0,0,0.5)'
+                                            }}>
+                                                {lead._score % 1 === 0 ? lead._score.toFixed(0) : lead._score.toFixed(1)}
+                                            </div>
+                                            <div style={{ 
+                                                fontSize: 9, 
+                                                fontWeight: 800, 
+                                                color: 'rgba(255,255,255,0.25)', 
+                                                textTransform: 'uppercase', 
+                                                letterSpacing: '0.15em', 
+                                                marginTop: 4 
+                                            }}>
+                                                Score
+                                            </div>
                                         </div>
-                                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 4, lineHeight: 1.4 }}>{scoreReason(lead)}</div>
+                                    </div>
+
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                            <div style={{ 
+                                                padding: '4px 10px', 
+                                                borderRadius: '100px', 
+                                                fontSize: '11px', 
+                                                fontWeight: 800, 
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '0.05em',
+                                                background: cls === 'hot' ? 'rgba(74, 222, 128, 0.1)' : cls === 'warm' ? 'rgba(251, 191, 36, 0.1)' : 'rgba(255,255,255,0.05)',
+                                                color: cls === 'hot' ? '#4ADE80' : cls === 'warm' ? '#FBBF24' : 'rgba(255,255,255,0.6)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 6
+                                            }}>
+                                                {cls === 'hot' ? <Flame size={12} fill="#4ADE80" /> : cls === 'warm' ? <Thermometer size={12} /> : <Snowflake size={12} />}
+                                                {scoreLabel(lead._score, settings.hotThreshold, settings.warmThreshold)}
+                                            </div>
+                                        </div>
+                                        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5, fontWeight: 500 }}>
+                                            {scoreReason(lead)}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

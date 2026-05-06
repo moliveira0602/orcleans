@@ -21,13 +21,13 @@ export default function CommandBar({ isOpen, onClose, onNavigate, onOpenLead }: 
         .filter(l => l.nome?.toLowerCase().includes(search.toLowerCase()) || l.segmento?.toLowerCase().includes(search.toLowerCase()))
         .slice(0, 5);
 
-    const navigationItems: { id: Page; label: string; icon: any }[] = [
+    const navigationItems: { id: Page; label: string; icon: any }[] = ([
         { id: 'dashboard', label: 'Dashboard', icon: <Search size={14} /> },
         { id: 'leads', label: 'Lista de Leads', icon: <Users size={14} /> },
         { id: 'pipeline', label: 'Pipeline de Vendas', icon: <Columns3 size={14} /> },
         { id: 'insights', label: 'Sonar (Mapa)', icon: <Sparkles size={14} /> },
         { id: 'settings', label: 'Configurações', icon: <Settings size={14} /> },
-    ].filter(item => item.label.toLowerCase().includes(search.toLowerCase()));
+    ] as { id: Page; label: string; icon: any }[]).filter(item => item.label.toLowerCase().includes(search.toLowerCase()));
 
     const totalItems = filteredLeads.length + navigationItems.length;
 

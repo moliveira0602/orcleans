@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../services/auth';
+import LightRays from '../components/ui/LightRays';
 
 export default function LoginPage() {
     const { login, register } = useAuth();
@@ -52,6 +53,20 @@ export default function LoginPage() {
                 </video>
                 <div className="hero-gradient" />
                 <div className="hero-particles" />
+                <LightRays
+                    raysOrigin="top-center"
+                    raysColor="#ffffff"
+                    raysSpeed={1.0}
+                    lightSpread={1.0}
+                    rayLength={2.0}
+                    pulsating={true}
+                    fadeDistance={1.0}
+                    saturation={1.0}
+                    followMouse={true}
+                    mouseInfluence={0.1}
+                    noiseAmount={0.0}
+                    distortion={0.0}
+                />
             </div>
             <div className="login-card">
                 <div className="login-logo" style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>
@@ -121,11 +136,15 @@ export default function LoginPage() {
                 <button
                     className="login-toggle"
                     onClick={() => {
-                        setIsRegister((v) => !v);
-                        setError('');
+                        if (isRegister) {
+                            setIsRegister(false);
+                            setError('');
+                        } else {
+                            navigate('/?demo=true');
+                        }
                     }}
                 >
-                    {isRegister ? 'Já tem uma conta? Entrar' : 'Não tem conta? Criar agora'}
+                    {isRegister ? 'Já tem uma conta? Entrar' : 'Não tem conta? Agende uma demonstração'}
                 </button>
             </div>
 

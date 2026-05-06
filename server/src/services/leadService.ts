@@ -17,6 +17,9 @@ export async function createLead(organizationId: string, userId: string, data: C
     }
 
     if (org.leadsConsumed >= org.maxLeads) {
+      if (org.plan === 'trial') {
+        throw new Error('Você atingiu o limite de importação gratuita de 20 leads do período de teste. Por favor, entre em contato com a equipe de suporte para liberar mais espaço.');
+      }
       throw new Error('Limite de leads atingido. Faça upgrade do seu plano.');
     }
 
@@ -57,15 +60,18 @@ export async function createLeadsBulk(organizationId: string, userId: string, le
     }
 
     const PLAN_LIMITS: Record<string, number> = {
-      'trial': 50,
+      'trial': 20,
       'starter': 500,
       'pro': 2000,
       'enterprise': 10000
     };
     
-    const effectiveMaxLeads = org.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[(org.plan || '').toLowerCase()] || 50);
+    const effectiveMaxLeads = org.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[(org.plan || '').toLowerCase()] || 20);
 
     if (org.leadsConsumed + leads.length > effectiveMaxLeads) {
+      if (org.plan === 'trial') {
+        throw new Error('Você atingiu o limite de importação gratuita de 20 leads do período de teste. Por favor, entre em contato com a equipe de suporte para liberar mais espaço.');
+      }
       throw new Error(`Limite de leads atingido. Espaço disponível: ${effectiveMaxLeads - org.leadsConsumed} leads.`);
     }
 

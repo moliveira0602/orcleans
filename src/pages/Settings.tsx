@@ -349,12 +349,12 @@ export default function SettingsPage() {
 
                             {(() => {
                                 const PLAN_LIMITS: Record<string, number> = {
-                                    'trial': 25,
+                                    'trial': 20,
                                     'starter': 500,
                                     'pro': 2000,
                                     'enterprise': 10000
                                 };
-                                const effectiveMax = org?.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[org?.plan?.toLowerCase()] || 25);
+                                const effectiveMax = org?.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[org?.plan?.toLowerCase()] || 20);
                                 // Use local lead count as authoritative fallback if server counter is 0
                                 const consumption = (org?.leadsConsumed && org.leadsConsumed > 0) ? org.leadsConsumed : leads.length;
                                 

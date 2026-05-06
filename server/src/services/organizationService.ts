@@ -23,13 +23,13 @@ export async function getOrganization(id: string) {
 
   // Define limits for consistency
   const PLAN_LIMITS: Record<string, number> = {
-    'trial': 50,
+    'trial': 20,
     'starter': 500,
     'pro': 2000,
     'enterprise': 10000
   };
 
-  const effectiveMax = org.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[org.plan.toLowerCase()] || 50);
+  const effectiveMax = org.maxLeads > 0 ? org.maxLeads : (PLAN_LIMITS[org.plan.toLowerCase()] || 20);
 
   return {
     ...org,

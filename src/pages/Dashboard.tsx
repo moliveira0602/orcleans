@@ -17,7 +17,7 @@ import { createLeadsBulk } from '../services/leads';
 import { useAuth } from '../services/auth';
 
 const PLAN_LIMITS: Record<string, number> = {
-    trial: 25,
+    trial: 20,
     starter: 500,
     pro: 2000,
     enterprise: 10000,
