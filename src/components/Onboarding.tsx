@@ -46,21 +46,23 @@ const ONBOARDING_STEPS: Step[] = [
 interface OnboardingProps {
     onComplete: () => void;
     onNavigate?: (page: string) => void;
+    userId?: string;
 }
 
-export function Onboarding({ onComplete }: OnboardingProps) {
+export function Onboarding({ onComplete, userId }: OnboardingProps) {
     const [step, setStep] = useState(0);
     const current = ONBOARDING_STEPS[step];
     const isLast = step === ONBOARDING_STEPS.length - 1;
+    const storageKey = userId ? `orca_onboarding_done_${userId}` : 'orca_onboarding_done';
 
     const handleNext = useCallback(() => {
         if (isLast) {
-            localStorage.setItem('orca_onboarding_done', 'true');
+            localStorage.setItem(storageKey, 'true');
             onComplete();
         } else {
             setStep((s) => s + 1);
         }
-    }, [isLast, onComplete]);
+    }, [isLast, onComplete, storageKey]);
 
     const handlePrev = useCallback(() => {
         setStep((s) => Math.max(0, s - 1));
@@ -105,7 +107,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 </div>
 
                 <button className="onboarding-skip" onClick={() => {
-                    localStorage.setItem('orca_onboarding_done', 'true');
+                    localStorage.setItem(storageKey, 'true');
                     onComplete();
                 }}>
                     Pular introdução
@@ -115,7 +117,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     );
 }
 
-export function useOnboarding() {
-    const isDone = typeof window !== 'undefined' && localStorage.getItem('orca_onboarding_done') === 'true';
+export function useOnboarding(userId?: string) {
+    const storageKey = userId ? `orca_onboarding_done_${userId}` : 'orca_onboarding_done';
+    const isDone = typeof window !== 'undefined' && localStorage.getItem(storageKey) === 'true';
     return { isDone };
 }

@@ -35,9 +35,9 @@ const MOBILE_NAV_ITEMS: { id: Page; icon: React.ReactNode; label: string }[] = [
 export default function Layout() {
     const { isLoading, leads, settings } = useAppState();
     const { refreshLeads } = useApp();
-    const { isDone: onboardingDone } = useOnboarding();
     const { user, isSuperAdmin } = useAuth();
-    const [showOnboarding, setShowOnboarding] = useState(!onboardingDone);
+    const { isDone: onboardingDone } = useOnboarding(user?.id);
+    const [showOnboarding, setShowOnboarding] = useState(false);
     const [currentPage, setCurrentPage] = useState<Page>('dashboard');
     const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
     const [mapLeadId, setMapLeadId] = useState<string | null>(null);
@@ -47,8 +47,16 @@ export default function Layout() {
     const [insightLeads, setInsightLeads] = useState<any[] | null>(null);
     const [commandBarOpen, setCommandBarOpen] = useState(false);
 
-    // Refresh leads on mount (Layout only renders when user is authenticated)
     useEffect(() => {
+        // Only show onboarding once we know the user and whether they've done it
+        if (user?.id) {
+            setShowOnboarding(!onboardingDone);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.id]);
+
+    useEffect(() => {
+        // Refresh leads on mount (Layout only renders when user is authenticated)
         refreshLeads();
 
         // Check URL for direct page access (e.g., returning from Stripe)
@@ -114,8 +122,10 @@ export default function Layout() {
 
     const handleOnboardingComplete = useCallback(() => {
         setShowOnboarding(false);
-        localStorage.setItem('orca_onboarding_done', 'true');
-    }, []);
+        if (user?.id) {
+            localStorage.setItem(`orca_onboarding_done_${user.id}`, 'true');
+        }
+    }, [user?.id]);
 
     const handleAnalyzeLeads = useCallback(async (
         leads: any[],
@@ -139,7 +149,7 @@ export default function Layout() {
 
     return (
         <div className="app">
-            {showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
+            {showOnboarding && <Onboarding onComplete={handleOnboardingComplete} userId={user?.id} />}
             <div 
                 className={`sidebar-overlay${mobileMenuOpen ? ' open' : ''}`} 
                 onClick={() => setMobileMenuOpen(false)}
