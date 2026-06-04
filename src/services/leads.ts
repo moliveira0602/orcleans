@@ -112,8 +112,12 @@ export async function deleteLeadsBulk(leadIds: string[]): Promise<{ count: numbe
   return api.post<{ count: number }>('/leads/bulk-delete', { leadIds });
 }
 
-export async function moveLeadPipeline(id: string, stage: string): Promise<Lead> {
-  return api.patch<Lead>(`/leads/${id}/pipeline`, { stage });
+export interface MovePipelineResult extends Lead {
+  _feedbackApplied?: number;
+}
+
+export async function moveLeadPipeline(id: string, stage: string): Promise<MovePipelineResult> {
+  return api.patch<MovePipelineResult>(`/leads/${id}/pipeline`, { stage });
 }
 
 export async function logLeadActivity(leadId: string, channel: string): Promise<void> {
@@ -155,3 +159,72 @@ export async function fetchLeadInteractions(leadId: string): Promise<any[]> {
 export async function enrichLead(leadId: string): Promise<Lead> {
   return api.post<Lead>(`/leads/${leadId}/enrich`, {});
 }
+
+// ── SONAR CONTÍNUO ────────────────────────────────────────────────────────────
+
+export interface SonarWatch {
+  id: string;
+  segment: string;
+  city: string;
+  frequency: 'daily' | 'weekly';
+  isActive: boolean;
+  lastRunAt: string | null;
+  createdAt: string;
+}
+
+export async function fetchSonarWatches(): Promise<SonarWatch[]> {
+  return api.get<SonarWatch[]>('/sonar/watches');
+}
+
+export async function createSonarWatch(data: {
+  segment: string;
+  city: string;
+  frequency: 'daily' | 'weekly';
+}): Promise<SonarWatch> {
+  return api.post<SonarWatch>('/sonar/watches', data);
+}
+
+export async function deleteSonarWatch(id: string): Promise<void> {
+  return api.delete<void>(`/sonar/watches/${id}`);
+}
+
+export async function runSonarWatchNow(id: string): Promise<{ imported: number }> {
+  return api.post<{ imported: number }>(`/sonar/watches/${id}/run`, {});
+}
+
+// ── ENRICHMENT CNPJ / NIF ────────────────────────────────────────────────────
+
+export interface CnpjData {
+  razao_social?: string;
+  nome_fantasia?: string;
+  cnpj?: string;
+  email?: string;
+  telefone?: string;
+  logradouro?: string;
+  municipio?: string;
+  uf?: string;
+  cep?: string;
+  descricao_atividade_principal?: string;
+  situacao_cadastral?: string;
+  data_inicio_atividade?: string;
+}
+
+export interface NifData {
+  name?: string;
+  address?: string;
+  city?: string;
+  zip?: string;
+  activity?: string;
+  status?: string;
+}
+
+export async function enrichByCnpj(cnpj: string): Promise<CnpjData> {
+  const clean = cnpj.replace(/\D/g, '');
+  return api.get<CnpjData>(`/enrich/cnpj/${clean}`);
+}
+
+export async function enrichByNif(nif: string): Promise<NifData> {
+  const clean = nif.replace(/\D/g, '');
+  return api.get<NifData>(`/enrich/nif/${clean}`);
+}
+

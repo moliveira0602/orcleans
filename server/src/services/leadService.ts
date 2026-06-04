@@ -263,7 +263,11 @@ export async function deleteLeadsBulk(organizationId: string | undefined, _userI
   });
 }
 
-export async function moveLeadPipeline(organizationId: string, leadId: string, stage: string) {
+export async function moveLeadPipeline(
+  organizationId: string,
+  leadId: string,
+  stage: string
+): Promise<{ lead: any; feedbackApplied: number }> {
   const existing = await prisma.lead.findFirst({
     where: { id: leadId, organizationId },
   });
@@ -272,10 +276,53 @@ export async function moveLeadPipeline(organizationId: string, leadId: string, s
     throw new Error('Lead não encontrado');
   }
 
-  return prisma.lead.update({
+  const lead = await prisma.lead.update({
     where: { id: leadId },
     data: { pipelineStage: stage },
   });
+
+  // ── FEEDBACK LOOP ────────────────────────────────────────────────────────────
+  // When a lead reaches a terminal stage, propagate a score signal to similar
+  // leads (same segment + city) within the same organization.
+  // ganho   → peers receive +5 outcomeScore (positive reinforcement)
+  // perdido → peers receive -2 outcomeScore (negative reinforcement)
+  // ─────────────────────────────────────────────────────────────────────────────
+  let feedbackApplied = 0;
+
+  const TERMINAL_STAGES: Record<string, number> = {
+    ganho: 5,
+    perdido: -2,
+  };
+
+  if (stage in TERMINAL_STAGES && existing.segmento && existing.cidade) {
+    const delta = TERMINAL_STAGES[stage];
+
+    const result = await prisma.lead.updateMany({
+      where: {
+        organizationId,
+        id: { not: leadId }, // exclude the lead itself
+        segmento: { equals: existing.segmento, mode: 'insensitive' },
+        cidade: { equals: existing.cidade, mode: 'insensitive' },
+        pipelineStage: { notIn: ['ganho', 'perdido'] }, // only active leads
+      },
+      data: {
+        outcomeScore: { increment: delta },
+      },
+    });
+
+    feedbackApplied = result.count;
+
+    if (feedbackApplied > 0) {
+      console.log(
+        `[FeedbackLoop] Stage "${stage}" for lead "${existing.nome}" ` +
+        `propagated outcomeScore ${delta > 0 ? '+' : ''}${delta} ` +
+        `to ${feedbackApplied} similar leads ` +
+        `(segment: "${existing.segmento}", city: "${existing.cidade}")`
+      );
+    }
+  }
+
+  return { lead, feedbackApplied };
 }
 
 export async function getDashboardMetrics(organizationId: string | undefined) {

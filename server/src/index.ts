@@ -2,6 +2,7 @@ import express, { type Request, type Response, type NextFunction } from 'express
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
+import cron from 'node-cron';
 
 // Load environment variables
 import './config/env';
@@ -16,8 +17,11 @@ import organizationRoutes from './routes/organizations';
 import billingRoutes from './routes/billing';
 import contactRoutes from './routes/contact';
 import aiRoutes from './routes/ai';
+import sonarRoutes from './routes/sonar';
+import enrichRoutes from './routes/enrich';
 import { maintenanceMode } from './middleware/maintenance';
 import { tryAuthenticate } from './middleware/auth';
+import { runDueSonars } from './services/sonarService';
 
 const app = express();
 
@@ -160,6 +164,8 @@ app.use('/api/organizations', organizationRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/sonar', sonarRoutes);
+app.use('/api/enrich', enrichRoutes);
 
 // Error handling middleware - MUST BE LAST
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
@@ -177,6 +183,21 @@ const server = process.env.VERCEL
       console.log(`[ORCA API] NODE_ENV=${process.env.NODE_ENV}`);
       console.log(`[ORCA API] DB configured: ${process.env.DATABASE_URL ? 'yes' : 'no'}`);
     });
+
+// ── SONAR CONTÍNUO — Cron Job ─────────────────────────────────────────────
+// Runs every day at 06:00 UTC. Checks all active SonarWatch records that
+// are due (based on frequency) and executes their scans automatically.
+if (!process.env.VERCEL) {
+  cron.schedule('0 6 * * *', async () => {
+    console.log('[Sonar Cron] Starting scheduled sonar run...');
+    try {
+      await runDueSonars();
+    } catch (err) {
+      console.error('[Sonar Cron] Error during scheduled run:', err);
+    }
+  }, { timezone: 'UTC' });
+  console.log('[ORCA API] Sonar cron job scheduled (daily at 06:00 UTC)');
+}
 
 export { app, server };
 export default app;

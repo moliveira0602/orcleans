@@ -3,7 +3,8 @@ import {
     Radar, Search, MapPin, Activity, Phone, Mail,
     Share2, Star, Check, Trash2, FolderPlus,
     ChevronRight, Info, AlertTriangle, Crosshair,
-    RotateCw, RefreshCw, Users, Target, X, Code, Layers
+    RotateCw, RefreshCw, Users, Target, X, Code, Layers,
+    Bell, Plus, ChevronDown, ChevronUp, PlayCircle
 } from 'lucide-react';
 import { useAppState, useAppDispatch } from '../store';
 import { getLeadName, getLeadCategory, detectAddressCol, getLeadAddress, detectPostalCol, getLeadPostal, detectLatCol, detectLngCol, getRawCoord } from '../utils/detect';
@@ -13,6 +14,8 @@ import { MapContainer, TileLayer, Circle, CircleMarker, Popup, useMap } from 're
 import { runScan, getScanStatus, clearScanCache } from '../utils/scanService';
 import { useToast } from '../components/Toast';
 import { createLeadsBulk, fetchLeads } from '../services/leads';
+import { fetchSonarWatches, createSonarWatch, deleteSonarWatch, runSonarWatchNow } from '../services/leads';
+import type { SonarWatch } from '../services/leads';
 import { type Lead } from '../types';
 import 'leaflet/dist/leaflet.css';
 
@@ -161,6 +164,55 @@ export default function Insights({ onOpenDetail, highlightedLeadId, onShowInsigh
         const saved = localStorage.getItem('orca_scan_source');
         return (saved as 'demo' | 'google') || 'google';
     });
+
+    // ── Sonar Contínuo State ──────────────────────────────────────────────
+    const [sonarPanelOpen, setSonarPanelOpen] = useState(false);
+    const [sonarWatches, setSonarWatches] = useState<SonarWatch[]>([]);
+    const [sonarForm, setSonarForm] = useState({ segment: '', city: '', frequency: 'weekly' as 'daily' | 'weekly' });
+    const [sonarRunning, setSonarRunning] = useState<string | null>(null); // watchId being run
+
+    useEffect(() => {
+        if (!sonarPanelOpen) return;
+        fetchSonarWatches().then(setSonarWatches).catch(() => {});
+    }, [sonarPanelOpen]);
+
+    const handleCreateSonarWatch = async () => {
+        if (!sonarForm.segment || !sonarForm.city) {
+            toast('Preencha o segmento e a cidade.', 'error');
+            return;
+        }
+        try {
+            const w = await createSonarWatch(sonarForm);
+            setSonarWatches(prev => [w, ...prev]);
+            setSonarForm({ segment: '', city: '', frequency: 'weekly' });
+            toast('Sonar criado! Vai executar automaticamente.', 'success');
+        } catch (err: any) {
+            toast(err.message || 'Erro ao criar Sonar', 'error');
+        }
+    };
+
+    const handleDeleteSonarWatch = async (id: string) => {
+        try {
+            await deleteSonarWatch(id);
+            setSonarWatches(prev => prev.filter(w => w.id !== id));
+            toast('Sonar removido.', 'info');
+        } catch (err: any) {
+            toast(err.message || 'Erro ao remover Sonar', 'error');
+        }
+    };
+
+    const handleRunSonarNow = async (id: string) => {
+        setSonarRunning(id);
+        try {
+            const result = await runSonarWatchNow(id);
+            toast(`Sonar executado: ${result.imported} leads importados!`, 'success');
+            setSonarWatches(prev => prev.map(w => w.id === id ? { ...w, lastRunAt: new Date().toISOString() } : w));
+        } catch (err: any) {
+            toast(err.message || 'Erro ao executar Sonar', 'error');
+        } finally {
+            setSonarRunning(null);
+        }
+    };
     
     // Enhanced Scan Form State
     const [scanConfig, setScanConfig] = useState({
@@ -1160,6 +1212,135 @@ export default function Insights({ onOpenDetail, highlightedLeadId, onShowInsigh
                     <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 8 }}>
                         Visualiza a densidade de leads quentes para otimizar rotas de prospecção.
                     </div>
+                </div>
+
+                {/* ── SONAR CONTÍNUO PANEL ────────────────────────────────── */}
+                <div style={{
+                    marginBottom: 16,
+                    border: '1px solid rgba(99,102,241,0.25)',
+                    borderRadius: 14,
+                    overflow: 'hidden',
+                }}>
+                    <button
+                        onClick={() => setSonarPanelOpen(p => !p)}
+                        style={{
+                            width: '100%',
+                            padding: '14px 16px',
+                            background: 'rgba(99,102,241,0.08)',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 10,
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <Bell size={14} color="#A5B4FC" />
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#A5B4FC' }}>Sonar Contínuo</div>
+                            {sonarWatches.length > 0 && (
+                                <div style={{
+                                    background: 'rgba(99,102,241,0.3)',
+                                    color: '#C7D2FE',
+                                    fontSize: 9,
+                                    fontWeight: 800,
+                                    padding: '2px 6px',
+                                    borderRadius: 100
+                                }}>{sonarWatches.length} ativos</div>
+                            )}
+                        </div>
+                        {sonarPanelOpen ? <ChevronUp size={14} color="#666" /> : <ChevronDown size={14} color="#666" />}
+                    </button>
+
+                    {sonarPanelOpen && (
+                        <div style={{ padding: '16px', background: 'rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', lineHeight: 1.5 }}>
+                                Configure monitorizações automáticas. O Sonar executa sozinho (diário ou semanal) e importa novos leads encontrados.
+                            </div>
+
+                            {/* Create form */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px', background: 'rgba(99,102,241,0.05)', borderRadius: 10, border: '1px solid rgba(99,102,241,0.15)' }}>
+                                <input
+                                    className="input"
+                                    placeholder="Segmento (ex: restaurante)"
+                                    style={{ background: 'rgba(0,0,0,0.3)', borderColor: 'rgba(99,102,241,0.2)', color: '#FFF', fontSize: 11, height: 32 }}
+                                    value={sonarForm.segment}
+                                    onChange={e => setSonarForm(p => ({ ...p, segment: e.target.value }))}
+                                />
+                                <input
+                                    className="input"
+                                    placeholder="Cidade (ex: Lisboa)"
+                                    style={{ background: 'rgba(0,0,0,0.3)', borderColor: 'rgba(99,102,241,0.2)', color: '#FFF', fontSize: 11, height: 32 }}
+                                    value={sonarForm.city}
+                                    onChange={e => setSonarForm(p => ({ ...p, city: e.target.value }))}
+                                />
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <select
+                                        className="input"
+                                        style={{ flex: 1, background: 'rgba(0,0,0,0.3)', borderColor: 'rgba(99,102,241,0.2)', color: '#FFF', fontSize: 11, height: 32 }}
+                                        value={sonarForm.frequency}
+                                        onChange={e => setSonarForm(p => ({ ...p, frequency: e.target.value as 'daily' | 'weekly' }))}
+                                    >
+                                        <option value="weekly">Semanal</option>
+                                        <option value="daily">Diário</option>
+                                    </select>
+                                    <button
+                                        className="btn"
+                                        onClick={handleCreateSonarWatch}
+                                        style={{ background: 'rgba(99,102,241,0.3)', color: '#C7D2FE', border: '1px solid rgba(99,102,241,0.4)', height: 32, padding: '0 12px', fontSize: 11, gap: 6 }}
+                                    >
+                                        <Plus size={12} /> Criar
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Active watches list */}
+                            {sonarWatches.length > 0 && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    {sonarWatches.map(w => (
+                                        <div key={w.id} style={{
+                                            padding: '10px 12px',
+                                            background: 'rgba(255,255,255,0.03)',
+                                            borderRadius: 10,
+                                            border: '1px solid rgba(255,255,255,0.06)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 10
+                                        }}>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontSize: 11, fontWeight: 700, color: '#FFF' }}>{w.segment}</div>
+                                                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>
+                                                    {w.city} · {w.frequency === 'daily' ? 'Diário' : 'Semanal'}
+                                                </div>
+                                                {w.lastRunAt && (
+                                                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', marginTop: 2 }}>
+                                                        Última run: {new Date(w.lastRunAt).toLocaleDateString()}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <button
+                                                onClick={() => handleRunSonarNow(w.id)}
+                                                disabled={sonarRunning === w.id}
+                                                title="Executar agora"
+                                                style={{ background: 'rgba(99,102,241,0.15)', border: 'none', borderRadius: 8, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+                                            >
+                                                {sonarRunning === w.id
+                                                    ? <RefreshCw size={12} color="#A5B4FC" className="spin" />
+                                                    : <PlayCircle size={12} color="#A5B4FC" />}
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteSonarWatch(w.id)}
+                                                title="Remover sonar"
+                                                style={{ background: 'rgba(239,68,68,0.1)', border: 'none', borderRadius: 8, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+                                            >
+                                                <Trash2 size={12} color="rgba(239,68,68,0.7)" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Primary Action */}

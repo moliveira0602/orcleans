@@ -27,6 +27,7 @@ model Organization {
   users       User[]
   leads       Lead[]
   activities  Activity[]
+  sonarWatches SonarWatch[]
 
   @@map("organizations")
 }
@@ -204,3 +205,22 @@ model OrcaLead {
 
   @@map("orca_leads")
 }
+
+model SonarWatch {
+  id             String    @id @default(uuid())
+  organizationId String
+  segment        String
+  city           String
+  frequency      String    @default("weekly") // 'daily' | 'weekly'
+  isActive       Boolean   @default(true)
+  lastRunAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([isActive])
+  @@map("sonar_watches")
+}
+

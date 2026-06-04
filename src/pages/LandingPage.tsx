@@ -27,7 +27,6 @@ import {
     BarChart
 } from 'lucide-react';
 import MistBackground from '../components/ui/MistBackground';
-import LightRays from '../components/ui/LightRays';
 import api from '../services/api';
 
 // ===== DATA: FAQ Items =====
@@ -612,20 +611,6 @@ export default function LandingPage() {
                     </video>
                     <div className="hero-noise" />
                     <div className="hero-gradient" />
-                    <LightRays
-                        raysOrigin="top-center"
-                        raysColor="#ffffff"
-                        raysSpeed={1.0}
-                        lightSpread={1.0}
-                        rayLength={2.0}
-                        pulsating={true}
-                        fadeDistance={1.0}
-                        saturation={1.0}
-                        followMouse={true}
-                        mouseInfluence={0.1}
-                        noiseAmount={0.0}
-                        distortion={0.0}
-                    />
                 </div>
                 <div className="hero-content">
                     <div className={`hero-badge animate-fade-up${heroAnimated ? ' visible' : ''}`}>Sonar — Inteligência Comercial B2B</div>

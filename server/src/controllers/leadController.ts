@@ -154,8 +154,11 @@ export async function movePipeline(req: AuthRequest, res: Response) {
   try {
     const leadId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const { stage } = req.body;
-    const lead = await leadService.moveLeadPipeline(req.organizationId!, leadId, stage);
-    return res.status(200).json(lead);
+    const result = await leadService.moveLeadPipeline(req.organizationId!, leadId, stage);
+    return res.status(200).json({
+      ...result.lead,
+      _feedbackApplied: result.feedbackApplied,
+    });
   } catch (error: any) {
     return res.status(400).json({ error: error.message });
   }

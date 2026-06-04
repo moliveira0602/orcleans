@@ -13,7 +13,6 @@
     "vercel-build": "prisma generate && tsc"
   },
   "dependencies": {
-    "axios": "^1.7.9",
     "@prisma/client": "^6.5.0",
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",
@@ -21,8 +20,11 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.11.0",
+    "@types/node-cron": "^3.0.11",
+    "@types/nodemailer": "^6.4.17",
     "@types/uuid": "^10.0.0",
     "@vercel/node": "^5.1.2",
+    "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -31,13 +33,13 @@
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
+    "node-cron": "^4.2.1",
     "nodemailer": "^6.10.0",
     "prisma": "^6.5.0",
     "stripe": "^22.0.2",
     "tsx": "^4.19.3",
     "typescript": "^5.9.3",
     "uuid": "^11.1.0",
-    "zod": "^3.24.2",
-    "@types/nodemailer": "^6.4.17"
+    "zod": "^3.24.2"
   }
 }

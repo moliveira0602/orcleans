@@ -24,7 +24,9 @@ import {
     Sparkles,
     Clock,
     Eye,
-    EyeOff
+    EyeOff,
+    Building2,
+    TrendingUp
 } from 'lucide-react';
 import ResponsiveDetailPanel from './ResponsiveDetailPanel';
 import { useAppState, useAppDispatch } from '../store';
@@ -63,6 +65,8 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
     const [focusMode, setFocusMode] = useState(false);
 
     const [enriching, setEnriching] = useState(false);
+    const [cnpjLoading, setCnpjLoading] = useState(false);
+    const [cnpjData, setCnpjData] = useState<leadApi.CnpjData | leadApi.NifData | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
     // Buscar lead
@@ -193,7 +197,17 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
 
     const movePipeline = async (stage: PipelineStage) => {
         try {
-            await leadApi.moveLeadPipeline(lead.id, stage);
+            const result = await leadApi.moveLeadPipeline(lead.id, stage);
+            // Show feedback loop notification when peers are affected
+            if (result._feedbackApplied && result._feedbackApplied > 0) {
+                const delta = (stage === 'ganho') ? '+5' : '-2';
+                setTimeout(() => {
+                    toast(
+                        `🧠 Feedback Loop: score ${delta} aplicado a ${result._feedbackApplied} leads similares`,
+                        'success'
+                    );
+                }, 800);
+            }
         } catch (err) {
             console.error('Failed to move lead on server:', err);
         }
@@ -204,6 +218,58 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
             type: 'ADD_ACTIVITY',
             payload: { title: `Pipeline: ${name}`, sub: `Movido para ${label}`, icon: 'pipeline', time: new Date().toISOString() },
         });
+    };
+
+    // ── CNPJ / NIF Enrichment ────────────────────────────────────────────────
+    const handleCnpjNif = async () => {
+        // Detect CNPJ (14 digits) or NIF (9 digits) from any field
+        const allText = [lead.nome, lead.observacoes, (lead._raw as any)?.cnpj, (lead._raw as any)?.nif]
+            .filter(Boolean).join(' ');
+        const digits14 = allText.match(/(\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2})/)?.[1]?.replace(/\D/g, '');
+        const digits9  = allText.match(/\b([1-9]\d{8})\b/)?.[1];
+
+        const cnpj = digits14?.length === 14 ? digits14 : null;
+        const nif  = !cnpj && digits9?.length === 9 ? digits9 : null;
+
+        if (!cnpj && !nif) {
+            toast('Nenhum CNPJ (14 dígitos) ou NIF (9 dígitos) detectado neste lead.', 'info');
+            return;
+        }
+
+        setCnpjLoading(true);
+        setCnpjData(null);
+        try {
+            const data = cnpj
+                ? await leadApi.enrichByCnpj(cnpj)
+                : await leadApi.enrichByNif(nif!);
+            setCnpjData(data);
+
+            // Auto-fill empty lead fields from the official data
+            const cnpjFields = data as leadApi.CnpjData;
+            const nifFields  = data as leadApi.NifData;
+            const patches: Record<string, string> = {};
+
+            if (cnpj) {
+                if (!lead.telefone && cnpjFields.telefone) patches.telefone = cnpjFields.telefone;
+                if (!lead.email    && cnpjFields.email)    patches.email    = cnpjFields.email;
+                if (!lead.endereco && cnpjFields.logradouro) patches.endereco = cnpjFields.logradouro;
+                if (!lead.cidade   && cnpjFields.municipio)  patches.cidade   = cnpjFields.municipio;
+            } else {
+                if (!lead.endereco && nifFields.address) patches.endereco = nifFields.address;
+                if (!lead.cidade   && nifFields.city)    patches.cidade   = nifFields.city;
+            }
+
+            if (Object.keys(patches).length > 0) {
+                try { await leadApi.updateLead(lead.id, patches); } catch {}
+                dispatch({ type: 'UPDATE_LEAD', payload: { id: lead.id, fields: patches } });
+            }
+
+            toast(`✅ ${cnpj ? 'CNPJ' : 'NIF'} validado e dados oficiais carregados!`, 'success');
+        } catch (err: any) {
+            toast(err.message || `Erro ao validar ${cnpj ? 'CNPJ' : 'NIF'}`, 'error');
+        } finally {
+            setCnpjLoading(false);
+        }
     };
 
     const startEdit = (key: string, value: string) => {
@@ -455,23 +521,72 @@ export default function LeadDetail({ leadId, onClose, onNavigate }: LeadDetailPr
                             }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                                     <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Análise de Performance</span>
-                                    <button 
-                                        className={`btn btn-ghost btn-sm ${enriching ? 'loading' : ''}`}
-                                        onClick={handleEnrich}
-                                        disabled={enriching}
-                                        style={{ 
-                                            fontSize: '10px', 
-                                            background: 'rgba(255,255,255,0.05)', 
-                                            borderRadius: '8px',
-                                            height: '24px',
-                                            border: '1px solid rgba(255,255,255,0.1)'
-                                        }}
-                                    >
-                                        <RotateCw size={12} className={enriching ? 'loading-spinner-fast' : ''} />
-                                        {enriching ? 'Scouting...' : 'Enriquecer'}
-                                    </button>
+                                    <div style={{ display: 'flex', gap: 6 }}>
+                                        <button
+                                            className={`btn btn-ghost btn-sm`}
+                                            onClick={handleCnpjNif}
+                                            disabled={cnpjLoading}
+                                            title="Validar CNPJ (Brasil) ou NIF (Portugal)"
+                                            style={{
+                                                fontSize: '10px',
+                                                background: 'rgba(99,102,241,0.1)',
+                                                borderRadius: '8px',
+                                                height: '24px',
+                                                border: '1px solid rgba(99,102,241,0.3)',
+                                                color: '#A5B4FC',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 4
+                                            }}
+                                        >
+                                            <Building2 size={10} />
+                                            {cnpjLoading ? 'A verificar...' : 'CNPJ/NIF'}
+                                        </button>
+                                        <button
+                                            className={`btn btn-ghost btn-sm ${enriching ? 'loading' : ''}`}
+                                            onClick={handleEnrich}
+                                            disabled={enriching}
+                                            style={{
+                                                fontSize: '10px',
+                                                background: 'rgba(255,255,255,0.05)',
+                                                borderRadius: '8px',
+                                                height: '24px',
+                                                border: '1px solid rgba(255,255,255,0.1)'
+                                            }}
+                                        >
+                                            <RotateCw size={12} className={enriching ? 'loading-spinner-fast' : ''} />
+                                            {enriching ? 'Scouting...' : 'Enriquecer'}
+                                        </button>
+                                    </div>
                                 </div>
+                                {/* CNPJ/NIF Result panel */}
+                                {cnpjData && (
+                                    <div style={{
+                                        background: 'rgba(99,102,241,0.08)',
+                                        border: '1px solid rgba(99,102,241,0.2)',
+                                        borderRadius: 12,
+                                        padding: '12px 14px',
+                                        marginBottom: 14,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 4
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                                            <Building2 size={12} color="#A5B4FC" />
+                                            <span style={{ fontSize: 10, fontWeight: 800, color: '#A5B4FC', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                                                Dados Oficiais Validados
+                                            </span>
+                                        </div>
+                                        {Object.entries(cnpjData).filter(([, v]) => v).map(([k, v]) => (
+                                            <div key={k} style={{ display: 'flex', gap: 8 }}>
+                                                <span style={{ fontSize: 10, color: 'rgba(165,180,252,0.5)', minWidth: 80, fontWeight: 600 }}>{k.replace(/_/g, ' ')}</span>
+                                                <span style={{ fontSize: 11, color: '#DDD', fontWeight: 500 }}>{String(v)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+
                                     <div style={{ position: 'relative', width: 88, height: 88, flexShrink: 0 }}>
                                         {/* Background Ring */}
                                         <svg width="88" height="88" viewBox="0 0 88 88">

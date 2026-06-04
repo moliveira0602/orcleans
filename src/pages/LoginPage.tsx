@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../services/auth';
-import LightRays from '../components/ui/LightRays';
 
 export default function LoginPage() {
     const { login, register } = useAuth();
@@ -48,25 +47,11 @@ export default function LoginPage() {
     return (
         <div className="login-page">
             <div className="hero-bg">
-                <video className="hero-video" autoPlay muted playsInline poster="/images/ORCA.png">
+                <video className="hero-video" autoPlay muted playsInline>
                     <source src="/images/video/video-orca.mp4" type="video/mp4" />
                 </video>
                 <div className="hero-gradient" />
                 <div className="hero-particles" />
-                <LightRays
-                    raysOrigin="top-center"
-                    raysColor="#ffffff"
-                    raysSpeed={1.0}
-                    lightSpread={1.0}
-                    rayLength={2.0}
-                    pulsating={true}
-                    fadeDistance={1.0}
-                    saturation={1.0}
-                    followMouse={true}
-                    mouseInfluence={0.1}
-                    noiseAmount={0.0}
-                    distortion={0.0}
-                />
             </div>
             <div className="login-card">
                 <div className="login-logo" style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>
@@ -160,10 +145,11 @@ export default function LoginPage() {
                 .hero-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
                 .hero-video {
                     position: absolute; top: 50%; left: 50%; min-width: 100%; min-height: 100%;
-                    width: auto; height: auto; transform: translate(-50%, -50%);
-                    object-fit: cover; opacity: 0.4;
+                    width: auto; height: auto; transform: translate(-50%, -50%) scale(1.05);
+                    object-fit: cover; opacity: 0.45;
+                    filter: blur(10px);
                 }
-                .hero-gradient { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(51, 51, 51, 0.4) 0%, #0A0A0A 80%); z-index: 1; }
+                .hero-gradient { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10, 10, 10, 0.6) 0%, rgba(10, 10, 10, 0.3) 25%, rgba(10, 10, 10, 0) 50%, rgba(10, 10, 10, 0.4) 75%, #0A0A0A 100%); z-index: 1; }
                 .hero-particles {
                     position: absolute; inset: 0;
                     background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
@@ -172,13 +158,16 @@ export default function LoginPage() {
                 .login-card {
                     position: relative;
                     z-index: 10;
-                    background: rgba(51, 51, 51, 0.95);
+                    background: rgba(10, 10, 10, 0.55);
+                    backdrop-filter: blur(20px);
+                    -webkit-backdrop-filter: blur(20px);
                     border: 1px solid rgba(255, 255, 255, 0.12);
-                    border-radius: 20px;
+                    border-radius: 24px;
                     padding: 40px 36px;
                     width: 100%;
                     max-width: 400px;
                     animation: loginAppear 0.35s ease;
+                    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
                 }
                 @keyframes loginAppear {
                     from { opacity: 0; transform: translateY(20px) scale(0.97); }
